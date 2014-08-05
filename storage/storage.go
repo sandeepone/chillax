@@ -1,34 +1,47 @@
-package chillax_storage
+package storage
 
 import (
     "os"
+    "os/user"
     "path"
-    "errors"
     "io/ioutil"
     "github.com/didip/chillax/libenv"
 )
 
-func NewStorage() *Storer {
-    storage := libenv.EnvWithDefault("STORAGE_TYPE", "FileSystem")
-    if storage == "FileSystem" {
-        return &FileSystem{}
+func NewStorage() Storer {
+    storageType := libenv.EnvWithDefault("STORAGE_TYPE", "FileSystem")
+    if storageType == "FileSystem" {
+        currentUser, _ := user.Current()
+
+        store     := &FileSystem{}
+        store.Root = currentUser.HomeDir + "/chillax"
+        return store
     }
+    return nil
 }
 
 type Storer interface {
+    GetRoot()              string
     Create(string, []byte) error
     Update(string, []byte) error
     Get(string)            ([]byte, error)
+    List(string)           ([]string, error)
     Delete(string)         error
 }
 
-type FileSystem struct {}
+type FileSystem struct {
+    Root string
+}
+
+func (fs *FileSystem) GetRoot() string {
+    return fs.Root
+}
 
 func (fs *FileSystem) CreateOrUpdate(fullpath string, data []byte) error {
     var err error
 
+    fullpath  = path.Join(fs.Root, fullpath)
     basepath := path.Dir(fullpath)
-    filename := path.Base(fullpath)
 
     if _, err = os.Stat(fullpath); os.IsNotExist(err) {
         // Create parent directory
@@ -41,7 +54,7 @@ func (fs *FileSystem) CreateOrUpdate(fullpath string, data []byte) error {
         defer fileHandler.Close()
     }
 
-    err = ioutil.WriteFile(fullpath, string(data), 0744)
+    err = ioutil.WriteFile(fullpath, data, 0744)
 
     return err
 }
@@ -55,15 +68,23 @@ func (fs *FileSystem) Update(fullpath string, data []byte) error {
 }
 
 func (fs *FileSystem) Get(fullpath string) ([]byte, error) {
+    fullpath = path.Join(fs.Root, fullpath)
     return ioutil.ReadFile(fullpath)
 }
 
-func (fs *FileSystem) Delete(fullpath string) error {
-    finfo, err := os.Stat(fullpath)
-    if err == nil {
-        if finfo.IsDir() {
-            err = os.RemoveAll(fullpath)
-        }
+func (fs *FileSystem) List(fullpath string) ([]string, error) {
+    fullpath  = path.Join(fs.Root, fullpath)
+    files, err := ioutil.ReadDir(fullpath)
+    names    := make([]string, len(files))
+
+    for index, f := range files {
+        names[index] = f.Name()
     }
-    return err
+
+    return names, err
+}
+
+func (fs *FileSystem) Delete(fullpath string) error {
+    fullpath = path.Join(fs.Root, fullpath)
+    return os.RemoveAll(fullpath)
 }
