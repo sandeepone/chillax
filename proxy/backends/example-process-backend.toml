@@ -1,0 +1,4 @@
+path = "/somewhere"
+command = "./example/example-panic"
+delay = "1m"
+ping = "30s"

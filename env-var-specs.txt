@@ -1,1 +1,1 @@
-STORAGE_TYPE, default=FileSystem, description=Storage engine used by Chillax.
+STORAGE_TYPE, default=FileSystem, description=Storage backend used by Chillax.
