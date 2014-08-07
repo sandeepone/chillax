@@ -143,7 +143,7 @@ func TestCreateDockerContainers(t *testing.T) {
     err     := backend.CreateDockerContainers()
 
     if err != nil {
-        t.Errorf("Failed to create Docker container. Error: %v", err)
+        t.Errorf("Failed to create Docker containers. Error: %v", err)
     }
 
     dockerHost := backend.Docker.Hosts[0]
@@ -151,4 +151,22 @@ func TestCreateDockerContainers(t *testing.T) {
     for _, containerId := range backend.ContainerIds() {
         backend.NewDockerClients()[dockerHost].RemoveContainer(dockerclient.RemoveContainerOptions{ID: containerId})
     }
+}
+
+func TestStartDockerContainers(t *testing.T) {
+    backend := NewDockerProxyBackendForTest()
+
+    err := backend.CreateDockerContainers()
+
+    if err != nil {
+        t.Errorf("Failed to create Docker containers. Error: %v", err)
+    }
+
+    err = backend.StartDockerContainers()
+
+    if err != nil {
+        t.Errorf("Failed to start Docker containers. Error: %v", err)
+    }
+
+    backend.StopAndRemoveContainers()
 }

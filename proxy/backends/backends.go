@@ -6,9 +6,12 @@ import (
     "strings"
     "github.com/BurntSushi/toml"
     dockerclient "github.com/fsouza/go-dockerclient"
+    "github.com/didip/chillax/libstring"
     chillax_storage "github.com/didip/chillax/storage"
     chillax_dockerinventory "github.com/didip/chillax/dockerinventory"
 )
+
+const DOCKER_TIMEOUT = uint(5)
 
 func NewProxyBackend(tomlBytes []byte) *ProxyBackend {
     backend := &ProxyBackend{}
@@ -46,7 +49,7 @@ type ProxyBackendDockerContainerConfig struct {
     Ports []string
 }
 
-func (pb *ProxyBackend) ProxyName() (string) {
+func (pb *ProxyBackend) ProxyName() string {
     name := strings.Replace(pb.Path, "/", "", 1)
     return strings.Replace(name, "/", "-", -1)
 }
@@ -58,7 +61,7 @@ func (pb *ProxyBackend) Serialize() ([]byte, error) {
     return buffer.Bytes(), err
 }
 
-func (pb *ProxyBackend) Save() (error) {
+func (pb *ProxyBackend) Save() error {
     inBytes, err := pb.Serialize()
 
     if err == nil {
@@ -67,7 +70,7 @@ func (pb *ProxyBackend) Save() (error) {
     return err
 }
 
-func (pb *ProxyBackend) IsDocker() (bool) {
+func (pb *ProxyBackend) IsDocker() bool {
     if pb.Docker != nil && pb.Docker.Tag != "" && len(pb.Docker.Hosts) > 0 {
         return true
     }
@@ -144,7 +147,28 @@ func (pb *ProxyBackend) CreateDockerContainerOptions(publiclyAvailablePort int) 
     return containerOpts
 }
 
-func (pb *ProxyBackend) CreateDockerContainers() (error) {
+func (pb *ProxyBackend) StartContainerOptions(containerPorts []string) *dockerclient.HostConfig {
+    config := &dockerclient.HostConfig{}
+    config.ContainerIDFile = "/etc/cidfile"
+    config.PortBindings    = make(map[dockerclient.Port][]dockerclient.PortBinding)
+
+    for _, ports := range containerPorts {
+        hostIp, hostPort, containerPort := libstring.SplitDockerPorts(ports)
+
+        hostPortBinding := &dockerclient.PortBinding{}
+        hostPortBinding.HostPort = hostPort
+
+        if hostIp != "" {
+            hostPortBinding.HostIp = hostIp
+        }
+
+        config.PortBindings[dockerclient.Port(containerPort)] = append(config.PortBindings[dockerclient.Port(containerPort)], *hostPortBinding)
+    }
+
+    return config
+}
+
+func (pb *ProxyBackend) CreateDockerContainers() error {
     var err error
 
     numDockers := len(pb.Docker.Hosts)
@@ -186,9 +210,38 @@ func (pb *ProxyBackend) CreateDockerContainers() (error) {
     return err
 }
 
-// func (pb *ProxyBackend) StartDockerContainer() (error) {}
+func (pb *ProxyBackend) StartDockerContainers() error {
+    for _, containerConfig := range pb.Docker.Containers {
+        client, err := dockerclient.NewClient(containerConfig.Host)
+        if err != nil { return err }
 
-// func (pb *ProxyBackend) StopDockerContainer() (error) {}
+        err = client.StartContainer(containerConfig.Id, pb.StartContainerOptions(containerConfig.Ports))
+        if err != nil { return err }
+    }
+    return nil
+}
+
+func (pb *ProxyBackend) StopAndRemoveContainers() error {
+    for _, containerConfig := range pb.Docker.Containers {
+        client, err := dockerclient.NewClient(containerConfig.Host)
+        if err != nil { return err }
+
+        client.StopContainer(containerConfig.Id, DOCKER_TIMEOUT)
+
+        client.RemoveContainer(dockerclient.RemoveContainerOptions{ID: containerConfig.Id})
+    }
+    return nil
+}
+
+func (pb *ProxyBackend) StopDockerContainers() error {
+    for _, containerConfig := range pb.Docker.Containers {
+        client, err := dockerclient.NewClient(containerConfig.Host)
+        if err != nil { return err }
+
+        return client.StopContainer(containerConfig.Id, DOCKER_TIMEOUT)
+    }
+    return nil
+}
 
 // func (pb *ProxyBackend) RestartDockerContainer() (error) {}
 
