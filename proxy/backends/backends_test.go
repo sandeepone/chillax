@@ -7,11 +7,16 @@ import (
     "io/ioutil"
 )
 
-func TestDeserializeFromToml(t *testing.T) {
+func NewDockerProxyBackendForTest() *ProxyBackend {
     fileHandle, _ := os.Open("./example-docker-backend.toml")
     bufReader     := bufio.NewReader(fileHandle)
     definition, _ := ioutil.ReadAll(bufReader)
     backend       := NewProxyBackend(definition)
+    return backend
+}
+
+func TestDeserializeFromToml(t *testing.T) {
+    backend := NewDockerProxyBackendForTest()
 
     if backend.Path != "/path/to/scraper" {
         t.Errorf("backend.Path should be /path/to/scraper. Backend: %s", backend)
@@ -71,10 +76,7 @@ func TestDeserializeFromToml(t *testing.T) {
 }
 
 func TestSerializeFromToml(t *testing.T) {
-    fileHandle, _ := os.Open("./example-docker-backend.toml")
-    bufReader     := bufio.NewReader(fileHandle)
-    definition, _ := ioutil.ReadAll(bufReader)
-    backend       := NewProxyBackend(definition)
+    backend := NewDockerProxyBackendForTest()
 
     _, err := backend.Serialize()
 
@@ -84,10 +86,7 @@ func TestSerializeFromToml(t *testing.T) {
 }
 
 func TestSave(t *testing.T) {
-    fileHandle, _ := os.Open("./example-docker-backend.toml")
-    bufReader     := bufio.NewReader(fileHandle)
-    definition, _ := ioutil.ReadAll(bufReader)
-    backend       := NewProxyBackend(definition)
+    backend := NewDockerProxyBackendForTest()
 
     err := backend.Save()
 
@@ -97,13 +96,10 @@ func TestSave(t *testing.T) {
 }
 
 func TestIsDocker(t *testing.T) {
-    fileHandle, _ := os.Open("./example-docker-backend.toml")
-    bufReader     := bufio.NewReader(fileHandle)
-    definition, _ := ioutil.ReadAll(bufReader)
-    backend       := NewProxyBackend(definition)
+    backend := NewDockerProxyBackendForTest()
 
     if !backend.IsDocker() {
-        t.Errorf("Backend1 should be docker.")
+        t.Errorf("Backend1 should be docker")
     }
 
     fileHandle2, _ := os.Open("./example-process-backend.toml")
@@ -112,6 +108,40 @@ func TestIsDocker(t *testing.T) {
     backend2       := NewProxyBackend(definition2)
 
     if backend2.IsDocker() {
-        t.Errorf("Backend2 must not be docker.")
+        t.Errorf("Backend2 must not be docker")
+    }
+}
+
+func TestContainerIds(t *testing.T) {
+    backend := NewDockerProxyBackendForTest()
+
+    if backend.ContainerIds()[0] != "abc123" {
+        t.Errorf("backend.ContainerIds[0] should == abc123")
+    }
+    if backend.ContainerIds()[1] != "abc12456" {
+        t.Errorf("backend.ContainerIds[1] should == abc12456")
+    }
+}
+
+func TestCreateDockerContainerOptions(t *testing.T) {
+    backend := NewDockerProxyBackendForTest()
+
+    publiclyAvailablePort  := 65536
+    createContainerOptions := backend.CreateDockerContainerOptions(publiclyAvailablePort)
+
+    if createContainerOptions.Name == "" {
+        t.Errorf("createContainerOptions.Name should not be empty string. Actually: %v", createContainerOptions.Name)
+    }
+    if len(createContainerOptions.Config.ExposedPorts) != len(backend.Docker.Ports) {
+        t.Errorf("Number of ExposedPorts per container should == backend.Docker.Ports. Actually: %v", createContainerOptions.Config.ExposedPorts)
+    }
+}
+
+func TestCreateDockerContainers(t *testing.T) {
+    backend := NewDockerProxyBackendForTest()
+    err     := backend.CreateDockerContainers()
+
+    if err != nil {
+        t.Errorf("Failed to create Docker container. Error: %v", err)
     }
 }

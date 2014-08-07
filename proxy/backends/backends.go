@@ -5,7 +5,9 @@ import (
     "bytes"
     "strings"
     "github.com/BurntSushi/toml"
+    dockerclient "github.com/fsouza/go-dockerclient"
     chillax_storage "github.com/didip/chillax/storage"
+    chillax_dockerinventory "github.com/didip/chillax/dockerinventory"
 )
 
 func NewProxyBackend(tomlBytes []byte) *ProxyBackend {
@@ -33,7 +35,7 @@ type ProxyBackendDockerConfig struct {
     Numprocs   int
     Hosts      []string
     Ports      []string
-    Containers []*ProxyBackendDockerContainerConfig
+    Containers []ProxyBackendDockerContainerConfig
 }
 
 type ProxyBackendDockerContainerConfig struct {
@@ -72,6 +74,21 @@ func (pb *ProxyBackend) IsDocker() (bool) {
     return false
 }
 
+func (pb *ProxyBackend) NewDockerClients() map[string]*dockerclient.Client {
+    dockers := make(map[string]*dockerclient.Client)
+
+    for _, dockerUri := range pb.Docker.Hosts {
+        client, err := dockerclient.NewClient(dockerUri)
+
+        if err == nil {
+            dockers[dockerUri] = client
+        }
+    }
+
+    return dockers
+}
+
+
 // // protocol can be: TCP or HTTP
 // func (pb *ProxyBackend) Ping(protocol string) (bool) {}
 
@@ -97,9 +114,78 @@ func (pb *ProxyBackend) IsDocker() (bool) {
 
 // func (pb *ProxyBackend) WatchProcess() (error) {}
 
-// //
-// // Docker container
-// //
+//
+// Docker container
+//
+func (pb *ProxyBackend) ContainerIds() []string {
+    ids := make([]string, len(pb.Docker.Containers))
+
+    for index, containerConfig := range pb.Docker.Containers {
+        ids[index] = containerConfig.Id
+    }
+    return ids
+}
+
+func (pb *ProxyBackend) CreateDockerContainerOptions(publiclyAvailablePort int) *dockerclient.CreateContainerOptions {
+    containerOpts := &dockerclient.CreateContainerOptions{}
+    containerOpts.Name = fmt.Sprintf("%v-%v", pb.ProxyName(), publiclyAvailablePort)
+
+    containerOpts.Config              = &dockerclient.Config{}
+    containerOpts.Config.Image        = pb.Docker.Tag
+    containerOpts.Config.Env          = pb.Docker.Env
+    containerOpts.Config.AttachStdout = true
+    containerOpts.Config.AttachStderr = true
+    containerOpts.Config.ExposedPorts = make(map[dockerclient.Port]struct{})
+
+    for _, port := range pb.Docker.Ports {
+        containerOpts.Config.ExposedPorts[dockerclient.Port(port)] = struct {}{}
+    }
+
+    return containerOpts
+}
+
+func (pb *ProxyBackend) CreateDockerContainers() (error) {
+    var err error
+
+    numDockers := len(pb.Docker.Hosts)
+    if numDockers < 1 { return nil }
+
+    pb.Docker.Containers = make([]ProxyBackendDockerContainerConfig, pb.Docker.Numprocs)
+
+    dockerClients := pb.NewDockerClients()
+
+    for i := 0; i < pb.Docker.Numprocs; i++ {
+        dockerHostsIndex := i
+
+        if i >= numDockers {
+            dockerHostsIndex = i % numDockers
+        }
+
+        pb.Docker.Containers[i] = ProxyBackendDockerContainerConfig{}
+
+        pb.Docker.Containers[i].Tag   = pb.Docker.Tag
+        pb.Docker.Containers[i].Env   = pb.Docker.Env
+        pb.Docker.Containers[i].Host  = pb.Docker.Hosts[dockerHostsIndex]
+        pb.Docker.Containers[i].Ports = make([]string, len(pb.Docker.Ports))
+
+        publiclyAvailablePort := chillax_dockerinventory.ReservePort(pb.Docker.Containers[i].Host)
+
+        for index, backendPort := range pb.Docker.Ports {
+            pb.Docker.Containers[i].Ports[index] = fmt.Sprintf("%v:%v", publiclyAvailablePort, backendPort)
+        }
+
+        containerOpts  := pb.CreateDockerContainerOptions(publiclyAvailablePort)
+        container, err := dockerClients[pb.Docker.Containers[i].Host].CreateContainer(*containerOpts)
+        if err != nil { return err }
+
+        pb.Docker.Containers[i].Id = container.ID
+
+        err = pb.Save()
+        if err != nil { return err }
+    }
+    return err
+}
+
 // func (pb *ProxyBackend) StartDockerContainer() (error) {}
 
 // func (pb *ProxyBackend) StopDockerContainer() (error) {}
