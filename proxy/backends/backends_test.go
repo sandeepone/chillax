@@ -5,6 +5,7 @@ import (
     "bufio"
     "testing"
     "io/ioutil"
+    dockerclient "github.com/fsouza/go-dockerclient"
 )
 
 func NewDockerProxyBackendForTest() *ProxyBackend {
@@ -143,5 +144,11 @@ func TestCreateDockerContainers(t *testing.T) {
 
     if err != nil {
         t.Errorf("Failed to create Docker container. Error: %v", err)
+    }
+
+    dockerHost := backend.Docker.Hosts[0]
+
+    for _, containerId := range backend.ContainerIds() {
+        backend.NewDockerClients()[dockerHost].RemoveContainer(dockerclient.RemoveContainerOptions{ID: containerId})
     }
 }
