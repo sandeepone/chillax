@@ -65,7 +65,12 @@ func (pb *ProxyBackend) Save() (error) {
     return err
 }
 
-// func (pb *ProxyBackend) IsDocker() (bool) {}
+func (pb *ProxyBackend) IsDocker() (bool) {
+    if pb.Docker != nil && pb.Docker.Tag != "" && len(pb.Docker.Hosts) > 0 {
+        return true
+    }
+    return false
+}
 
 // // protocol can be: TCP or HTTP
 // func (pb *ProxyBackend) Ping(protocol string) (bool) {}

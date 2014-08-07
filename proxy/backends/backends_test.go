@@ -95,3 +95,23 @@ func TestSave(t *testing.T) {
         t.Errorf("Failed to save backend")
     }
 }
+
+func TestIsDocker(t *testing.T) {
+    fileHandle, _ := os.Open("./example-docker-backend.toml")
+    bufReader     := bufio.NewReader(fileHandle)
+    definition, _ := ioutil.ReadAll(bufReader)
+    backend       := NewProxyBackend(definition)
+
+    if !backend.IsDocker() {
+        t.Errorf("Backend1 should be docker.")
+    }
+
+    fileHandle2, _ := os.Open("./example-process-backend.toml")
+    bufReader2     := bufio.NewReader(fileHandle2)
+    definition2, _ := ioutil.ReadAll(bufReader2)
+    backend2       := NewProxyBackend(definition2)
+
+    if backend2.IsDocker() {
+        t.Errorf("Backend2 must not be docker.")
+    }
+}
