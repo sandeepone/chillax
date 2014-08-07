@@ -210,18 +210,39 @@ func (pb *ProxyBackend) CreateDockerContainers() error {
     return err
 }
 
-func (pb *ProxyBackend) StartDockerContainers() error {
-    for _, containerConfig := range pb.Docker.Containers {
-        client, err := dockerclient.NewClient(containerConfig.Host)
-        if err != nil { return err }
+func (pb *ProxyBackend) StartDockerContainers() []error {
+    errChan := make(chan error, len(pb.Docker.Containers))
+    errors  := make([]error, len(pb.Docker.Containers))
 
-        err = client.StartContainer(containerConfig.Id, pb.StartContainerOptions(containerConfig.Ports))
-        if err != nil { return err }
+    for _, containerConfig := range pb.Docker.Containers {
+        go func(containerConfig ProxyBackendDockerContainerConfig) {
+            errChan <- pb.StartDockerContainer(containerConfig)
+        } (containerConfig);
     }
-    return nil
+
+    for i := 0; i < len(pb.Docker.Containers); i++ {
+        err := <- errChan
+        errors[i] = err
+    }
+    return errors
 }
 
-func (pb *ProxyBackend) StopAndRemoveContainers() error {
+func (pb *ProxyBackend) InspectDockerContainer(containerConfig ProxyBackendDockerContainerConfig) (*dockerclient.Container, error) {
+    client, err := dockerclient.NewClient(containerConfig.Host)
+    if err != nil { return nil, err }
+
+    return client.InspectContainer(containerConfig.Id)
+}
+
+func (pb *ProxyBackend) StartDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
+    client, err := dockerclient.NewClient(containerConfig.Host)
+    if err != nil { return err }
+
+    err = client.StartContainer(containerConfig.Id, pb.StartContainerOptions(containerConfig.Ports))
+    return err
+}
+
+func (pb *ProxyBackend) StopAndRemoveDockerContainers() error {
     for _, containerConfig := range pb.Docker.Containers {
         client, err := dockerclient.NewClient(containerConfig.Host)
         if err != nil { return err }
@@ -231,6 +252,17 @@ func (pb *ProxyBackend) StopAndRemoveContainers() error {
         client.RemoveContainer(dockerclient.RemoveContainerOptions{ID: containerConfig.Id})
     }
     return nil
+}
+
+func (pb *ProxyBackend) StopAndRemoveDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
+    client, err := dockerclient.NewClient(containerConfig.Host)
+    if err != nil { return err }
+
+    err = client.StopContainer(containerConfig.Id, DOCKER_TIMEOUT)
+    if err != nil { return err }
+
+    err = client.RemoveContainer(dockerclient.RemoveContainerOptions{ID: containerConfig.Id})
+    return err
 }
 
 func (pb *ProxyBackend) StopDockerContainers() error {
@@ -243,6 +275,13 @@ func (pb *ProxyBackend) StopDockerContainers() error {
     return nil
 }
 
+func (pb *ProxyBackend) StopDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
+    client, err := dockerclient.NewClient(containerConfig.Host)
+    if err != nil { return err }
+
+    return client.StopContainer(containerConfig.Id, DOCKER_TIMEOUT)
+}
+
 func (pb *ProxyBackend) RestartDockerContainers() error {
     for _, containerConfig := range pb.Docker.Containers {
         client, err := dockerclient.NewClient(containerConfig.Host)
@@ -251,6 +290,13 @@ func (pb *ProxyBackend) RestartDockerContainers() error {
         return client.RestartContainer(containerConfig.Id, DOCKER_TIMEOUT)
     }
     return nil
+}
+
+func (pb *ProxyBackend) RestartDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
+    client, err := dockerclient.NewClient(containerConfig.Host)
+    if err != nil { return err }
+
+    return client.RestartContainer(containerConfig.Id, DOCKER_TIMEOUT)
 }
 
 // func (pb *ProxyBackend) WatchDockerContainer() error {}

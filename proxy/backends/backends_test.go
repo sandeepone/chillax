@@ -153,7 +153,7 @@ func TestCreateDockerContainers(t *testing.T) {
     }
 }
 
-func TestStartStopRestartAndRemoveDockerContainers(t *testing.T) {
+func TestStartStopRestartAndRemoveOneDockerContainer(t *testing.T) {
     backend := NewDockerProxyBackendForTest()
 
     err := backend.CreateDockerContainers()
@@ -162,23 +162,59 @@ func TestStartStopRestartAndRemoveDockerContainers(t *testing.T) {
         t.Errorf("Failed to create Docker containers. Error: %v", err)
     }
 
-    err = backend.StartDockerContainers()
+    container1 := backend.Docker.Containers[0]
+    container2 := backend.Docker.Containers[1]
+
+    err = backend.StartDockerContainer(container1)
 
     if err != nil {
-        t.Errorf("Failed to start Docker containers. Error: %v", err)
+        t.Errorf("Failed to start Docker container. Error: %v", err)
     }
 
-    err = backend.StopDockerContainers()
+    err = backend.StopDockerContainer(container1)
 
     if err != nil {
-        t.Errorf("Failed to stop Docker containers. Error: %v", err)
+        t.Errorf("Failed to stop Docker container. Error: %v", err)
     }
 
-    err = backend.RestartDockerContainers()
+    err = backend.RestartDockerContainer(container1)
 
     if err != nil {
-        t.Errorf("Failed to restart Docker containers. Error: %v", err)
+        t.Errorf("Failed to restart Docker container. Error: %v", err)
     }
 
-    backend.StopAndRemoveContainers()
+    backend.StopAndRemoveDockerContainer(container1)
+    backend.StopAndRemoveDockerContainer(container2)
+}
+
+func TestStartMultipleDockerContainers(t *testing.T) {
+    backend := NewDockerProxyBackendForTest()
+
+    backend.CreateDockerContainers()
+
+    errs := backend.StartDockerContainers()
+
+    if errs[0] != nil || errs[1] != nil {
+        t.Errorf("Failed to start Docker containers. Errors: %v", errs)
+    }
+
+    container1 := backend.Docker.Containers[0]
+    container2 := backend.Docker.Containers[1]
+
+    containerJson1, err := backend.InspectDockerContainer(container1)
+    containerJson2, err := backend.InspectDockerContainer(container2)
+
+    if err != nil {
+        t.Errorf("Failed to inspect Docker container. JSON: %v, Error: %v", containerJson1, err)
+    }
+
+    if (containerJson1.ID != container1.Id) || (containerJson2.ID != container2.Id) {
+        t.Errorf("ID must match between container JSON and containerConfig")
+    }
+
+    if (!containerJson1.State.Running) || (!containerJson2.State.Running) {
+        t.Errorf("Container JSON must indicate state: Running")
+    }
+
+    backend.StopAndRemoveDockerContainers()
 }
