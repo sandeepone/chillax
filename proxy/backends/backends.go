@@ -243,6 +243,14 @@ func (pb *ProxyBackend) StopDockerContainers() error {
     return nil
 }
 
-// func (pb *ProxyBackend) RestartDockerContainer() (error) {}
+func (pb *ProxyBackend) RestartDockerContainers() error {
+    for _, containerConfig := range pb.Docker.Containers {
+        client, err := dockerclient.NewClient(containerConfig.Host)
+        if err != nil { return err }
 
-// func (pb *ProxyBackend) WatchDockerContainer() (error) {}
+        return client.RestartContainer(containerConfig.Id, DOCKER_TIMEOUT)
+    }
+    return nil
+}
+
+// func (pb *ProxyBackend) WatchDockerContainer() error {}

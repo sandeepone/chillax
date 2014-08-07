@@ -153,7 +153,7 @@ func TestCreateDockerContainers(t *testing.T) {
     }
 }
 
-func TestStartDockerContainers(t *testing.T) {
+func TestStartStopRestartAndRemoveDockerContainers(t *testing.T) {
     backend := NewDockerProxyBackendForTest()
 
     err := backend.CreateDockerContainers()
@@ -166,6 +166,18 @@ func TestStartDockerContainers(t *testing.T) {
 
     if err != nil {
         t.Errorf("Failed to start Docker containers. Error: %v", err)
+    }
+
+    err = backend.StopDockerContainers()
+
+    if err != nil {
+        t.Errorf("Failed to stop Docker containers. Error: %v", err)
+    }
+
+    err = backend.RestartDockerContainers()
+
+    if err != nil {
+        t.Errorf("Failed to restart Docker containers. Error: %v", err)
     }
 
     backend.StopAndRemoveContainers()
