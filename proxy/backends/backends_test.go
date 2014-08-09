@@ -218,3 +218,34 @@ func TestStartMultipleDockerContainers(t *testing.T) {
 
     backend.StopAndRemoveDockerContainers()
 }
+
+func TestInspectAndRestartDockerContainer(t *testing.T) {
+    backend := NewDockerProxyBackendForTest()
+
+    err := backend.CreateDockerContainers()
+
+    if err != nil {
+        t.Errorf("Failed to create Docker containers. Error: %v", err)
+    }
+
+    container1 := backend.Docker.Containers[0]
+
+    containerJson, err := backend.InspectDockerContainer(container1)
+    if containerJson.State.Running {
+        t.Errorf("Container1 should not be running")
+    }
+
+    err = backend.InspectAndStartDockerContainer(container1)
+    if err != nil {
+        t.Errorf("Failed to inspect and restart Docker container. Error: %v", err)
+    }
+
+    containerJson, err = backend.InspectDockerContainer(container1)
+    if !containerJson.State.Running {
+        t.Errorf("Container1 should be running")
+    }
+
+    backend.StopAndRemoveDockerContainers()
+}
+
+

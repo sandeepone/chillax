@@ -299,4 +299,12 @@ func (pb *ProxyBackend) RestartDockerContainer(containerConfig ProxyBackendDocke
     return client.RestartContainer(containerConfig.Id, DOCKER_TIMEOUT)
 }
 
+func (pb *ProxyBackend) InspectAndStartDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
+    jsonData, err := pb.InspectDockerContainer(containerConfig)
+    if err == nil && !jsonData.State.Running {
+        err = pb.StartDockerContainer(containerConfig)
+    }
+    return err
+}
+
 // func (pb *ProxyBackend) WatchDockerContainer() error {}
