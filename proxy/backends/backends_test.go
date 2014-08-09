@@ -25,6 +25,9 @@ func TestDeserializeFromToml(t *testing.T) {
     if backend.Command != "" {
         t.Errorf("backend.Command should not exists. Backend: %s", backend)
     }
+    if backend.Numprocs != 2 {
+        t.Errorf("backend.Numprocs should == 2. Backend: %s", backend)
+    }
     if backend.Delay != "1m" {
         t.Errorf("backend.Command should == 1m. Backend: %s", backend)
     }
@@ -37,9 +40,6 @@ func TestDeserializeFromToml(t *testing.T) {
     }
     if backend.Docker.Env[0] != "HTTP_PORT=8080" {
         t.Errorf("backend.Docker.Env[0] should == HTTP_PORT=8080. Backend.Docker.Env: %s", backend.Docker.Env)
-    }
-    if backend.Docker.Numprocs != 2 {
-        t.Errorf("backend.Docker.Numprocs should == 2. Backend.Docker: %s", backend.Docker)
     }
     if backend.Docker.Hosts[0] != "tcp://127.0.0.1:2375" {
         t.Errorf("backend.Docker.Hosts[0] should == tcp://127.0.0.1:2375. Backend.Docker.Hosts: %s", backend.Docker.Hosts)

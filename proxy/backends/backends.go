@@ -15,6 +15,8 @@ const DOCKER_TIMEOUT = uint(5)
 
 func NewProxyBackend(tomlBytes []byte) *ProxyBackend {
     backend := &ProxyBackend{}
+    backend.Numprocs = 1
+
     storage := chillax_storage.NewStorage()
 
     toml.Decode(string(tomlBytes), backend)
@@ -25,17 +27,17 @@ func NewProxyBackend(tomlBytes []byte) *ProxyBackend {
 
 type ProxyBackend struct {
     Storage chillax_storage.Storer
-    Path    string
-    Command string
-    Delay   string
-    Ping    string
-    Docker  *ProxyBackendDockerConfig
+    Path     string
+    Command  string
+    Numprocs int
+    Delay    string
+    Ping     string
+    Docker   *ProxyBackendDockerConfig
 }
 
 type ProxyBackendDockerConfig struct {
     Tag        string
     Env        []string
-    Numprocs   int
     Hosts      []string
     Ports      []string
     Containers []ProxyBackendDockerContainerConfig
@@ -94,8 +96,6 @@ func (pb *ProxyBackend) NewDockerClients() map[string]*dockerclient.Client {
 
 // // protocol can be: TCP or HTTP
 // func (pb *ProxyBackend) Ping(protocol string) (bool) {}
-
-// func (pb *ProxyBackend) PingDocker() (bool) {}
 
 
 // func (pb *ProxyBackend) Start() (error) {}
@@ -174,11 +174,11 @@ func (pb *ProxyBackend) CreateDockerContainers() error {
     numDockers := len(pb.Docker.Hosts)
     if numDockers < 1 { return nil }
 
-    pb.Docker.Containers = make([]ProxyBackendDockerContainerConfig, pb.Docker.Numprocs)
+    pb.Docker.Containers = make([]ProxyBackendDockerContainerConfig, pb.Numprocs)
 
     dockerClients := pb.NewDockerClients()
 
-    for i := 0; i < pb.Docker.Numprocs; i++ {
+    for i := 0; i < pb.Numprocs; i++ {
         dockerHostsIndex := i
 
         if i >= numDockers {
