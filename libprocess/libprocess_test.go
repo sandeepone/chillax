@@ -41,7 +41,7 @@ func TestToJson(t *testing.T) {
     }
 }
 
-func TestProcessStartStop(t *testing.T) {
+func TestProcessStartRestartStop(t *testing.T) {
     p := NewProcessWrapperForTest()
 
     err := p.Start()
@@ -56,6 +56,14 @@ func TestProcessStartStop(t *testing.T) {
     }
     if p.Pid != p.Handler.Pid {
         t.Errorf("ProcessWrapper PID should == Process PID")
+    }
+
+    err = p.Restart()
+    if err != nil {
+        t.Errorf("Unable to restart process")
+    }
+    if p.Status != "restarted" {
+        t.Errorf("process status is set incorrectly")
     }
 
     err = p.Stop()
