@@ -2,7 +2,6 @@ package libprocess
 
 import (
     "encoding/json"
-    "log"
     "os"
     "syscall"
     "time"
@@ -11,36 +10,37 @@ import (
 const DEFAULT_PING = "1m"
 
 type ProcessWrapper struct {
-    Name     string
-    Command  string
-    Args     []string
-    Path     string
-    Respawn  int
-    Delay    string
-    Ping     string
-    Pid      int
-    Status   string
-    Handler  *os.Process
-    Respawns int
+    Name           string
+    Path           string
+    Command        string
+    Args           []string
+    Delay          string
+    Ping           string
+    Pid            int
+    Status         string
+    Handler        *os.Process
+    Respawn        int
+    RespawnCounter int
 }
 
-func (p *ProcessWrapper) ToJson() string {
-    js, err := json.Marshal(p)
-    if err != nil {
-        log.Print(err)
-        return ""
-    }
-    return string(js)
+func (p *ProcessWrapper) ToJson() ([]byte, error) {
+    return json.Marshal(p)
+}
+
+func (p *ProcessWrapper) SetDefaults() {
+    p.Ping    = DEFAULT_PING
+    p.Pid     = -1
+    p.Respawn = -1
 }
 
 func (p *ProcessWrapper) StartAndWatch() {
     go func() {
         p.Start()
 
-        p.DoPing(DEFAULT_PING, func(time time.Duration, p *ProcessWrapper) {
+        p.DoPing(func(time time.Duration, p *ProcessWrapper) {
             if p.Pid > 0 {
-                p.Respawns = 0
-                p.Status   = "running"
+                p.RespawnCounter = 0
+                p.Status = "running"
             }
         })
 
@@ -88,34 +88,43 @@ func (p *ProcessWrapper) Release(status string) {
     if p.Handler != nil {
         p.Handler.Release()
     }
-    p.Pid = 0
+    p.Pid = -1
     p.Status = status
+}
+
+func (p *ProcessWrapper) RestartAndWatch() error {
+    err := p.Stop()
+    if err != nil { return err }
+
+    p.StartAndWatch()
+    p.Status = "restarted"
+
+    return nil
 }
 
 //Restart the process
 func (p *ProcessWrapper) Restart() error {
     err := p.Stop()
-    p.StartAndWatch()
-    p.Status = "restarted"
+    if err != nil { return err }
 
-    return err
+    err = p.Start()
+    if err != nil { return err }
+
+    p.Status = "restarted"
+    return nil
 }
 
-//Run callback on the process after given duration.
-func (p *ProcessWrapper) DoPing(duration string, f func(t time.Duration, p *ProcessWrapper)) {
-    if p.Ping != "" {
-        duration = p.Ping
+//Run callback on the process after *ProcessWrapper.Ping duration.
+func (p *ProcessWrapper) DoPing(f func(t time.Duration, p *ProcessWrapper)) {
+    t, err := time.ParseDuration(p.Ping)
+    if err == nil {
+        go func() {
+            select {
+            case <-time.After(t):
+                f(t, p)
+            }
+        }()
     }
-    t, err := time.ParseDuration(duration)
-    if err != nil {
-        t, err = time.ParseDuration(DEFAULT_PING)
-    }
-    go func() {
-        select {
-        case <-time.After(t):
-            f(t, p)
-        }
-    }()
 }
 
 //Watch the process
@@ -140,9 +149,9 @@ func (p *ProcessWrapper) Watch() {
     case <-procStateChan:
         if p.Status == "stopped" { return }
 
-        p.Respawns++
+        p.RespawnCounter++
 
-        if p.Respawns > p.Respawn {
+        if p.RespawnCounter > p.Respawn {
             p.Release("exited")
             return
         }

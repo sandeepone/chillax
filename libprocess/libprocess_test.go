@@ -22,11 +22,11 @@ func TestToJson(t *testing.T) {
         t.Errorf("Unable to start process")
     }
 
-    inJson := p.ToJson()
+    inJson, _ := p.ToJson()
 
     var deserializedData map[string]interface{}
 
-    err = json.Unmarshal([]byte(inJson), &deserializedData)
+    err = json.Unmarshal(inJson, &deserializedData)
     if err != nil {
         t.Errorf("Unable to deserialize JSON. Error: %v", err)
     }
