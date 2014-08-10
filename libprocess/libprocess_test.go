@@ -6,12 +6,13 @@ import (
 )
 
 func NewProcessWrapperForTest() *ProcessWrapper {
-    return &ProcessWrapper{
+    p := &ProcessWrapper{
         Name:    "bash",
         Command: "/bin/bash",
         Args:    []string{"foo", "bar"},
-        Respawn: 3,
     }
+    p.SetDefaults()
+    return p
 }
 
 func TestToJson(t *testing.T) {

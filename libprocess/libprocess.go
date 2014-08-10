@@ -7,14 +7,13 @@ import (
     "time"
 )
 
-const DEFAULT_PING = "1m"
-
 type ProcessWrapper struct {
     Name           string
     Path           string
     Command        string
     Args           []string
-    Delay          string
+    StopDelay      string
+    StartDelay     string
     Ping           string
     Pid            int
     Status         string
@@ -28,9 +27,11 @@ func (p *ProcessWrapper) ToJson() ([]byte, error) {
 }
 
 func (p *ProcessWrapper) SetDefaults() {
-    p.Ping    = DEFAULT_PING
-    p.Pid     = -1
-    p.Respawn = -1
+    p.Ping       = "30s"
+    p.StopDelay  = "0s"
+    p.StartDelay = "0s"
+    p.Pid        = -1
+    p.Respawn    = -1
 }
 
 func (p *ProcessWrapper) StartAndWatch() {
@@ -52,6 +53,11 @@ func (p *ProcessWrapper) StartAndWatch() {
 func (p *ProcessWrapper) Start() error {
     wd, err := os.Getwd()
     if err != nil { return err }
+
+    delayTime, err := time.ParseDuration(p.StartDelay)
+    if err != nil { return err }
+
+    time.Sleep(delayTime)
 
     procAttr := &os.ProcAttr{
         Dir: wd,
@@ -76,7 +82,12 @@ func (p *ProcessWrapper) Start() error {
 // Stop process and all its children
 func (p *ProcessWrapper) Stop() error {
     if p.Handler != nil {
-        err := p.Handler.Signal(syscall.SIGINT)
+        delayTime, err := time.ParseDuration(p.StopDelay)
+        if err != nil { return err }
+
+        time.Sleep(delayTime)
+
+        err = p.Handler.Signal(syscall.SIGINT)
         if err != nil { return err }
     }
     p.Release("stopped")
@@ -102,7 +113,8 @@ func (p *ProcessWrapper) RestartAndWatch() error {
     return nil
 }
 
-//Restart the process
+// Restart process
+// Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
 func (p *ProcessWrapper) Restart() error {
     err := p.Stop()
     if err != nil { return err }
@@ -127,12 +139,13 @@ func (p *ProcessWrapper) DoPing(f func(t time.Duration, p *ProcessWrapper)) {
     }
 }
 
-//Watch the process
+// Watch the process changes and restart if necessary
 func (p *ProcessWrapper) Watch() {
     if p.Handler == nil {
         p.Release("stopped")
         return
     }
+
     procStateChan := make(chan *os.ProcessState)
     diedChan      := make(chan error)
 
@@ -151,16 +164,13 @@ func (p *ProcessWrapper) Watch() {
 
         p.RespawnCounter++
 
-        if p.RespawnCounter > p.Respawn {
+        if (p.Respawn != -1) && p.RespawnCounter > p.Respawn {
             p.Release("exited")
             return
         }
 
-        if p.Delay != "" {
-            t, _ := time.ParseDuration(p.Delay)
-            time.Sleep(t)
-        }
-        p.Restart()
+        p.RestartAndWatch()
+
     case <-diedChan:
         p.Release("killed")
     }
