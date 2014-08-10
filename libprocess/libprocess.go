@@ -2,7 +2,6 @@ package libprocess
 
 import (
     "encoding/json"
-    "fmt"
     "log"
     "os"
     "syscall"
@@ -25,8 +24,16 @@ type ProcessWrapper struct {
     Respawns int
 }
 
-func (p *ProcessWrapper) RunAndWatch() chan *ProcessWrapper {
-    ch := make(chan *ProcessWrapper)
+func (p *ProcessWrapper) ToJson() string {
+    js, err := json.Marshal(p)
+    if err != nil {
+        log.Print(err)
+        return ""
+    }
+    return string(js)
+}
+
+func (p *ProcessWrapper) StartAndWatch() {
     go func() {
         p.Start()
 
@@ -34,24 +41,11 @@ func (p *ProcessWrapper) RunAndWatch() chan *ProcessWrapper {
             if p.Pid > 0 {
                 p.Respawns = 0
                 p.Status   = "running"
-
-                fmt.Printf("%s refreshed after %s.\n", p.Name, time)
             }
         })
 
         go p.Watch()
-        ch <- p
     }()
-    return ch
-}
-
-func (p *ProcessWrapper) String() string {
-    js, err := json.Marshal(p)
-    if err != nil {
-        log.Print(err)
-        return ""
-    }
-    return string(js)
 }
 
 // Start process
@@ -99,12 +93,12 @@ func (p *ProcessWrapper) Release(status string) {
 }
 
 //Restart the process
-func (p *ProcessWrapper) Restart() chan *ProcessWrapper {
-    p.Stop()
-    procWrapperChan := p.RunAndWatch()
+func (p *ProcessWrapper) Restart() error {
+    err := p.Stop()
+    p.StartAndWatch()
     p.Status = "restarted"
 
-    return procWrapperChan
+    return err
 }
 
 //Run callback on the process after given duration.
