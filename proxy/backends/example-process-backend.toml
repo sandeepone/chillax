@@ -1,4 +1,5 @@
-path = "/somewhere"
-command = "./example/example-panic"
+path = "/sekai"
+command = "go run ./example-http-daemon.go"
+numprocs = 2
 delay = "1m"
 ping = "30s"
