@@ -147,7 +147,7 @@ func (pb *ProxyBackend) CreateDockerContainerOptions(publiclyAvailablePort int) 
     return containerOpts
 }
 
-func (pb *ProxyBackend) StartContainerOptions(containerPorts []string) *dockerclient.HostConfig {
+func (pb *ProxyBackend) StartDockerContainerOptions(containerPorts []string) *dockerclient.HostConfig {
     config := &dockerclient.HostConfig{}
     config.ContainerIDFile = "/etc/cidfile"
     config.PortBindings    = make(map[dockerclient.Port][]dockerclient.PortBinding)
@@ -238,7 +238,7 @@ func (pb *ProxyBackend) StartDockerContainer(containerConfig ProxyBackendDockerC
     client, err := dockerclient.NewClient(containerConfig.Host)
     if err != nil { return err }
 
-    err = client.StartContainer(containerConfig.Id, pb.StartContainerOptions(containerConfig.Ports))
+    err = client.StartContainer(containerConfig.Id, pb.StartDockerContainerOptions(containerConfig.Ports))
     return err
 }
 
