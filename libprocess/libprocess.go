@@ -23,15 +23,12 @@ type ProcessWrapper struct {
     Status   string
     Handler  *os.Process
     Respawns int
-    Children ProcessWrapperChildren
 }
 
-func (p *ProcessWrapper) RunAndWatch(name string) chan *ProcessWrapper {
+func (p *ProcessWrapper) RunAndWatch() chan *ProcessWrapper {
     ch := make(chan *ProcessWrapper)
     go func() {
-        if name == "" { name = p.Name }
-
-        p.Start(name)
+        p.Start()
 
         p.DoPing(DEFAULT_PING, func(time time.Duration, p *ProcessWrapper) {
             if p.Pid > 0 {
@@ -57,8 +54,8 @@ func (p *ProcessWrapper) String() string {
     return string(js)
 }
 
-// Start process by name
-func (p *ProcessWrapper) Start(name string) error {
+// Start process
+func (p *ProcessWrapper) Start() error {
     wd, err := os.Getwd()
     if err != nil { return err }
 
@@ -72,10 +69,9 @@ func (p *ProcessWrapper) Start(name string) error {
         },
     }
 
-    args := append([]string{name}, p.Args...)
+    args := append([]string{p.Name}, p.Args...)
     process, err := os.StartProcess(p.Command, args, procAttr)
 
-    p.Name    = name
     p.Handler = process
     p.Pid     = process.Pid
     p.Status  = "started"
@@ -86,8 +82,6 @@ func (p *ProcessWrapper) Start(name string) error {
 // Stop process and all its children
 func (p *ProcessWrapper) Stop() error {
     if p.Handler != nil {
-        p.Children.Stop("all")
-
         err := p.Handler.Signal(syscall.SIGINT)
         if err != nil { return err }
     }
@@ -107,7 +101,7 @@ func (p *ProcessWrapper) Release(status string) {
 //Restart the process
 func (p *ProcessWrapper) Restart() chan *ProcessWrapper {
     p.Stop()
-    procWrapperChan := p.RunAndWatch("")
+    procWrapperChan := p.RunAndWatch()
     p.Status = "restarted"
 
     return procWrapperChan
@@ -167,51 +161,4 @@ func (p *ProcessWrapper) Watch() {
     case <-diedChan:
         p.Release("killed")
     }
-}
-
-//Run child processes
-func (p *ProcessWrapper) Run() {
-    for name, p := range p.Children {
-        p.RunAndWatch(name)
-    }
-}
-
-//Child processes.
-type ProcessWrapperChildren map[string]*ProcessWrapper
-
-//Stringify
-func (c ProcessWrapperChildren) String() string {
-    js, err := json.Marshal(c)
-    if err != nil { return "" }
-    return string(js)
-}
-
-//Get child processes names.
-func (c ProcessWrapperChildren) Keys() []string {
-    keys := []string{}
-    for k, _ := range c {
-        keys = append(keys, k)
-    }
-    return keys
-}
-
-//Get child process.
-func (c ProcessWrapperChildren) Get(key string) *ProcessWrapper {
-    if v, ok := c[key]; ok {
-        return v
-    }
-    return nil
-}
-
-func (c ProcessWrapperChildren) Stop(name string) {
-    if name == "all" {
-        for name, p := range c {
-            p.Stop()
-            delete(c, name)
-        }
-        return
-    }
-    p := c.Get(name)
-    p.Stop()
-    delete(c, name)
 }
