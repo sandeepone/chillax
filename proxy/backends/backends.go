@@ -97,10 +97,6 @@ func (pb *ProxyBackend) NewDockerClients() map[string]*dockerclient.Client {
 }
 
 
-// // protocol can be: TCP or HTTP
-// func (pb *ProxyBackend) Ping(protocol string) (bool) {}
-
-
 // func (pb *ProxyBackend) Start() (error) {}
 
 // func (pb *ProxyBackend) Stop() (error) {}
@@ -225,6 +221,20 @@ func (pb *ProxyBackend) StartDockerContainerOptions(containerPorts []string) *do
     return config
 }
 
+func (pb *ProxyBackend) PullDockerImageOptions() *dockerclient.PullImageOptions {
+    tagParts := strings.Split(pb.Docker.Tag, ":")
+
+    options := &dockerclient.PullImageOptions{}
+    options.Repository = tagParts[0]
+    options.Tag        = "latest"
+
+    if len(tagParts) >= 2 {
+        options.Tag = tagParts[1]
+    }
+
+    return options
+}
+
 func (pb *ProxyBackend) CreateDockerContainers() error {
     var err error
 
@@ -255,8 +265,17 @@ func (pb *ProxyBackend) CreateDockerContainers() error {
             pb.Docker.Containers[i].Ports[index] = fmt.Sprintf("%v:%v", publiclyAvailablePort, backendPort)
         }
 
+        dockerClientInstance := dockerClients[pb.Docker.Containers[i].Host]
+
         containerOpts  := pb.CreateDockerContainerOptions(publiclyAvailablePort)
-        container, err := dockerClients[pb.Docker.Containers[i].Host].CreateContainer(*containerOpts)
+        container, err := dockerClientInstance.CreateContainer(*containerOpts)
+
+        if err != nil && err.Error() == "no such image" {
+            err = dockerClientInstance.PullImage(
+                *pb.PullDockerImageOptions(),
+                dockerclient.AuthConfiguration{},
+            )
+        }
         if err != nil { return err }
 
         pb.Docker.Containers[i].Id = container.ID
