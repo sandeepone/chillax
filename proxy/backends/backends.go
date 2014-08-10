@@ -4,9 +4,11 @@ import (
     "fmt"
     "bytes"
     "strings"
+    "errors"
     "github.com/BurntSushi/toml"
-    dockerclient "github.com/fsouza/go-dockerclient"
     "github.com/didip/chillax/libstring"
+    "github.com/didip/chillax/libprocess"
+    dockerclient "github.com/fsouza/go-dockerclient"
     chillax_storage "github.com/didip/chillax/storage"
     chillax_dockerinventory "github.com/didip/chillax/dockerinventory"
 )
@@ -26,13 +28,14 @@ func NewProxyBackend(tomlBytes []byte) *ProxyBackend {
 }
 
 type ProxyBackend struct {
-    Storage chillax_storage.Storer
-    Path     string
-    Command  string
-    Numprocs int
-    Delay    string
-    Ping     string
-    Docker   *ProxyBackendDockerConfig
+    Path            string
+    Command         string
+    Numprocs        int
+    Delay           string
+    Ping            string
+    Storage         chillax_storage.Storer
+    ProcessWrappers []*libprocess.ProcessWrapper
+    Docker          *ProxyBackendDockerConfig
 }
 
 type ProxyBackendDockerConfig struct {
@@ -106,16 +109,70 @@ func (pb *ProxyBackend) NewDockerClients() map[string]*dockerclient.Client {
 
 // func (pb *ProxyBackend) Watch() (error) {}
 
-// //
-// // Regular process
-// //
-// func (pb *ProxyBackend) StartProcess() (error) {}
+//
+// Regular process
+//
+func (pb *ProxyBackend) NewProcessWrapper() *libprocess.ProcessWrapper {
+    pw := &libprocess.ProcessWrapper{
+        Name:    pb.ProxyName(),
+        Path:    pb.Path,
+        Command: pb.Command,
+    }
+    pw.SetDefaults()
+    return pw
+}
 
-// func (pb *ProxyBackend) StopProcess() (error) {}
+func (pb *ProxyBackend) StartProcesses() {
+    for i := 0; i < pb.Numprocs; i++ {
+        go func() {
+            pb.ProcessWrappers[i] = pb.NewProcessWrapper()
+            pb.ProcessWrappers[i].StartAndWatch()
+        }()
+    }
+}
 
-// func (pb *ProxyBackend) RestartProcess() (error) {}
+func (pb *ProxyBackend) StopProcesses() []error {
+    errChan    := make(chan error, pb.Numprocs)
+    errorSlice := make([]error, pb.Numprocs)
 
-// func (pb *ProxyBackend) WatchProcess() (error) {}
+    for i := 0; i < pb.Numprocs; i++ {
+        go func() {
+            if pb.ProcessWrappers[i] == nil {
+                errChan <- errors.New("Process has not been started.")
+            } else {
+                errChan <- pb.ProcessWrappers[i].Stop()
+            }
+        }()
+    }
+
+    for i := 0; i < pb.Numprocs; i++ {
+        err := <- errChan
+        errorSlice[i] = err
+    }
+    return errorSlice
+}
+
+func (pb *ProxyBackend) RestartProcesses() []error {
+    errChan    := make(chan error, pb.Numprocs)
+    errorSlice := make([]error, pb.Numprocs)
+
+    for i := 0; i < pb.Numprocs; i++ {
+        go func() {
+            if pb.ProcessWrappers[i] == nil {
+                errChan <- errors.New("Process has not been started.")
+            } else {
+                errChan <- pb.ProcessWrappers[i].RestartAndWatch()
+            }
+        }()
+    }
+
+    for i := 0; i < pb.Numprocs; i++ {
+        err := <- errChan
+        errorSlice[i] = err
+    }
+    return errorSlice
+}
+
 
 //
 // Docker container

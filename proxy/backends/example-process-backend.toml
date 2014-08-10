@@ -1,5 +1,5 @@
-path = "/sekai"
-command = "go run ./example-http-daemon.go"
+path = "/hello/world"
+command = "python -m SimpleHTTPServer"
 numprocs = 2
 delay = "1m"
 ping = "30s"
