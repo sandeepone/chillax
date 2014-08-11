@@ -276,26 +276,30 @@ func (pb *ProxyBackend) StartDockerContainerOptions(containerPorts []string) *do
     return config
 }
 
-func (pb *ProxyBackend) PullDockerImageOptions() *dockerclient.PullImageOptions {
-    tagParts := strings.Split(pb.Docker.Tag, ":")
-
-    options := &dockerclient.PullImageOptions{}
-    options.Repository = tagParts[0]
-    options.Tag        = "latest"
-
-    if len(tagParts) >= 2 {
-        options.Tag = tagParts[1]
-    }
-
-    return options
-}
-
 func (pb *ProxyBackend) PullDockerImage(dockerHost string) error {
     client, err := dockerclient.NewClient(dockerHost)
     if err != nil { return err }
 
+    apiImages, err := client.ListImages(false)
+
+    for _, apiImage := range apiImages {
+        for _, remoteRepository := range apiImage.RepoTags {
+            if remoteRepository == pb.Docker.Tag {
+                return nil
+            }
+        }
+    }
+
+    tagParts   := strings.Split(pb.Docker.Tag, ":")
+    repository := tagParts[0]
+    tag        := "latest"
+
+    if len(tagParts) >= 2 {
+        tag = tagParts[1]
+    }
+
     return client.PullImage(
-        *pb.PullDockerImageOptions(),
+        dockerclient.PullImageOptions{Repository: repository, Tag: tag},
         dockerclient.AuthConfiguration{},
     )
 }
