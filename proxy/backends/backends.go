@@ -107,7 +107,7 @@ func (pb *ProxyBackend) NewDockerClients() map[string]*dockerclient.Client {
 // func (pb *ProxyBackend) Watch() (error) {}
 
 //
-// Regular process
+// Regular processes
 //
 func (pb *ProxyBackend) NewProcessWrapper() *libprocess.ProcessWrapper {
     pw := &libprocess.ProcessWrapper{
@@ -172,17 +172,8 @@ func (pb *ProxyBackend) RestartProcesses() []error {
 
 
 //
-// Docker container
+// Docker containers
 //
-func (pb *ProxyBackend) ContainerIds() []string {
-    ids := make([]string, len(pb.Docker.Containers))
-
-    for index, containerConfig := range pb.Docker.Containers {
-        ids[index] = containerConfig.Id
-    }
-    return ids
-}
-
 func (pb *ProxyBackend) CreateDockerContainerOptions(publiclyAvailablePort int) *dockerclient.CreateContainerOptions {
     containerOpts := &dockerclient.CreateContainerOptions{}
     containerOpts.Name = fmt.Sprintf("%v-%v", pb.ProxyName(), publiclyAvailablePort)
@@ -236,6 +227,16 @@ func (pb *ProxyBackend) PullDockerImageOptions() *dockerclient.PullImageOptions 
     return options
 }
 
+func (pb *ProxyBackend) PullDockerImage(dockerHost string) error {
+    client, err := dockerclient.NewClient(dockerHost)
+    if err != nil { return err }
+
+    return client.PullImage(
+        *pb.PullDockerImageOptions(),
+        dockerclient.AuthConfiguration{},
+    )
+}
+
 func (pb *ProxyBackend) CreateDockerContainers() error {
     var err error
 
@@ -252,6 +253,10 @@ func (pb *ProxyBackend) CreateDockerContainers() error {
         }
 
         dockerHost := pb.Docker.Hosts[dockerHostsIndex]
+
+        // Pull docker image first.
+        err = pb.PullDockerImage(dockerHost)
+        if err != nil { return err }
 
         containerConfig, err := pb.CreateDockerContainer(dockerHost)
         if err != nil { return err }
@@ -279,13 +284,6 @@ func (pb *ProxyBackend) CreateDockerContainer(dockerHost string) (ProxyBackendDo
     }
 
     client, err := dockerclient.NewClient(containerConfig.Host)
-    if err != nil { return containerConfig, err }
-
-    // Pull docker image first.
-    err = client.PullImage(
-        *pb.PullDockerImageOptions(),
-        dockerclient.AuthConfiguration{},
-    )
     if err != nil { return containerConfig, err }
 
     containerOpts  := pb.CreateDockerContainerOptions(publiclyAvailablePort)

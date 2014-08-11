@@ -6,7 +6,6 @@ import (
     "testing"
     "io/ioutil"
     "github.com/didip/chillax/libtime"
-    dockerclient "github.com/fsouza/go-dockerclient"
 )
 
 func TestIsDocker(t *testing.T) {
@@ -23,17 +22,6 @@ func TestIsDocker(t *testing.T) {
 
     if backend2.IsDocker() {
         t.Errorf("Backend2 must not be docker")
-    }
-}
-
-func TestContainerIds(t *testing.T) {
-    backend := NewDockerProxyBackendForTest()
-
-    if backend.ContainerIds()[0] != "abc123" {
-        t.Errorf("backend.ContainerIds[0] should == abc123")
-    }
-    if backend.ContainerIds()[1] != "abc12456" {
-        t.Errorf("backend.ContainerIds[1] should == abc12456")
     }
 }
 
@@ -59,11 +47,7 @@ func TestCreateDockerContainers(t *testing.T) {
         t.Errorf("Failed to create Docker containers. Error: %v", err)
     }
 
-    dockerHost := backend.Docker.Hosts[0]
-
-    for _, containerId := range backend.ContainerIds() {
-        backend.NewDockerClients()[dockerHost].RemoveContainer(dockerclient.RemoveContainerOptions{ID: containerId})
-    }
+    backend.StopAndRemoveDockerContainers()
 }
 
 func TestStartStopRestartAndRemoveOneDockerContainer(t *testing.T) {
