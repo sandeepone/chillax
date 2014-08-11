@@ -244,8 +244,6 @@ func (pb *ProxyBackend) CreateDockerContainers() error {
 
     pb.Docker.Containers = make([]ProxyBackendDockerContainerConfig, pb.Numprocs)
 
-    dockerClients := pb.NewDockerClients()
-
     for i := 0; i < pb.Numprocs; i++ {
         dockerHostsIndex := i
 
@@ -253,38 +251,51 @@ func (pb *ProxyBackend) CreateDockerContainers() error {
             dockerHostsIndex = i % numDockers
         }
 
-        pb.Docker.Containers[i] = ProxyBackendDockerContainerConfig{}
+        dockerHost := pb.Docker.Hosts[dockerHostsIndex]
 
-        pb.Docker.Containers[i].Tag   = pb.Docker.Tag
-        pb.Docker.Containers[i].Env   = pb.Docker.Env
-        pb.Docker.Containers[i].Host  = pb.Docker.Hosts[dockerHostsIndex]
-        pb.Docker.Containers[i].Ports = make([]string, len(pb.Docker.Ports))
-
-        publiclyAvailablePort := chillax_dockerinventory.ReservePort(pb.Docker.Containers[i].Host)
-
-        for index, backendPort := range pb.Docker.Ports {
-            pb.Docker.Containers[i].Ports[index] = fmt.Sprintf("%v:%v", publiclyAvailablePort, backendPort)
-        }
-
-        dockerClientInstance := dockerClients[pb.Docker.Containers[i].Host]
-
-        containerOpts  := pb.CreateDockerContainerOptions(publiclyAvailablePort)
-        container, err := dockerClientInstance.CreateContainer(*containerOpts)
-
-        if err != nil && err.Error() == "no such image" {
-            err = dockerClientInstance.PullImage(
-                *pb.PullDockerImageOptions(),
-                dockerclient.AuthConfiguration{},
-            )
-        }
+        containerConfig, err := pb.CreateDockerContainer(dockerHost)
         if err != nil { return err }
 
-        pb.Docker.Containers[i].Id = container.ID
+        pb.Docker.Containers[i] = containerConfig
 
         err = pb.Save()
         if err != nil { return err }
     }
     return err
+}
+
+func (pb *ProxyBackend) CreateDockerContainer(dockerHost string) (ProxyBackendDockerContainerConfig, error) {
+    containerConfig := ProxyBackendDockerContainerConfig{}
+
+    containerConfig.Tag   = pb.Docker.Tag
+    containerConfig.Env   = pb.Docker.Env
+    containerConfig.Host  = dockerHost
+    containerConfig.Ports = make([]string, len(pb.Docker.Ports))
+
+    publiclyAvailablePort := chillax_dockerinventory.ReservePort(containerConfig.Host)
+
+    for index, backendPort := range pb.Docker.Ports {
+        containerConfig.Ports[index] = fmt.Sprintf("%v:%v", publiclyAvailablePort, backendPort)
+    }
+
+    client, err := dockerclient.NewClient(containerConfig.Host)
+    if err != nil { return containerConfig, err }
+
+    // Pull docker image first.
+    err = client.PullImage(
+        *pb.PullDockerImageOptions(),
+        dockerclient.AuthConfiguration{},
+    )
+    if err != nil { return containerConfig, err }
+
+    containerOpts  := pb.CreateDockerContainerOptions(publiclyAvailablePort)
+    container, err := client.CreateContainer(*containerOpts)
+
+    if err != nil { return containerConfig, err }
+
+    containerConfig.Id = container.ID
+
+    return containerConfig, err
 }
 
 func (pb *ProxyBackend) StartDockerContainers() []error {

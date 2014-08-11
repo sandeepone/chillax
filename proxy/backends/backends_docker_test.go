@@ -197,5 +197,7 @@ func TestWatchDockerContainer(t *testing.T) {
     if !containerJson.State.Running {
         t.Errorf("Container1 should still be running. Container state: %v", containerJson.State)
     }
+
+    backend.StopAndRemoveDockerContainers()
 }
 
