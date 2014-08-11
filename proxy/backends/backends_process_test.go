@@ -32,3 +32,15 @@ func TestCreateProcesses(t *testing.T) {
         t.Errorf("Failed to create processes. Error: %v", err)
     }
 }
+
+func TestStartStopProcesses(t *testing.T) {
+    backend := NewProcessProxyBackendForTest()
+    backend.CreateProcesses()
+
+    errors := backend.StartProcesses()
+    for _, err := range errors {
+        if err != nil {
+            t.Errorf("Failed to start process. Error: %v", err)
+        }
+    }
+}
