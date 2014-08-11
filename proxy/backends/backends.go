@@ -34,14 +34,30 @@ type ProxyBackend struct {
     Numprocs        int
     Delay           string
     Ping            string
+    Env             []string
     Storage         chillax_storage.Storer
-    ProcessWrappers []*libprocess.ProcessWrapper
+    Process         *ProxyBackendProcessConfig
     Docker          *ProxyBackendDockerConfig
 }
 
+// Process data structure
+type ProxyBackendProcessConfig struct {
+    HttpPortEnv string `toml:httpportenv`
+    Instances   []ProxyBackendProcessInstanceConfig
+}
+
+type ProxyBackendProcessInstanceConfig struct {
+    Command        string
+    Delay          string
+    Ping           string
+    Env            []string
+    ProcessWrapper *libprocess.ProcessWrapper
+}
+
+
+// Docker data structure
 type ProxyBackendDockerConfig struct {
     Tag        string
-    Env        []string
     Hosts      []string
     Ports      []string
     Containers []ProxyBackendDockerContainerConfig
@@ -119,27 +135,67 @@ func (pb *ProxyBackend) NewProcessWrapper() *libprocess.ProcessWrapper {
     return pw
 }
 
-func (pb *ProxyBackend) StartProcesses() {
+func (pb *ProxyBackend) NewProxyBackendProcessInstanceConfig() ProxyBackendProcessInstanceConfig {
+    pbpi := ProxyBackendProcessInstanceConfig{}
+    pbpi.Command        = pb.Command
+    pbpi.Delay          = pb.Delay
+    pbpi.Ping           = pb.Ping
+    pbpi.Env            = pb.Env
+    pbpi.ProcessWrapper = pb.NewProcessWrapper()
+
+    return pbpi
+}
+
+func (pb *ProxyBackend) CreateProcesses() error {
+    if pb.Process == nil { return nil }
+
     for i := 0; i < pb.Numprocs; i++ {
-        go func() {
-            pb.ProcessWrappers[i] = pb.NewProcessWrapper()
-            pb.ProcessWrappers[i].StartAndWatch()
-        }()
+        pb.Process.Instances[i] = pb.NewProxyBackendProcessInstanceConfig()
+        err := pb.Save()
+        if err != nil { return err }
     }
+    return nil
+}
+
+func (pb *ProxyBackend) StartProcesses() []error {
+    errChan    := make(chan error, pb.Numprocs)
+    errorSlice := make([]error, pb.Numprocs)
+
+    if pb.Process == nil { return errorSlice }
+
+    for i := 0; i < pb.Numprocs; i++ {
+        go func(i int) {
+            pb.Process.Instances[i].ProcessWrapper.StartAndWatch()
+            errChan <- pb.Save()
+        }(i)
+    }
+
+    for i := 0; i < pb.Numprocs; i++ {
+        err := <- errChan
+        errorSlice[i] = err
+    }
+    return errorSlice
 }
 
 func (pb *ProxyBackend) StopProcesses() []error {
     errChan    := make(chan error, pb.Numprocs)
     errorSlice := make([]error, pb.Numprocs)
 
+    if pb.Process == nil { return errorSlice }
+
     for i := 0; i < pb.Numprocs; i++ {
-        go func() {
-            if pb.ProcessWrappers[i] == nil {
+        go func(i int) {
+            if pb.Process.Instances[i].ProcessWrapper == nil {
                 errChan <- errors.New("Process has not been started.")
             } else {
-                errChan <- pb.ProcessWrappers[i].Stop()
+                err := pb.Process.Instances[i].ProcessWrapper.Stop()
+
+                if err == nil {
+                    err = pb.Save()
+                }
+                errChan <- err
             }
-        }()
+        }(i)
     }
 
     for i := 0; i < pb.Numprocs; i++ {
@@ -153,12 +209,19 @@ func (pb *ProxyBackend) RestartProcesses() []error {
     errChan    := make(chan error, pb.Numprocs)
     errorSlice := make([]error, pb.Numprocs)
 
+    if pb.Process == nil { return errorSlice }
+
     for i := 0; i < pb.Numprocs; i++ {
         go func() {
-            if pb.ProcessWrappers[i] == nil {
+            if pb.Process.Instances[i].ProcessWrapper == nil {
                 errChan <- errors.New("Process has not been started.")
             } else {
-                errChan <- pb.ProcessWrappers[i].RestartAndWatch()
+                err := pb.Process.Instances[i].ProcessWrapper.RestartAndWatch()
+
+                if err == nil {
+                    err = pb.Save()
+                }
+                errChan <- err
             }
         }()
     }
@@ -180,7 +243,7 @@ func (pb *ProxyBackend) CreateDockerContainerOptions(publiclyAvailablePort int) 
 
     containerOpts.Config              = &dockerclient.Config{}
     containerOpts.Config.Image        = pb.Docker.Tag
-    containerOpts.Config.Env          = pb.Docker.Env
+    containerOpts.Config.Env          = pb.Env
     containerOpts.Config.AttachStdout = true
     containerOpts.Config.AttachStderr = true
     containerOpts.Config.ExposedPorts = make(map[dockerclient.Port]struct{})
@@ -273,7 +336,7 @@ func (pb *ProxyBackend) CreateDockerContainer(dockerHost string) (ProxyBackendDo
     containerConfig := ProxyBackendDockerContainerConfig{}
 
     containerConfig.Tag   = pb.Docker.Tag
-    containerConfig.Env   = pb.Docker.Env
+    containerConfig.Env   = pb.Env
     containerConfig.Host  = dockerHost
     containerConfig.Ports = make([]string, len(pb.Docker.Ports))
 

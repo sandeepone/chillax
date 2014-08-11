@@ -20,6 +20,15 @@ func TestDeserializeProcessProxyBackendFromToml(t *testing.T) {
     backend := NewProcessProxyBackendForTest()
 
     if backend.Command == "" {
-        t.Errorf("backend.Command should not exists. Backend: %s", backend)
+        t.Errorf("backend.Command should exists. Backend: %v", backend)
+    }
+}
+
+func TestCreateProcesses(t *testing.T) {
+    backend := NewProcessProxyBackendForTest()
+
+    err := backend.CreateProcesses()
+    if err != nil {
+        t.Errorf("Failed to create processes. Error: %v", err)
     }
 }

@@ -37,8 +37,8 @@ func TestDeserializeFromToml(t *testing.T) {
     if backend.Docker.Tag != "didip/go-urldownloader:latest" {
         t.Errorf("backend.Docker.Tag should == didip/go-urldownloader:latest. Backend.Docker: %s", backend.Docker)
     }
-    if backend.Docker.Env[0] != "HTTP_PORT=8080" {
-        t.Errorf("backend.Docker.Env[0] should == HTTP_PORT=8080. Backend.Docker.Env: %s", backend.Docker.Env)
+    if backend.Env[0] != "HTTP_PORT=8080" {
+        t.Errorf("backend.Docker.Env[0] should == HTTP_PORT=8080. Backend.Env: %s", backend.Env)
     }
     if backend.Docker.Hosts[0] != "tcp://127.0.0.1:2375" {
         t.Errorf("backend.Docker.Hosts[0] should == tcp://127.0.0.1:2375. Backend.Docker.Hosts: %s", backend.Docker.Hosts)

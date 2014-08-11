@@ -1,5 +1,35 @@
 path = "/hello/world"
-command = "python -m SimpleHTTPServer"
+command = "python -m SimpleHTTPServer %{HTTP_PORT}"
 numprocs = 2
 delay = "1m"
 ping = "30s"
+env = [
+    "S3_BUCKET=hadou-test-url-downloader",
+    "AWS_ACCESS_KEY_ID=111",
+    "AWS_SECRET_ACCESS_KEY=abc"
+]
+
+[process]
+httpportenv="HTTP_PORT"
+
+    [[process.instances]]
+    command = "python -m SimpleHTTPServer %{HTTP_PORT}"
+    delay = "1m"
+    ping = "30s"
+    env = [
+        "HTTP_PORT=33333",
+        "S3_BUCKET=hadou-test-url-downloader",
+        "AWS_ACCESS_KEY_ID=111",
+        "AWS_SECRET_ACCESS_KEY=abc"
+    ]
+
+    [[process.instances]]
+    command = "python -m SimpleHTTPServer %{HTTP_PORT}"
+    delay = "1m"
+    ping = "30s"
+    env = [
+        "HTTP_PORT=33332",
+        "S3_BUCKET=hadou-test-url-downloader",
+        "AWS_ACCESS_KEY_ID=111",
+        "AWS_SECRET_ACCESS_KEY=abc"
+    ]
