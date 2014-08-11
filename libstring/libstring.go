@@ -26,13 +26,6 @@ func StripProtocol(hostAndPort string) string {
     return parts[len(parts) - 1]
 }
 
-func StripPort(hostAndPort string) string {
-    hostAndPort = StripProtocol(hostAndPort)
-    parts := strings.Split(hostAndPort, ":")
-
-    return parts[0]
-}
-
 func SplitDockerPorts(ports string) (string, string, string) {
     var (
         hostIp string
