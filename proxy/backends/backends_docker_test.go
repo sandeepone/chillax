@@ -163,6 +163,7 @@ func TestInspectAndRestartDockerContainer(t *testing.T) {
 
 func TestWatchDockerContainer(t *testing.T) {
     backend := NewDockerProxyBackendForTest()
+    backend.Ping = "50ms"
 
     err := backend.CreateDockerContainers()
 
@@ -185,13 +186,16 @@ func TestWatchDockerContainer(t *testing.T) {
         t.Errorf("Container1 should be running")
     }
 
-    go backend.StopDockerContainer(container1)
+    err = backend.StopDockerContainer(container1)
+    if err != nil {
+        t.Errorf("Container1 should have been stopped. Error: %v", err)
+    }
 
-    libtime.SleepString("500ms")
+    libtime.SleepString("750ms")
 
     containerJson, err = backend.InspectDockerContainer(container1)
     if !containerJson.State.Running {
-        t.Errorf("Container1 should still be running. JSON: %v", containerJson)
+        t.Errorf("Container1 should still be running. Container state: %v", containerJson.State)
     }
 }
 
