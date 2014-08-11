@@ -388,9 +388,18 @@ func (pb *ProxyBackend) WatchDockerContainer(containerConfig ProxyBackendDockerC
     delayTime, err := time.ParseDuration(pb.Ping)
     if err != nil { return err }
 
+    inspectErrCounter := 0
+
     for {
         err = pb.InspectAndStartDockerContainer(containerConfig)
-        if err != nil { return err }
+
+        if err != nil {
+            if inspectErrCounter > 10 {
+                inspectErrCounter = 0
+                return err
+            }
+            inspectErrCounter++
+        }
 
         time.Sleep(delayTime)
     }

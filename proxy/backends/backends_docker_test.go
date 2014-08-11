@@ -178,11 +178,20 @@ func TestWatchDockerContainer(t *testing.T) {
 
     go backend.WatchDockerContainer(container1)
 
-    libtime.SleepString("1s")
+    libtime.SleepString("500ms")
 
     containerJson, err = backend.InspectDockerContainer(container1)
     if !containerJson.State.Running {
         t.Errorf("Container1 should be running")
+    }
+
+    go backend.StopDockerContainer(container1)
+
+    libtime.SleepString("500ms")
+
+    containerJson, err = backend.InspectDockerContainer(container1)
+    if !containerJson.State.Running {
+        t.Errorf("Container1 should still be running. JSON: %v", containerJson)
     }
 }
 
