@@ -5,6 +5,7 @@ import (
     "os"
     "syscall"
     "time"
+    "github.com/didip/chillax/libtime"
 )
 
 type ProcessWrapper struct {
@@ -54,10 +55,8 @@ func (p *ProcessWrapper) Start() error {
     wd, err := os.Getwd()
     if err != nil { return err }
 
-    delayTime, err := time.ParseDuration(p.StartDelay)
+    err = libtime.SleepString(p.StartDelay)
     if err != nil { return err }
-
-    time.Sleep(delayTime)
 
     procAttr := &os.ProcAttr{
         Dir: wd,
@@ -82,10 +81,8 @@ func (p *ProcessWrapper) Start() error {
 // Stop process and all its children
 func (p *ProcessWrapper) Stop() error {
     if p.Handler != nil {
-        delayTime, err := time.ParseDuration(p.StopDelay)
+        err := libtime.SleepString(p.StopDelay)
         if err != nil { return err }
-
-        time.Sleep(delayTime)
 
         err = p.Handler.Signal(syscall.SIGINT)
         if err != nil { return err }

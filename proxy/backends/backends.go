@@ -2,6 +2,7 @@ package backends
 
 import (
     "fmt"
+    "time"
     "bytes"
     "strings"
     "errors"
@@ -383,4 +384,15 @@ func (pb *ProxyBackend) InspectAndStartDockerContainer(containerConfig ProxyBack
     return err
 }
 
-// func (pb *ProxyBackend) WatchDockerContainer() error {}
+func (pb *ProxyBackend) WatchDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
+    delayTime, err := time.ParseDuration(pb.Ping)
+    if err != nil { return err }
+
+    for {
+        err = pb.InspectAndStartDockerContainer(containerConfig)
+        if err != nil { return err }
+
+        time.Sleep(delayTime)
+    }
+    return nil
+}

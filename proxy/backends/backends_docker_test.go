@@ -5,6 +5,7 @@ import (
     "bufio"
     "testing"
     "io/ioutil"
+    "github.com/didip/chillax/libtime"
     dockerclient "github.com/fsouza/go-dockerclient"
 )
 
@@ -160,4 +161,28 @@ func TestInspectAndRestartDockerContainer(t *testing.T) {
     backend.StopAndRemoveDockerContainers()
 }
 
+func TestWatchDockerContainer(t *testing.T) {
+    backend := NewDockerProxyBackendForTest()
+
+    err := backend.CreateDockerContainers()
+
+    if err != nil {
+        t.Errorf("Failed to create Docker containers. Error: %v", err)
+    }
+
+    container1 := backend.Docker.Containers[0]
+    containerJson, err := backend.InspectDockerContainer(container1)
+    if containerJson.State.Running {
+        t.Errorf("Container1 should not be running")
+    }
+
+    go backend.WatchDockerContainer(container1)
+
+    libtime.SleepString("1s")
+
+    containerJson, err = backend.InspectDockerContainer(container1)
+    if !containerJson.State.Running {
+        t.Errorf("Container1 should be running")
+    }
+}
 
