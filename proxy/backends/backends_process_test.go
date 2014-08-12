@@ -5,6 +5,7 @@ import (
     "bufio"
     "testing"
     "io/ioutil"
+    "github.com/didip/chillax/libtime"
 )
 
 
@@ -37,10 +38,24 @@ func TestStartStopProcesses(t *testing.T) {
     backend := NewProcessProxyBackendForTest()
     backend.CreateProcesses()
 
-    errors := backend.StartProcesses()
-    for _, err := range errors {
-        if err != nil {
-            t.Errorf("Failed to start process. Error: %v", err)
+    go func() {
+        errors := backend.StartProcesses()
+        for _, err := range errors {
+            if err != nil {
+                t.Errorf("Failed to start process. Error: %v", err)
+            }
         }
-    }
+    }()
+
+    libtime.SleepString("5s")
+
+    go func() {
+        errors := backend.StopProcesses()
+        t.Errorf("Failed to stop process. Errors: %v", errors)
+        for _, err := range errors {
+            if err != nil {
+                t.Errorf("Failed to stop process. Error: %v", err)
+            }
+        }
+    }()
 }
