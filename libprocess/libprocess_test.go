@@ -20,7 +20,7 @@ func TestToJson(t *testing.T) {
 
     err := p.Start()
     if err != nil {
-        t.Errorf("Unable to start process")
+        t.Errorf("Unable to start process. Error: %v", err)
     }
 
     inJson, _ := p.ToJson()
@@ -38,7 +38,7 @@ func TestToJson(t *testing.T) {
 
     err = p.Stop()
     if err != nil {
-        t.Errorf("Unable to stop process")
+        t.Errorf("Unable to stop process. Error: %v", err)
     }
 }
 
@@ -47,21 +47,21 @@ func TestProcessStartRestartStop(t *testing.T) {
 
     err := p.Start()
     if err != nil {
-        t.Errorf("Unable to start process")
+        t.Errorf("Unable to start process. Error: %v", err)
     }
     if p.Status != "started" {
         t.Errorf("process status is set incorrectly")
     }
-    if p.Pid <= 0 || p.Handler.Pid <= 0 {
+    if p.Pid <= 0 || p.CmdStruct.Process.Pid <= 0 {
         t.Errorf("Process should start with PID > 0")
     }
-    if p.Pid != p.Handler.Pid {
+    if p.Pid != p.CmdStruct.Process.Pid {
         t.Errorf("ProcessWrapper PID should == Process PID")
     }
 
     err = p.Restart()
     if err != nil {
-        t.Errorf("Unable to restart process")
+        t.Errorf("Unable to restart process. Error: %v", err)
     }
     if p.Status != "restarted" {
         t.Errorf("process status is set incorrectly")
@@ -69,7 +69,7 @@ func TestProcessStartRestartStop(t *testing.T) {
 
     err = p.Stop()
     if err != nil {
-        t.Errorf("Unable to stop process")
+        t.Errorf("Unable to stop process. Error: %v", err)
     }
     if p.Status != "stopped" {
         t.Errorf("process status is set incorrectly")

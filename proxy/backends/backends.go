@@ -1,12 +1,14 @@
 package backends
 
 import (
+    "os"
     "fmt"
     "time"
     "bytes"
     "strings"
     "errors"
     "github.com/BurntSushi/toml"
+    "github.com/didip/chillax/libenv"
     "github.com/didip/chillax/libstring"
     "github.com/didip/chillax/libprocess"
     dockerclient "github.com/fsouza/go-dockerclient"
@@ -125,32 +127,38 @@ func (pb *ProxyBackend) NewDockerClients() map[string]*dockerclient.Client {
 //
 // Regular processes
 //
-func (pb *ProxyBackend) NewProcessWrapper() *libprocess.ProcessWrapper {
+func (pb *ProxyBackend) NewProcessWrapper(command string) *libprocess.ProcessWrapper {
     pw := &libprocess.ProcessWrapper{
         Name:    pb.ProxyName(),
-        Path:    pb.Path,
-        Command: pb.Command,
+        Command: command,
     }
     pw.SetDefaults()
     return pw
 }
 
 func (pb *ProxyBackend) NewProxyBackendProcessInstanceConfig() ProxyBackendProcessInstanceConfig {
-    pbpi := ProxyBackendProcessInstanceConfig{}
+    httpPort := libenv.EnvWithDefault(pb.Process.HttpPortEnv, "")
+    pbpi     := ProxyBackendProcessInstanceConfig{}
+
     pbpi.Command        = pb.Command
+    pbpi.Command        = strings.Replace(pbpi.Command, "$" + pb.Process.HttpPortEnv, httpPort, -1)
     pbpi.Delay          = pb.Delay
     pbpi.Ping           = pb.Ping
     pbpi.Env            = pb.Env
-    pbpi.ProcessWrapper = pb.NewProcessWrapper()
+    pbpi.ProcessWrapper = pb.NewProcessWrapper(pbpi.Command)
 
     return pbpi
 }
 
 func (pb *ProxyBackend) CreateProcesses() error {
-    if pb.Process == nil { return nil }
+    if pb.Process == nil { return errors.New("[process] section is missing.") }
 
     for i := 0; i < pb.Numprocs; i++ {
+        // hardcoded for now
+        os.Setenv(pb.Process.HttpPortEnv, "33333")
+
         pb.Process.Instances[i] = pb.NewProxyBackendProcessInstanceConfig()
+
         err := pb.Save()
         if err != nil { return err }
     }
@@ -163,10 +171,18 @@ func (pb *ProxyBackend) StartProcesses() []error {
 
     if pb.Process == nil { return errorSlice }
 
+    for _, env := range pb.Env {
+        envParts := strings.Split(env, "=")
+        os.Setenv(envParts[0], envParts[1])
+    }
+
     for i := 0; i < pb.Numprocs; i++ {
         go func(i int) {
-            pb.Process.Instances[i].ProcessWrapper.StartAndWatch()
-            errChan <- pb.Save()
+            err := pb.Process.Instances[i].ProcessWrapper.StartAndWatch()
+            if err == nil {
+                err = pb.Save()
+            }
+            errChan <- err
         }(i)
     }
 

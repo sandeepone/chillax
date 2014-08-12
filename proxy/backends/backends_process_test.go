@@ -20,7 +20,7 @@ func TestDeserializeProcessProxyBackendFromToml(t *testing.T) {
     backend := NewProcessProxyBackendForTest()
 
     if backend.Command == "" {
-        t.Errorf("backend.Command should exists. Backend: %v", backend)
+        t.Errorf("backend.Command should exists. Backend.Command: %v", backend.Command)
     }
 }
 
@@ -33,14 +33,14 @@ func TestCreateProcesses(t *testing.T) {
     }
 }
 
-// func TestStartStopProcesses(t *testing.T) {
-//     backend := NewProcessProxyBackendForTest()
-//     backend.CreateProcesses()
+func TestStartStopProcesses(t *testing.T) {
+    backend := NewProcessProxyBackendForTest()
+    backend.CreateProcesses()
 
-//     errors := backend.StartProcesses()
-//     for _, err := range errors {
-//         if err != nil {
-//             t.Errorf("Failed to start process. Error: %v", err)
-//         }
-//     }
-// }
+    errors := backend.StartProcesses()
+    for _, err := range errors {
+        if err != nil {
+            t.Errorf("Failed to start process. Error: %v", err)
+        }
+    }
+}
