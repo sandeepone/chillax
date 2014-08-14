@@ -34,7 +34,7 @@ func TestCreateProcesses(t *testing.T) {
     }
 }
 
-func TestStartStopProcesses(t *testing.T) {
+func TestStartRestartAndStopProcesses(t *testing.T) {
     backend := NewProcessProxyBackendForTest()
     backend.CreateProcesses()
 
@@ -45,6 +45,13 @@ func TestStartStopProcesses(t *testing.T) {
                 t.Errorf("Failed to start process. Error: %v", err)
             }
         }
+
+        // errors = backend.RestartProcesses()
+        // for _, err := range errors {
+        //     if err != nil {
+        //         t.Errorf("Failed to restart process. Error: %v", err)
+        //     }
+        // }
     }()
 
     libtime.SleepString("5s")
