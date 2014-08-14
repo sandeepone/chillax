@@ -179,7 +179,7 @@ func (pb *ProxyBackend) StartProcesses() []error {
 
     for i := 0; i < pb.Numprocs; i++ {
         go func(i int) {
-            err := pb.Process.Instances[i].ProcessWrapper.Start()
+            err := pb.Process.Instances[i].ProcessWrapper.StartAndWatch()
             if err == nil {
                 err = pb.Save()
             }
