@@ -1,7 +1,6 @@
 package libprocess
 
 import (
-    "fmt"
     "time"
     "os"
     "os/exec"
@@ -15,7 +14,6 @@ import (
 type ProcessWrapper struct {
     Name           string
     Command        string
-    Args           []string
     StopDelay      string
     StartDelay     string
     Ping           string
@@ -82,13 +80,11 @@ func (p *ProcessWrapper) Start() error {
 
     p.CmdStruct = p.NewCmd(p.Command)
 
-    err = p.CmdStruct.Run()
+    err = p.CmdStruct.Start()
     if err != nil { return err }
 
     p.Pid    = p.CmdStruct.Process.Pid
     p.Status = "started"
-
-    fmt.Printf("DA FUQ Start: %v", p.CmdStruct)
 
     p.ListenStopSignals()
 
