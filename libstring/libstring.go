@@ -3,6 +3,7 @@ package libstring
 import (
     "os"
     "time"
+    "net/url"
     "strconv"
     "strings"
     "code.google.com/p/go-uuid/uuid"
@@ -20,10 +21,15 @@ func NormalizeLocalhost(hostAndPort string) string {
     return hostAndPort
 }
 
-func StripProtocol(hostAndPort string) string {
-    parts := strings.Split(hostAndPort, "://")
+func HostWithoutPort(uri string) string {
+    if !strings.Contains(uri, ":") { return uri }
 
-    return parts[len(parts) - 1]
+    parsed, err := url.Parse(uri)
+    if err != nil { return uri }
+
+    host  := parsed.Host
+    parts := strings.Split(host, ":")
+    return parts[0]
 }
 
 func SplitDockerPorts(ports string) (string, string, string) {

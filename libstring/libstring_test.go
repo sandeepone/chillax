@@ -19,9 +19,9 @@ func TestNormalizeLocalhost(t *testing.T) {
     }
 }
 
-func TestStripProtocol(t *testing.T) {
-    if StripProtocol("tcp://localhost:2375") != "localhost:2375" {
-        t.Errorf("Failed to strip protocol: %v", StripProtocol("tcp://localhost:2375"))
+func TestHostWithoutPort(t *testing.T) {
+    if HostWithoutPort("tcp://localhost:2375") != "localhost" {
+        t.Errorf("Failed to extract host. What we got: %v", HostWithoutPort("tcp://localhost:2375"))
     }
 }
 

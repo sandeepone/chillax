@@ -1,4 +1,4 @@
-package dockerinventory
+package portkeeper
 
 import (
     "fmt"
@@ -11,15 +11,15 @@ import (
 const MAX_PORT = 65536
 
 func ReservePort(dockerHost string) int {
-    dockerHost    = libstring.StripProtocol(dockerHost)
+    dockerHost    = libstring.HostWithoutPort(dockerHost)
     store        := chillax_storage.NewStorage()
-    usedPorts, _ := store.List(fmt.Sprintf("/dockers/%v/used-ports", dockerHost))
+    usedPorts, _ := store.List(fmt.Sprintf("/hosts/%v/used-ports", dockerHost))
 
     var reservedPort int
 
     if len(usedPorts) == 0 {
         reservedPort = MAX_PORT
-        store.Create(fmt.Sprintf("/dockers/%v/used-ports/%v", dockerHost, reservedPort), make([]byte, 0))
+        store.Create(fmt.Sprintf("/hosts/%v/used-ports/%v", dockerHost, reservedPort), make([]byte, 0))
         return reservedPort
     }
 
@@ -32,6 +32,6 @@ func ReservePort(dockerHost string) int {
     firstGapPort    := libnumber.FirstGapIntSlice(usedIntPorts)
     reservedPort     = libnumber.LargestInt([]int{firstGapPort, newSmallestPort})
 
-    store.Create(fmt.Sprintf("/dockers/%v/used-ports/%v", dockerHost, reservedPort), make([]byte, 0))
+    store.Create(fmt.Sprintf("/hosts/%v/used-ports/%v", dockerHost, reservedPort), make([]byte, 0))
     return reservedPort
 }

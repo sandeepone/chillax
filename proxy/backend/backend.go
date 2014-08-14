@@ -13,7 +13,7 @@ import (
     "github.com/didip/chillax/libprocess"
     dockerclient "github.com/fsouza/go-dockerclient"
     chillax_storage "github.com/didip/chillax/storage"
-    chillax_dockerinventory "github.com/didip/chillax/dockerinventory"
+    chillax_portkeeper "github.com/didip/chillax/portkeeper"
 )
 
 const DOCKER_TIMEOUT = uint(5)
@@ -360,7 +360,7 @@ func (pb *ProxyBackend) CreateDockerContainer(dockerHost string) (ProxyBackendDo
     containerConfig.Host  = dockerHost
     containerConfig.Ports = make([]string, len(pb.Docker.Ports))
 
-    publiclyAvailablePort := chillax_dockerinventory.ReservePort(containerConfig.Host)
+    publiclyAvailablePort := chillax_portkeeper.ReservePort(containerConfig.Host)
 
     for index, backendPort := range pb.Docker.Ports {
         containerConfig.Ports[index] = fmt.Sprintf("%v:%v", publiclyAvailablePort, backendPort)
