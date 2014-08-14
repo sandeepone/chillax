@@ -1,11 +1,13 @@
 package libprocess
 
 import (
+    "fmt"
     "time"
     "os"
     "os/exec"
-    "strings"
+    "os/signal"
     "syscall"
+    "strings"
     "encoding/json"
     "github.com/didip/chillax/libtime"
 )
@@ -53,6 +55,10 @@ func (p *ProcessWrapper) NewCmd(command string) *exec.Cmd {
     return cmd
 }
 
+func (p *ProcessWrapper) IsProcessStarted() bool {
+    return p.CmdStruct.Process != nil
+}
+
 func (p *ProcessWrapper) StartAndWatch() error {
     err := p.Start()
     if err != nil { return err }
@@ -74,31 +80,37 @@ func (p *ProcessWrapper) Start() error {
     err := libtime.SleepString(p.StartDelay)
     if err != nil { return err }
 
-    cmd := p.NewCmd(p.Command)
+    p.CmdStruct = p.NewCmd(p.Command)
 
-    err = cmd.Run()
+    err = p.CmdStruct.Run()
     if err != nil { return err }
 
-    p.CmdStruct = cmd
-    p.Pid       = cmd.Process.Pid
-    p.Status    = "started"
+    p.Pid    = p.CmdStruct.Process.Pid
+    p.Status = "started"
+
+    fmt.Printf("DA FUQ Start: %v", p.CmdStruct)
+
+    p.ListenStopSignals()
 
     return err
 }
 
 // Stop process and all its children
 func (p *ProcessWrapper) Stop() error {
+    var err error
+
     if p.CmdStruct != nil && p.CmdStruct.Process != nil {
         err := libtime.SleepString(p.StopDelay)
         if err != nil { return err }
 
-        err = p.CmdStruct.Process.Signal(syscall.SIGKILL)
-        if err != nil && err.Error() != "os: process already finished" && err.Error() != "os: process already released" {
-            return err
+        err = p.CmdStruct.Process.Kill()
+
+        if err == nil {
+            p.Release("stopped")
         }
     }
-    p.Release("stopped")
-    return nil
+
+    return err
 }
 
 // Release and remove process pidfile
@@ -183,4 +195,18 @@ func (p *ProcessWrapper) Watch() {
     case <-diedChan:
         p.Release("killed")
     }
+}
+
+func (p *ProcessWrapper) ListenStopSignals() {
+    sigChan := make(chan os.Signal, 1)
+    signal.Notify(sigChan, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+
+    go func() {
+        <-sigChan
+
+        if p.IsProcessStarted() {
+            p.Stop()
+            close(sigChan)
+        }
+    }()
 }

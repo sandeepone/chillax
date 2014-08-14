@@ -50,6 +50,7 @@ func TestStartStopProcesses(t *testing.T) {
     libtime.SleepString("5s")
 
     errors := backend.StopProcesses()
+
     for _, err := range errors {
         if err != nil {
             t.Errorf("Failed to stop process. Error: %v", err)
