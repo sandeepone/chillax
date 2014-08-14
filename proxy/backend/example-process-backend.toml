@@ -18,7 +18,6 @@ httpportenv="HTTP_PORT"
     ping = "30s"
     pid = -1
     env = [
-        "HTTP_PORT=33333",
         "S3_BUCKET=hadou-test-url-downloader",
         "AWS_ACCESS_KEY_ID=111",
         "AWS_SECRET_ACCESS_KEY=abc"

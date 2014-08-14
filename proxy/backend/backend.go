@@ -6,9 +6,9 @@ import (
     "time"
     "bytes"
     "strings"
+    "strconv"
     "errors"
     "github.com/BurntSushi/toml"
-    "github.com/didip/chillax/libenv"
     "github.com/didip/chillax/libstring"
     "github.com/didip/chillax/libprocess"
     dockerclient "github.com/fsouza/go-dockerclient"
@@ -136,15 +136,16 @@ func (pb *ProxyBackend) NewProcessWrapper(command string) *libprocess.ProcessWra
     return pw
 }
 
-func (pb *ProxyBackend) NewProxyBackendProcessInstanceConfig() ProxyBackendProcessInstanceConfig {
-    httpPort := libenv.EnvWithDefault(pb.Process.HttpPortEnv, "")
-    pbpi     := ProxyBackendProcessInstanceConfig{}
+func (pb *ProxyBackend) NewProxyBackendProcessInstanceConfig(httpPort int) ProxyBackendProcessInstanceConfig {
+    pbpi := ProxyBackendProcessInstanceConfig{}
 
-    pbpi.Command        = pb.Command
-    pbpi.Command        = strings.Replace(pbpi.Command, "$" + pb.Process.HttpPortEnv, httpPort, -1)
-    pbpi.Delay          = pb.Delay
-    pbpi.Ping           = pb.Ping
-    pbpi.Env            = pb.Env
+    pbpi.Command = pb.Command
+    pbpi.Command = strings.Replace(pbpi.Command, fmt.Sprintf("$%v", pb.Process.HttpPortEnv), strconv.Itoa(httpPort), -1)
+    pbpi.Delay   = pb.Delay
+    pbpi.Ping    = pb.Ping
+    pbpi.Env     = pb.Env
+    pbpi.Env     = append(pbpi.Env, fmt.Sprintf("%v=%v", pb.Process.HttpPortEnv, httpPort))
+
     pbpi.ProcessWrapper = pb.NewProcessWrapper(pbpi.Command)
 
     return pbpi
@@ -154,10 +155,10 @@ func (pb *ProxyBackend) CreateProcesses() error {
     if pb.Process == nil { return errors.New("[process] section is missing.") }
 
     for i := 0; i < pb.Numprocs; i++ {
-        // hardcoded for now
-        os.Setenv(pb.Process.HttpPortEnv, "33333")
+        hostname, _ := os.Hostname()
+        newPort     := chillax_portkeeper.ReservePort(hostname)
 
-        pb.Process.Instances[i] = pb.NewProxyBackendProcessInstanceConfig()
+        pb.Process.Instances[i] = pb.NewProxyBackendProcessInstanceConfig(newPort)
 
         err := pb.Save()
         if err != nil { return err }

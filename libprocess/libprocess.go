@@ -1,12 +1,12 @@
 package libprocess
 
 import (
-    "encoding/json"
+    "time"
     "os"
     "os/exec"
     "strings"
     "syscall"
-    "time"
+    "encoding/json"
     "github.com/didip/chillax/libtime"
 )
 
@@ -92,7 +92,7 @@ func (p *ProcessWrapper) Stop() error {
         err := libtime.SleepString(p.StopDelay)
         if err != nil { return err }
 
-        err = p.CmdStruct.Process.Signal(syscall.SIGINT)
+        err = p.CmdStruct.Process.Signal(syscall.SIGKILL)
         if err != nil && err.Error() != "os: process already finished" && err.Error() != "os: process already released" {
             return err
         }
