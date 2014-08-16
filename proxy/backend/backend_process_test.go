@@ -38,25 +38,25 @@ func TestStartRestartAndStopProcesses(t *testing.T) {
     backend := NewProcessProxyBackendForTest()
     backend.CreateProcesses()
 
-    go func() {
-        errors := backend.StartProcesses()
-        for _, err := range errors {
-            if err != nil {
-                t.Errorf("Failed to start process. Error: %v", err)
-            }
+    errors := backend.StartProcesses()
+    for _, err := range errors {
+        if err != nil {
+            t.Errorf("Failed to start process. Error: %v", err)
         }
+    }
 
-        // errors = backend.RestartProcesses()
-        // for _, err := range errors {
-        //     if err != nil {
-        //         t.Errorf("Failed to restart process. Error: %v", err)
-        //     }
-        // }
-    }()
+    libtime.SleepString("15ms")
 
-    libtime.SleepString("5s")
+    errors = backend.RestartProcesses()
+    for _, err := range errors {
+        if err != nil {
+            t.Errorf("Failed to restart process. Error: %v", err)
+        }
+    }
 
-    errors := backend.StopProcesses()
+    libtime.SleepString("15ms")
+
+    errors = backend.StopProcesses()
 
     for _, err := range errors {
         if err != nil {
