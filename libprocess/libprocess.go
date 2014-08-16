@@ -99,7 +99,9 @@ func (p *ProcessWrapper) Stop() error {
         err := libtime.SleepString(p.StopDelay)
         if err != nil { return err }
 
-        err = p.CmdStruct.Process.Kill()
+        if p.Pid > 0 {
+            err = p.CmdStruct.Process.Kill()
+        }
 
         if err == nil {
             p.Release("stopped")
