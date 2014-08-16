@@ -108,22 +108,18 @@ func TestProcessStartAndWatch(t *testing.T) {
 
     firstPid := p.Pid
 
-    err := p.CmdStruct.Process.Kill()
-    if err == nil {
-        p.CmdStruct.Process.Release()
-    } else {
-        t.Errorf("Unable to kill process manually.")
-    }
-    libtime.SleepString("12ms")
+    if p.CmdStruct.Process.Pid > 0 {
+        err := p.CmdStruct.Process.Kill()
+        if err != nil {
+            t.Errorf("Unable to kill process manually.")
+        }
+        libtime.SleepString("120ms")
 
-    secondPid := p.Pid
+        secondPid := p.Pid
 
-    if firstPid == secondPid {
-        t.Errorf("New process should have generated new PID. firstPid: %v, secondPid: %v", firstPid, secondPid)
-    }
-
-    if p.Status != "restarted" {
-        t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
+        if firstPid == secondPid {
+            t.Errorf("New process should have generated new PID. firstPid: %v, secondPid: %v", firstPid, secondPid)
+        }
     }
 
     CheckBasicStopForTest(t, p)
