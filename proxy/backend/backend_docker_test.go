@@ -50,6 +50,30 @@ func TestCreateDockerContainers(t *testing.T) {
     backend.StopAndRemoveDockerContainers()
 }
 
+func TestDockerContainerMapPorts(t *testing.T) {
+    backend := NewDockerProxyBackendForTest()
+
+    err := backend.CreateDockerContainers()
+
+    if err != nil {
+        t.Errorf("Failed to create Docker containers. Error: %v", err)
+    }
+
+    container1 := backend.Docker.Containers[0]
+
+    err = backend.StartDockerContainer(container1)
+
+    if err != nil {
+        t.Errorf("Failed to start Docker container. Error: %v", err)
+    }
+
+    if container1.MapPorts[backend.Docker.HttpPortEnv] == 0 {
+        t.Errorf("Failed to assign http port. container1.MapPorts: %v", container1.MapPorts)
+    }
+
+    backend.StopAndRemoveDockerContainers()
+}
+
 func TestStartStopRestartAndRemoveOneDockerContainer(t *testing.T) {
     backend := NewDockerProxyBackendForTest()
 

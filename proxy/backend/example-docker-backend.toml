@@ -17,6 +17,7 @@ hosts = [
 ports = [
     "8080/tcp"
 ]
+httpportenv="HTTP_PORT"
 
     [[docker.containers]]
     id = "abc123"

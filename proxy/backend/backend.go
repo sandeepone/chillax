@@ -53,24 +53,27 @@ type ProxyBackendProcessInstanceConfig struct {
     Delay          string
     Ping           string
     Env            []string
+    MapPorts       map[string]int
     ProcessWrapper *libprocess.ProcessWrapper
 }
 
 
 // Docker data structure
 type ProxyBackendDockerConfig struct {
-    Tag        string
-    Hosts      []string
-    Ports      []string
-    Containers []ProxyBackendDockerContainerConfig
+    Tag         string
+    Hosts       []string
+    Ports       []string
+    HttpPortEnv string `toml:httpportenv`
+    Containers  []ProxyBackendDockerContainerConfig
 }
 
 type ProxyBackendDockerContainerConfig struct {
-    Id    string
-    Tag   string
-    Env   []string
-    Host  string
-    Ports []string
+    Id          string
+    Tag         string
+    Env         []string
+    Host        string
+    Ports       []string
+    MapPorts    map[string]int
 }
 
 func (pb *ProxyBackend) ProxyName() string {
@@ -134,12 +137,15 @@ func (pb *ProxyBackend) NewProcessWrapper(command string) *libprocess.ProcessWra
 func (pb *ProxyBackend) NewProxyBackendProcessInstanceConfig(httpPort int) ProxyBackendProcessInstanceConfig {
     pbpi := ProxyBackendProcessInstanceConfig{}
 
-    pbpi.Command = pb.Command
-    pbpi.Command = strings.Replace(pbpi.Command, fmt.Sprintf("$%v", pb.Process.HttpPortEnv), strconv.Itoa(httpPort), -1)
-    pbpi.Delay   = pb.Delay
-    pbpi.Ping    = pb.Ping
-    pbpi.Env     = pb.Env
-    pbpi.Env     = append(pbpi.Env, fmt.Sprintf("%v=%v", pb.Process.HttpPortEnv, httpPort))
+    pbpi.Command  = pb.Command
+    pbpi.Command  = strings.Replace(pbpi.Command, fmt.Sprintf("$%v", pb.Process.HttpPortEnv), strconv.Itoa(httpPort), -1)
+    pbpi.Delay    = pb.Delay
+    pbpi.Ping     = pb.Ping
+    pbpi.Env      = pb.Env
+    pbpi.Env      = append(pbpi.Env, fmt.Sprintf("%v=%v", pb.Process.HttpPortEnv, httpPort))
+    pbpi.MapPorts = make(map[string]int)
+
+    pbpi.MapPorts[pb.Process.HttpPortEnv] = httpPort
 
     pbpi.ProcessWrapper = pb.NewProcessWrapper(pbpi.Command)
 
@@ -356,15 +362,24 @@ func (pb *ProxyBackend) CreateDockerContainers() error {
     return err
 }
 
-func (pb *ProxyBackend) CreateDockerContainer(dockerHost string) (ProxyBackendDockerContainerConfig, error) {
+func (pb *ProxyBackend) NewProxyBackendDockerContainerConfig(dockerHost string) (ProxyBackendDockerContainerConfig) {
     containerConfig := ProxyBackendDockerContainerConfig{}
 
-    containerConfig.Tag   = pb.Docker.Tag
-    containerConfig.Env   = pb.Env
-    containerConfig.Host  = dockerHost
-    containerConfig.Ports = make([]string, len(pb.Docker.Ports))
+    containerConfig.Tag      = pb.Docker.Tag
+    containerConfig.Env      = pb.Env
+    containerConfig.Host     = dockerHost
+    containerConfig.Ports    = make([]string, len(pb.Docker.Ports))
+    containerConfig.MapPorts = make(map[string]int)
 
-    publiclyAvailablePort := chillax_portkeeper.ReservePort(containerConfig.Host)
+    containerConfig.MapPorts[pb.Docker.HttpPortEnv] = chillax_portkeeper.ReservePort(containerConfig.Host)
+
+    return containerConfig
+}
+
+func (pb *ProxyBackend) CreateDockerContainer(dockerHost string) (ProxyBackendDockerContainerConfig, error) {
+    containerConfig := pb.NewProxyBackendDockerContainerConfig(dockerHost)
+
+    publiclyAvailablePort := containerConfig.MapPorts[pb.Docker.HttpPortEnv]
 
     for index, backendPort := range pb.Docker.Ports {
         containerConfig.Ports[index] = fmt.Sprintf("%v:%v", publiclyAvailablePort, backendPort)
@@ -379,6 +394,8 @@ func (pb *ProxyBackend) CreateDockerContainer(dockerHost string) (ProxyBackendDo
     if err != nil { return containerConfig, err }
 
     containerConfig.Id = container.ID
+
+    err = pb.Save()
 
     return containerConfig, err
 }
