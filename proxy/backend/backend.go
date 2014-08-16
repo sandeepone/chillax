@@ -116,21 +116,16 @@ func (pb *ProxyBackend) NewDockerClients() map[string]*dockerclient.Client {
 }
 
 
-// func (pb *ProxyBackend) Start() (error) {}
-
-// func (pb *ProxyBackend) Stop() (error) {}
-
-// func (pb *ProxyBackend) Restart() (error) {}
-
-// func (pb *ProxyBackend) Watch() (error) {}
-
 //
 // Regular processes
 //
 func (pb *ProxyBackend) NewProcessWrapper(command string) *libprocess.ProcessWrapper {
     pw := &libprocess.ProcessWrapper{
-        Name:    pb.ProxyName(),
-        Command: command,
+        Name:       pb.ProxyName(),
+        Command:    command,
+        StopDelay:  pb.Delay,
+        StartDelay: pb.Delay,
+        Ping:       pb.Ping,
     }
     pw.SetDefaults()
     return pw
