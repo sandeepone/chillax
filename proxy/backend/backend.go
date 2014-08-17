@@ -54,6 +54,7 @@ type ProxyBackendProcessInstanceConfig struct {
     Delay          string
     Ping           string
     Env            []string
+    Host           string
     MapPorts       map[string]int
     ProcessWrapper *libprocess.ProcessWrapper
 }
@@ -135,13 +136,14 @@ func (pb *ProxyBackend) NewProcessWrapper(command string) *libprocess.ProcessWra
     return pw
 }
 
-func (pb *ProxyBackend) NewProxyBackendProcessInstanceConfig(httpPort int) ProxyBackendProcessInstanceConfig {
+func (pb *ProxyBackend) NewProxyBackendProcessInstanceConfig(host string, httpPort int) ProxyBackendProcessInstanceConfig {
     pbpi := ProxyBackendProcessInstanceConfig{}
 
     pbpi.Command  = pb.Command
     pbpi.Command  = strings.Replace(pbpi.Command, fmt.Sprintf("$%v", pb.Process.HttpPortEnv), strconv.Itoa(httpPort), -1)
     pbpi.Delay    = pb.Delay
     pbpi.Ping     = pb.Ping
+    pbpi.Host     = host
     pbpi.Env      = pb.Env
     pbpi.Env      = append(pbpi.Env, fmt.Sprintf("%v=%v", pb.Process.HttpPortEnv, httpPort))
     pbpi.MapPorts = make(map[string]int)
@@ -156,11 +158,19 @@ func (pb *ProxyBackend) NewProxyBackendProcessInstanceConfig(httpPort int) Proxy
 func (pb *ProxyBackend) CreateProcesses() error {
     if pb.Process == nil { return errors.New("[process] section is missing.") }
 
-    for i := 0; i < pb.Numprocs; i++ {
-        hostname, _ := os.Hostname()
-        newPort     := chillax_portkeeper.ReservePort(hostname)
+    numHosts := len(pb.Process.Hosts)
 
-        pb.Process.Instances[i] = pb.NewProxyBackendProcessInstanceConfig(newPort)
+    for i := 0; i < pb.Numprocs; i++ {
+        hostIndex := i
+
+        if i >= numHosts {
+            hostIndex = i % numHosts
+        }
+
+        host    := pb.Process.Hosts[hostIndex]
+        newPort := chillax_portkeeper.ReservePort(host)
+
+        pb.Process.Instances[i] = pb.NewProxyBackendProcessInstanceConfig(host, newPort)
 
         err := pb.Save()
         if err != nil { return err }

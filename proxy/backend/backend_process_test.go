@@ -35,6 +35,13 @@ func TestCreateProcesses(t *testing.T) {
     if err != nil {
         t.Errorf("Failed to create processes. Error: %v", err)
     }
+
+    if len(backend.Process.Instances) != 1 {
+        t.Errorf("Instances should be recorded inside backend.Process.Instances. Backend.Process.Instances: %v", backend.Process.Instances)
+    }
+    if backend.Process.Instances[0].Host != backend.Process.Hosts[0] {
+        t.Errorf("Instance host was not recorded correctly. Backend.Process.Instances: %v", backend.Process.Instances)
+    }
 }
 
 func TestStartRestartAndStopProcesses(t *testing.T) {
