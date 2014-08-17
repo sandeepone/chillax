@@ -6,6 +6,8 @@ import (
     "bufio"
     "testing"
     "io/ioutil"
+    "net/http"
+    "net/http/httptest"
 )
 
 
@@ -48,5 +50,49 @@ func TestChooseBackendHost(t *testing.T) {
 
     if host != handler.BackendHosts()[0] {
         t.Errorf("handler.BackendHosts()[0] should always be chosen. host: %v", host)
+    }
+}
+
+func TestProxyHandlerFunction(t *testing.T) {
+    handler := NewProxyHandlerForTest()
+    handler.CreateBackends()
+
+    errors := handler.StartBackends()
+    for _, err := range errors {
+        if err != nil {
+            t.Errorf("Failed to start process. Error: %v", err)
+        }
+    }
+
+    server := httptest.NewServer(http.HandlerFunc(handler.Function()))
+    defer server.Close()
+
+    _, err := http.Get(server.URL)
+    if err != nil {
+        t.Fatalf("Unable to hit server.URL endpoint. Error: %v. URL: %v", err, server.URL)
+    }
+
+    url := fmt.Sprintf("%v%v", server.URL, handler.Backend.Path)
+
+    response, err := http.DefaultClient.Get(url)
+    if err != nil {
+        t.Fatalf("Unable to hit the endpoint. Error: %v", err)
+    }
+    defer response.Body.Close()
+
+    if response.StatusCode != 200 {
+        t.Errorf("response.StatusCode should == 200. Response: %v", response.StatusCode)
+    }
+
+    content, err := ioutil.ReadAll(response.Body)
+    if err != nil {
+        t.Errorf("Unable to read content of the endpoint. Error: %v, Content: %v", err, content)
+    }
+
+    errors = handler.StopBackends()
+    for _, err := range errors {
+        if err != nil {
+            t.Errorf("Failed to stop backend process. Error: %v", err)
+        }
     }
 }
