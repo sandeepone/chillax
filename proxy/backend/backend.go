@@ -466,14 +466,18 @@ func (pb *ProxyBackend) StopAndRemoveDockerContainer(containerConfig ProxyBacken
     return err
 }
 
-func (pb *ProxyBackend) StopDockerContainers() error {
-    for _, containerConfig := range pb.Docker.Containers {
-        client, err := dockerclient.NewClient(containerConfig.Host)
-        if err != nil { return err }
+func (pb *ProxyBackend) StopDockerContainers() []error {
+    var errors []error
 
-        return client.StopContainer(containerConfig.Id, DOCKER_TIMEOUT)
+    for i, containerConfig := range pb.Docker.Containers {
+        client, err := dockerclient.NewClient(containerConfig.Host)
+        if err != nil {
+            errors[i] = err
+        } else {
+            errors[i] = client.StopContainer(containerConfig.Id, DOCKER_TIMEOUT)
+        }
     }
-    return nil
+    return errors
 }
 
 func (pb *ProxyBackend) StopDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
