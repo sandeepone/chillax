@@ -46,6 +46,28 @@ func (ph *ProxyHandler) CreateBackends() error {
     return err
 }
 
+func (ph *ProxyHandler) StartBackends() []error {
+    var errors []error
+
+    if ph.Backend.IsDocker() {
+        errors = ph.Backend.StartDockerContainers()
+    } else {
+        errors = ph.Backend.StartProcesses()
+    }
+    return errors
+}
+
+func (ph *ProxyHandler) StopBackends() []error {
+    var errors []error
+
+    if ph.Backend.IsDocker() {
+        errors = ph.Backend.StopDockerContainers()
+    } else {
+        errors = ph.Backend.StopProcesses()
+    }
+    return errors
+}
+
 func (ph *ProxyHandler) RealIP(r *http.Request) string {
     host, _, _ := net.SplitHostPort(r.RemoteAddr)
     return host
@@ -58,7 +80,7 @@ func (ph *ProxyHandler) BackendHosts() []string {
         backendHosts = make([]string, len(ph.Backend.Docker.Containers))
 
         for index, container := range ph.Backend.Docker.Containers {
-            backendHosts[index] = libstring.HostWithoutPort(container.Host) + ":" + strconv.Itoa(container.MapPorts[ph.Backend.Process.HttpPortEnv])
+            backendHosts[index] = libstring.HostWithoutPort(container.Host) + ":" + strconv.Itoa(container.MapPorts[ph.Backend.Docker.HttpPortEnv])
         }
     } else {
         backendHosts = make([]string, len(ph.Backend.Process.Instances))
@@ -81,12 +103,10 @@ func (ph *ProxyHandler) Function() func(http.ResponseWriter, *http.Request) {
     url.Scheme = "http"
     url.Path   = ph.Backend.Path
 
-    if ph.Backend.IsDocker() {
-    } else {
-    }
-
     return func(w http.ResponseWriter, r *http.Request) {
         r.URL.Path = "/"
+        r.URL.Host = ph.ChooseBackendHost()
+
         r.Header.Add("X-Real-IP", ph.RealIP(r))
 
         proxy := httputil.NewSingleHostReverseProxy(url)
