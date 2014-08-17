@@ -33,10 +33,20 @@ func TestBackendHosts(t *testing.T) {
         t.Errorf("handler.BackendHosts should exists. handler.BackendHosts: %v", handler.BackendHosts)
     }
 
-    hostname, _ := os.Hostname()
-    instance1   := handler.Backend.Process.Instances[0]
+    instance1 := handler.Backend.Process.Instances[0]
 
-    if handler.BackendHosts()[0] != fmt.Sprintf("%v:%v", hostname, instance1.MapPorts[handler.Backend.Process.HttpPortEnv]) {
+    if handler.BackendHosts()[0] != fmt.Sprintf("127.0.0.1:%v", instance1.MapPorts[handler.Backend.Process.HttpPortEnv]) {
         t.Errorf("handler.BackendHosts()[0] is incorrect. handler.BackendHosts()[0]: %v", handler.BackendHosts()[0])
+    }
+}
+
+func TestChooseBackendHost(t *testing.T) {
+    handler := NewProxyHandlerForTest()
+    handler.CreateBackends()
+
+    host := handler.ChooseBackendHost()
+
+    if host != handler.BackendHosts()[0] {
+        t.Errorf("handler.BackendHosts()[0] should always be chosen. host: %v", host)
     }
 }

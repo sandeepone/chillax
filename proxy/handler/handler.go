@@ -1,7 +1,6 @@
 package handler
 
 import(
-    "os"
     "net"
     "net/url"
     "net/http"
@@ -10,6 +9,7 @@ import(
     "github.com/didip/chillax/libstring"
     chillax_storage "github.com/didip/chillax/storage"
     chillax_proxy_backend "github.com/didip/chillax/proxy/backend"
+    chillax_proxy_selectors "github.com/didip/chillax/proxy/selectors"
 )
 
 func NewProxyHandlers() []*ProxyHandler {
@@ -62,13 +62,18 @@ func (ph *ProxyHandler) BackendHosts() []string {
         }
     } else {
         backendHosts = make([]string, len(ph.Backend.Process.Instances))
-        hostname, _ := os.Hostname()
 
         for index, instance := range ph.Backend.Process.Instances {
-            backendHosts[index] = hostname + ":" + strconv.Itoa(instance.MapPorts[ph.Backend.Process.HttpPortEnv])
+            backendHosts[index] = libstring.HostWithoutPort(instance.Host) + ":" + strconv.Itoa(instance.MapPorts[ph.Backend.Process.HttpPortEnv])
         }
     }
     return backendHosts
+}
+
+func (ph *ProxyHandler) ChooseBackendHost() string {
+    backendHosts := ph.BackendHosts()
+    selector     := chillax_proxy_selectors.NewRoundRobin(backendHosts)
+    return selector.Choose()
 }
 
 func (ph *ProxyHandler) Function() func(http.ResponseWriter, *http.Request) {
