@@ -45,6 +45,7 @@ type ProxyBackend struct {
 // Process data structure
 type ProxyBackendProcessConfig struct {
     HttpPortEnv string `toml:httpportenv`
+    Hosts       []string
     Instances   []ProxyBackendProcessInstanceConfig
 }
 

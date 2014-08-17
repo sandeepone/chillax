@@ -10,7 +10,10 @@ env = [
 ]
 
 [process]
-httpportenv="HTTP_PORT"
+httpportenv = "HTTP_PORT"
+hosts = [
+    "127.0.0.1"
+]
 
     [[process.instances]]
     command = "/usr/bin/python -m SimpleHTTPServer $HTTP_PORT"

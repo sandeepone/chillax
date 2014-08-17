@@ -23,6 +23,9 @@ func TestDeserializeProcessProxyBackendFromToml(t *testing.T) {
     if backend.Command == "" {
         t.Errorf("backend.Command should exists. Backend.Command: %v", backend.Command)
     }
+    if len(backend.Process.Hosts) != 1 {
+        t.Errorf("backend.Process.Hosts should contains 1 element. Backend.Process.Hosts: %v", backend.Process.Hosts)
+    }
 }
 
 func TestCreateProcesses(t *testing.T) {
