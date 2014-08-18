@@ -101,12 +101,10 @@ func (ph *ProxyHandler) ChooseBackendHost() string {
 func (ph *ProxyHandler) Function() func(http.ResponseWriter, *http.Request) {
     url       := &url.URL{}
     url.Scheme = "http"
-    url.Path   = ph.Backend.Path
+    url.Path   = "/"
+    url.Host   = ph.ChooseBackendHost()
 
     return func(w http.ResponseWriter, r *http.Request) {
-        r.URL.Path = "/"
-        r.URL.Host = ph.ChooseBackendHost()
-
         r.Header.Add("X-Real-IP", ph.RealIP(r))
 
         proxy := httputil.NewSingleHostReverseProxy(url)

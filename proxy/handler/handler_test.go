@@ -8,6 +8,7 @@ import (
     "io/ioutil"
     "net/http"
     "net/http/httptest"
+    "github.com/didip/chillax/libtime"
 )
 
 
@@ -64,29 +65,35 @@ func TestProxyHandlerFunction(t *testing.T) {
         }
     }
 
+    libtime.SleepString("500ms")
+
     server := httptest.NewServer(http.HandlerFunc(handler.Function()))
     defer server.Close()
 
-    _, err := http.Get(server.URL)
+    response, err := http.Get(server.URL)
     if err != nil {
         t.Fatalf("Unable to hit server.URL endpoint. Error: %v. URL: %v", err, server.URL)
     }
-
-    url := fmt.Sprintf("%v%v", server.URL, handler.Backend.Path)
-
-    response, err := http.DefaultClient.Get(url)
-    if err != nil {
-        t.Fatalf("Unable to hit the endpoint. Error: %v", err)
-    }
     defer response.Body.Close()
+
+    content, err := ioutil.ReadAll(response.Body)
+    if err != nil || len(content) == 0 {
+        t.Errorf("Unable to read content of the endpoint. Error: %v, Content: %v", err, string(content))
+    }
 
     if response.StatusCode != 200 {
         t.Errorf("response.StatusCode should == 200. Response: %v", response.StatusCode)
     }
 
-    content, err := ioutil.ReadAll(response.Body)
+    directResponse, err := http.Get("http://" + handler.BackendHosts()[0])
     if err != nil {
-        t.Errorf("Unable to read content of the endpoint. Error: %v, Content: %v", err, content)
+        t.Fatalf("Unable to get direct response to backend. Error: %v", err)
+    }
+    directResponseContent, _ := ioutil.ReadAll(directResponse.Body)
+    directResponse.Body.Close()
+
+    if string(content) != string(directResponseContent) {
+        t.Errorf("Content is not what we expect. Content: %v, Expected Content: %v", string(content), string(directResponseContent))
     }
 
     errors = handler.StopBackends()
