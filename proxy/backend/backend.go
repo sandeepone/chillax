@@ -189,9 +189,9 @@ func (pb *ProxyBackend) StartProcesses() []error {
         os.Setenv(envParts[0], envParts[1])
     }
 
-    for i := 0; i < pb.Numprocs; i++ {
+    for i, instance := range pb.Process.Instances {
         go func(i int) {
-            err := pb.Process.Instances[i].ProcessWrapper.StartAndWatch()
+            err := instance.ProcessWrapper.StartAndWatch()
             if err == nil {
                 err = pb.Save()
             }
@@ -199,7 +199,7 @@ func (pb *ProxyBackend) StartProcesses() []error {
         }(i)
     }
 
-    for i := 0; i < pb.Numprocs; i++ {
+    for i := 0; i < len(pb.Process.Instances); i++ {
         err := <- errChan
         errorSlice[i] = err
     }
@@ -230,7 +230,7 @@ func (pb *ProxyBackend) StopProcesses() []error {
         }(i)
     }
 
-    for i := 0; i < pb.Numprocs; i++ {
+    for i := 0; i < len(pb.Process.Instances); i++ {
         err := <- errChan
         errorSlice[i] = err
     }
@@ -261,7 +261,7 @@ func (pb *ProxyBackend) RestartProcesses() []error {
         }(i)
     }
 
-    for i := 0; i < pb.Numprocs; i++ {
+    for i := 0; i < len(pb.Process.Instances); i++ {
         err := <- errChan
         errorSlice[i] = err
     }
