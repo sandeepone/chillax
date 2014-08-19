@@ -35,7 +35,7 @@ func TestServerStartStopBackends(t *testing.T) {
         }
     }
 
-    libtime.SleepString("1s")
+    libtime.SleepString("250ms")
 
     errors = server.StopProxyBackends()
     for _, err := range errors {
