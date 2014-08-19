@@ -73,9 +73,9 @@ func (fs *FileSystem) Get(fullpath string) ([]byte, error) {
 }
 
 func (fs *FileSystem) List(fullpath string) ([]string, error) {
-    fullpath  = path.Join(fs.Root, fullpath)
+    fullpath    = path.Join(fs.Root, fullpath)
     files, err := ioutil.ReadDir(fullpath)
-    names    := make([]string, len(files))
+    names      := make([]string, len(files))
 
     for index, f := range files {
         names[index] = f.Name()
