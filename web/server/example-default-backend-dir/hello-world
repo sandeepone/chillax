@@ -1,0 +1,15 @@
+path = "/hello/world"
+command = "/usr/bin/python -m SimpleHTTPServer $HTTP_PORT"
+numprocs = 3
+delay = "0s"
+ping = "10ms"
+env = [
+    "AWS_ACCESS_KEY_ID=111",
+    "AWS_SECRET_ACCESS_KEY=abc"
+]
+
+[process]
+httpportenv = "HTTP_PORT"
+hosts = [
+    "127.0.0.1"
+]
