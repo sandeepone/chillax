@@ -34,8 +34,7 @@ func (h *HttpServer) LoadProxyHandlersFromConfig() error {
 
         h.ProxyHandlers = make([]*chillax_proxy_handler.ProxyHandler, len(files))
 
-        for i, file := range files {
-            fullFilename    := path.Join(defaultProxyBackendsDir, file)
+        for i, fullFilename := range files {
             fileHandle, err := os.Open(fullFilename)
 
             if err != nil { return err }

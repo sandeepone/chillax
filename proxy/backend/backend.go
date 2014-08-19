@@ -160,6 +160,8 @@ func (pb *ProxyBackend) CreateProcesses() error {
 
     numHosts := len(pb.Process.Hosts)
 
+    pb.Process.Instances = make([]ProxyBackendProcessInstanceConfig, pb.Numprocs)
+
     for i := 0; i < pb.Numprocs; i++ {
         hostIndex := i
 
