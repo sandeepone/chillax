@@ -1,6 +1,6 @@
 path = "/hello/world"
-command = "/usr/bin/python -m SimpleHTTPServer $HTTP_PORT"
-numprocs = 1
+command = "python -m SimpleHTTPServer $HTTP_PORT"
+numprocs = 2
 delay = "0s"
 ping = "10ms"
 env = [

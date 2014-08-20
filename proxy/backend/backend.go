@@ -181,7 +181,6 @@ func (pb *ProxyBackend) CreateProcesses() error {
 }
 
 func (pb *ProxyBackend) StartProcesses() []error {
-    errChan    := make(chan error, pb.Numprocs)
     errorSlice := make([]error, pb.Numprocs)
 
     if pb.Process == nil { return errorSlice }
@@ -192,20 +191,12 @@ func (pb *ProxyBackend) StartProcesses() []error {
     }
 
     for i, instance := range pb.Process.Instances {
-        go func(i int) {
-            err := instance.ProcessWrapper.StartAndWatch()
-            if err == nil {
-                err = pb.Save()
-            }
-            errChan <- err
-        }(i)
-    }
-
-    for i := 0; i < len(pb.Process.Instances); i++ {
-        err := <- errChan
+        err := instance.ProcessWrapper.StartAndWatch()
+        if err == nil {
+            err = pb.Save()
+        }
         errorSlice[i] = err
     }
-    close(errChan)
 
     return errorSlice
 }
@@ -246,28 +237,18 @@ func (pb *ProxyBackend) RestartProcesses() []error {
 
     if pb.Process == nil { return errorSlice }
 
-    errChan := make(chan error, len(pb.Process.Instances))
-
     for i, instance := range pb.Process.Instances {
-        go func(i int) {
-            if instance.ProcessWrapper == nil {
-                errChan <- errors.New("Process has not been started.")
-            } else {
-                err := instance.ProcessWrapper.RestartAndWatch()
+        if instance.ProcessWrapper == nil {
+            errorSlice[i] = errors.New("Process has not been started.")
+        } else {
+            err := instance.ProcessWrapper.RestartAndWatch()
 
-                if err == nil {
-                    err = pb.Save()
-                }
-                errChan <- err
+            if err == nil {
+                err = pb.Save()
             }
-        }(i)
+            errorSlice[i] = err
+        }
     }
-
-    for i := 0; i < len(pb.Process.Instances); i++ {
-        err := <- errChan
-        errorSlice[i] = err
-    }
-    close(errChan)
 
     return errorSlice
 }

@@ -36,7 +36,7 @@ func TestCreateProcesses(t *testing.T) {
         t.Errorf("Failed to create processes. Error: %v", err)
     }
 
-    if len(backend.Process.Instances) != 1 {
+    if len(backend.Process.Instances) < 1 {
         t.Errorf("Instances should be recorded inside backend.Process.Instances. Backend.Process.Instances: %v", backend.Process.Instances)
     }
     if backend.Process.Instances[0].Host != backend.Process.Hosts[0] {
