@@ -98,16 +98,19 @@ func (ph *ProxyHandler) ChooseBackendHost() string {
     return selector.Choose()
 }
 
-func (ph *ProxyHandler) Function() func(http.ResponseWriter, *http.Request) {
+func (ph *ProxyHandler) BackendUrl() *url.URL {
     url       := &url.URL{}
     url.Scheme = "http"
     url.Path   = "/"
     url.Host   = ph.ChooseBackendHost()
+    return url
+}
 
+func (ph *ProxyHandler) Function() func(http.ResponseWriter, *http.Request) {
     return func(w http.ResponseWriter, r *http.Request) {
         r.Header.Add("X-Real-IP", ph.RealIP(r))
 
-        proxy := httputil.NewSingleHostReverseProxy(url)
+        proxy := httputil.NewSingleHostReverseProxy(ph.BackendUrl())
         proxy.ServeHTTP(w, r)
     }
 }
