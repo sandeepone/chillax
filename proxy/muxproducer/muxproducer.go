@@ -1,4 +1,4 @@
-package server
+package muxproducer
 
 import (
     "os"
@@ -6,26 +6,25 @@ import (
     "path/filepath"
     "bufio"
     "io/ioutil"
-
-    "github.com/zenazn/goji"
     "github.com/didip/chillax/libenv"
+    gorilla_mux "github.com/gorilla/mux"
     chillax_proxy_handler "github.com/didip/chillax/proxy/handler"
 )
 
-func NewHttpServer() (*HttpServer, error) {
-    server := &HttpServer{}
+func NewMuxProducer() (*MuxProducer, error) {
+    mp := &MuxProducer{}
 
-    err := server.LoadProxyHandlersFromConfig()
-    if err != nil { return server, err }
+    err := mp.LoadProxyHandlersFromConfig()
+    if err != nil { return mp, err }
 
-    return server, err
+    return mp, err
 }
 
-type HttpServer struct {
+type MuxProducer struct {
     ProxyHandlers []*chillax_proxy_handler.ProxyHandler
 }
 
-func (h *HttpServer) LoadProxyHandlersFromConfig() error {
+func (h *MuxProducer) LoadProxyHandlersFromConfig() error {
     defaultProxyBackendsDir := libenv.EnvWithDefault("DEFAULT_PROXY_BACKENDS_DIR", "")
 
     if defaultProxyBackendsDir != "" {
@@ -50,11 +49,11 @@ func (h *HttpServer) LoadProxyHandlersFromConfig() error {
     return nil
 }
 
-func (h *HttpServer) ReloadProxyHandlers() {
+func (h *MuxProducer) ReloadProxyHandlers() {
     h.ProxyHandlers = chillax_proxy_handler.NewProxyHandlers()
 }
 
-func (h *HttpServer) CreateProxyBackends() []error {
+func (h *MuxProducer) CreateProxyBackends() []error {
     errors := make([]error, 0)
 
     for _, handler := range h.ProxyHandlers {
@@ -65,7 +64,7 @@ func (h *HttpServer) CreateProxyBackends() []error {
     return errors
 }
 
-func (h *HttpServer) StartProxyBackends() []error {
+func (h *MuxProducer) StartProxyBackends() []error {
     errors := make([]error, 0)
 
     for _, handler := range h.ProxyHandlers {
@@ -76,7 +75,7 @@ func (h *HttpServer) StartProxyBackends() []error {
     return errors
 }
 
-func (h *HttpServer) StopProxyBackends() []error {
+func (h *MuxProducer) StopProxyBackends() []error {
     errors := make([]error, 0)
 
     for _, handler := range h.ProxyHandlers {
@@ -87,7 +86,11 @@ func (h *HttpServer) StopProxyBackends() []error {
     return errors
 }
 
-func (h *HttpServer) Serve() {
-    goji.Serve()
-}
+func (h *MuxProducer) GorillaMuxWithProxyBackends() *gorilla_mux.Router {
+    mux := gorilla_mux.NewRouter()
 
+    for _, handler := range h.ProxyHandlers {
+        mux.HandleFunc(handler.Backend.Path, handler.Function())
+    }
+    return mux
+}

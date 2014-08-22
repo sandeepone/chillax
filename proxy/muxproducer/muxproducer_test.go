@@ -1,4 +1,4 @@
-package server
+package muxproducer
 
 import (
     "os"
@@ -7,28 +7,28 @@ import (
 )
 
 
-func NewServerForTest(t *testing.T) *HttpServer {
+func NewMuxProducerForTest(t *testing.T) *MuxProducer {
     os.Setenv("DEFAULT_PROXY_BACKENDS_DIR", "./example-default-backend-dir")
-    server, err := NewHttpServer()
+    muxObj, err := NewMuxProducer()
 
     if err != nil {
-        t.Errorf("Failed to create HTTP server cleanly. Error: %v", err)
+        t.Errorf("Failed to create HTTP muxObj cleanly. Error: %v", err)
     }
 
-    return server
+    return muxObj
 }
 
-func TestServerStartStopBackends(t *testing.T) {
-    server := NewServerForTest(t)
+func TestMuxProducerStartStopBackends(t *testing.T) {
+    muxObj := NewMuxProducerForTest(t)
 
-    errors := server.CreateProxyBackends()
+    errors := muxObj.CreateProxyBackends()
     for _, err := range errors {
         if err != nil {
             t.Errorf("Failed to create backends. Error: %v", err)
         }
     }
 
-    errors = server.StartProxyBackends()
+    errors = muxObj.StartProxyBackends()
     for _, err := range errors {
         if err != nil {
             t.Errorf("Failed to start backends. Error: %v", err)
@@ -37,7 +37,7 @@ func TestServerStartStopBackends(t *testing.T) {
 
     libtime.SleepString("250ms")
 
-    errors = server.StopProxyBackends()
+    errors = muxObj.StopProxyBackends()
     for _, err := range errors {
         if err != nil {
             t.Errorf("Failed to stop backends. Error: %v", err)
