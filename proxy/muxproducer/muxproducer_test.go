@@ -9,26 +9,26 @@ import (
 
 func NewMuxProducerForTest(t *testing.T) *MuxProducer {
     os.Setenv("DEFAULT_PROXY_BACKENDS_DIR", "./example-default-backend-dir")
-    muxObj, err := NewMuxProducer()
+    mp, err := NewMuxProducer()
 
     if err != nil {
-        t.Errorf("Failed to create HTTP muxObj cleanly. Error: %v", err)
+        t.Errorf("Failed to create HTTP mp cleanly. Error: %v", err)
     }
 
-    return muxObj
+    return mp
 }
 
 func TestMuxProducerStartStopBackends(t *testing.T) {
-    muxObj := NewMuxProducerForTest(t)
+    mp := NewMuxProducerForTest(t)
 
-    errors := muxObj.CreateProxyBackends()
+    errors := mp.CreateProxyBackends()
     for _, err := range errors {
         if err != nil {
             t.Errorf("Failed to create backends. Error: %v", err)
         }
     }
 
-    errors = muxObj.StartProxyBackends()
+    errors = mp.StartProxyBackends()
     for _, err := range errors {
         if err != nil {
             t.Errorf("Failed to start backends. Error: %v", err)
@@ -37,7 +37,7 @@ func TestMuxProducerStartStopBackends(t *testing.T) {
 
     libtime.SleepString("250ms")
 
-    errors = muxObj.StopProxyBackends()
+    errors = mp.StopProxyBackends()
     for _, err := range errors {
         if err != nil {
             t.Errorf("Failed to stop backends. Error: %v", err)
