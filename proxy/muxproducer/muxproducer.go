@@ -24,14 +24,14 @@ type MuxProducer struct {
     ProxyHandlers []*chillax_proxy_handler.ProxyHandler
 }
 
-func (h *MuxProducer) LoadProxyHandlersFromConfig() error {
+func (mp *MuxProducer) LoadProxyHandlersFromConfig() error {
     defaultProxyBackendsDir := libenv.EnvWithDefault("DEFAULT_PROXY_BACKENDS_DIR", "")
 
     if defaultProxyBackendsDir != "" {
         files, err := filepath.Glob(path.Join(defaultProxyBackendsDir, "*.toml"))
         if err != nil { return err }
 
-        h.ProxyHandlers = make([]*chillax_proxy_handler.ProxyHandler, len(files))
+        mp.ProxyHandlers = make([]*chillax_proxy_handler.ProxyHandler, len(files))
 
         for i, fullFilename := range files {
             fileHandle, err := os.Open(fullFilename)
@@ -43,20 +43,20 @@ func (h *MuxProducer) LoadProxyHandlersFromConfig() error {
 
             if err != nil { return err }
 
-            h.ProxyHandlers[i] = chillax_proxy_handler.NewProxyHandler(definition)
+            mp.ProxyHandlers[i] = chillax_proxy_handler.NewProxyHandler(definition)
         }
     }
     return nil
 }
 
-func (h *MuxProducer) ReloadProxyHandlers() {
-    h.ProxyHandlers = chillax_proxy_handler.NewProxyHandlers()
+func (mp *MuxProducer) ReloadProxyHandlers() {
+    mp.ProxyHandlers = chillax_proxy_handler.NewProxyHandlers()
 }
 
-func (h *MuxProducer) CreateProxyBackends() []error {
+func (mp *MuxProducer) CreateProxyBackends() []error {
     errors := make([]error, 0)
 
-    for _, handler := range h.ProxyHandlers {
+    for _, handler := range mp.ProxyHandlers {
         err := handler.CreateBackends()
         if err != nil { errors = append(errors, err) }
     }
@@ -64,10 +64,10 @@ func (h *MuxProducer) CreateProxyBackends() []error {
     return errors
 }
 
-func (h *MuxProducer) StartProxyBackends() []error {
+func (mp *MuxProducer) StartProxyBackends() []error {
     errors := make([]error, 0)
 
-    for _, handler := range h.ProxyHandlers {
+    for _, handler := range mp.ProxyHandlers {
         errs := handler.StartBackends()
         if errs != nil { errors = append(errors, errs...) }
     }
@@ -75,10 +75,10 @@ func (h *MuxProducer) StartProxyBackends() []error {
     return errors
 }
 
-func (h *MuxProducer) StopProxyBackends() []error {
+func (mp *MuxProducer) StopProxyBackends() []error {
     errors := make([]error, 0)
 
-    for _, handler := range h.ProxyHandlers {
+    for _, handler := range mp.ProxyHandlers {
         errs := handler.StopBackends()
         if errs != nil { errors = append(errors, errs...) }
     }
@@ -86,10 +86,10 @@ func (h *MuxProducer) StopProxyBackends() []error {
     return errors
 }
 
-func (h *MuxProducer) GorillaMuxWithProxyBackends() *gorilla_mux.Router {
+func (mp *MuxProducer) GorillaMuxWithProxyBackends() *gorilla_mux.Router {
     mux := gorilla_mux.NewRouter()
 
-    for _, handler := range h.ProxyHandlers {
+    for _, handler := range mp.ProxyHandlers {
         mux.HandleFunc(handler.Backend.Path, handler.Function())
     }
     return mux
