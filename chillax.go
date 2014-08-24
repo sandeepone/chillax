@@ -13,8 +13,9 @@ func main() {
     mp.StartProxyBackends()
     mux := mp.GorillaMuxWithProxyBackends()
 
-    staticDir := "./web/static"
-    chillax_web_handlers.GorillaMuxRouteStaticDir(mux, staticDir)
+    chillax_web_handlers.GorillaMuxRouteStaticDir(mux, "./web/default-assets")
+
+    mux.HandleFunc("/proxies", chillax_web_handlers.ProxiesHandler(mp)).Methods("GET")
 
     http.ListenAndServe(":8080", mux)
 }

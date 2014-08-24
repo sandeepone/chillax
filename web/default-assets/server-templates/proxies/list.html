@@ -1,0 +1,3 @@
+{{ range $element := .ProxyHandlers }}
+    {{ $element.Backend.Path }}
+{{ end }}
