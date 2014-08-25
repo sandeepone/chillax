@@ -20,9 +20,9 @@ func main() {
     muxProducer.StartProxyBackends()
     mux := muxProducer.GorillaMuxWithProxyBackends()
 
-    chillax_web_handlers.GorillaMuxRouteStaticDir(mux, settings.DefaultAssetsPath)
+    mux.HandleFunc("/chillax/static", chillax_web_handlers.StaticDirHandler(settings.DefaultAssetsPath)).Methods("GET")
 
-    mux.HandleFunc("/proxies", chillax_web_handlers.ProxiesHandler(muxProducer)).Methods("GET")
+    mux.HandleFunc("/chillax/proxies", chillax_web_handlers.ProxiesHandler(muxProducer.ProxyHandlers)).Methods("GET")
 
     http.ListenAndServe(settings.HttpAddress(), mux)
 }
