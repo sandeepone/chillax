@@ -1,52 +1,28 @@
 package muxproducer
 
 import (
-    "os"
-    "path"
-    "path/filepath"
-    "bufio"
-    "io/ioutil"
-    "github.com/didip/chillax/libenv"
     gorilla_mux "github.com/gorilla/mux"
     chillax_proxy_handler "github.com/didip/chillax/proxy/handler"
 )
 
-func NewMuxProducer() (*MuxProducer, error) {
+func NewMuxProducer(proxyHandlerTomls [][]byte) (*MuxProducer) {
     mp := &MuxProducer{}
 
-    err := mp.LoadProxyHandlersFromConfig()
-    if err != nil { return mp, err }
+    mp.LoadProxyHandlersFromConfig(proxyHandlerTomls)
 
-    return mp, err
+    return mp
 }
 
 type MuxProducer struct {
     ProxyHandlers []*chillax_proxy_handler.ProxyHandler
 }
 
-func (mp *MuxProducer) LoadProxyHandlersFromConfig() error {
-    defaultProxyBackendsDir := libenv.EnvWithDefault("DEFAULT_PROXY_BACKENDS_DIR", "")
+func (mp *MuxProducer) LoadProxyHandlersFromConfig(proxyHandlerTomls [][]byte) {
+    mp.ProxyHandlers = make([]*chillax_proxy_handler.ProxyHandler, len(proxyHandlerTomls))
 
-    if defaultProxyBackendsDir != "" {
-        files, err := filepath.Glob(path.Join(defaultProxyBackendsDir, "*.toml"))
-        if err != nil { return err }
-
-        mp.ProxyHandlers = make([]*chillax_proxy_handler.ProxyHandler, len(files))
-
-        for i, fullFilename := range files {
-            fileHandle, err := os.Open(fullFilename)
-
-            if err != nil { return err }
-
-            bufReader       := bufio.NewReader(fileHandle)
-            definition, err := ioutil.ReadAll(bufReader)
-
-            if err != nil { return err }
-
-            mp.ProxyHandlers[i] = chillax_proxy_handler.NewProxyHandler(definition)
-        }
+    for i, definition := range proxyHandlerTomls {
+        mp.ProxyHandlers[i] = chillax_proxy_handler.NewProxyHandler(definition)
     }
-    return nil
 }
 
 func (mp *MuxProducer) ReloadProxyHandlers() {

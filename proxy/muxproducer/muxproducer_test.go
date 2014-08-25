@@ -3,17 +3,18 @@ package muxproducer
 import (
     "os"
     "testing"
+    "path/filepath"
     "github.com/didip/chillax/libtime"
+    chillax_web_settings "github.com/didip/chillax/web/settings"
 )
 
 
 func NewMuxProducerForTest(t *testing.T) *MuxProducer {
-    os.Setenv("DEFAULT_PROXY_BACKENDS_DIR", "./example-default-backend-dir")
-    mp, err := NewMuxProducer()
+    fullpath, _ := filepath.Abs("../../examples/configs/proxy-handlers")
+    os.Setenv("PROXY_HANDLERS_PATH", fullpath)
 
-    if err != nil {
-        t.Errorf("Failed to create HTTP mp cleanly. Error: %v", err)
-    }
+    settings := chillax_web_settings.NewServerSettings()
+    mp       := NewMuxProducer(settings.ProxyHandlerTomls)
 
     return mp
 }
