@@ -1,18 +1,20 @@
 package handlers
 
 import (
+    "fmt"
     "net/http"
     "html/template"
-    "github.com/GeertJohan/go.rice"
-    gorilla_mux "github.com/gorilla/mux"
+    // "github.com/GeertJohan/go.rice"
     chillax_proxy_handler "github.com/didip/chillax/proxy/handler"
 )
 
-func StaticDirHandler(staticDirectory string) func(http.ResponseWriter, *http.Request) {
-    box, _ := rice.FindBox(staticDirectory)
-    return func(w http.ResponseWriter, r *http.Request) {
-        http.FileServer(box.HTTPBox())
-    }
+func StaticDirHandler(staticDirectory string) http.Handler {
+    // box, _ := rice.FindBox(staticDirectory)
+    // return http.FileServer(box.HTTPBox())
+
+    fmt.Printf("staticDirectory: %v\n", staticDirectory)
+
+    return http.FileServer(http.Dir(staticDirectory))
 }
 
 func ProxiesHandler(proxyHandlers []*chillax_proxy_handler.ProxyHandler) func(http.ResponseWriter, *http.Request) {
