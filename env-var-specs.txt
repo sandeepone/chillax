@@ -1,2 +1,0 @@
-STORAGE_TYPE, default=FileSystem, description=Storage backend used by Chillax.
-DEFAULT_PROXY_BACKENDS_DIR, default="", description=Default location to load proxy backends for the first time.
