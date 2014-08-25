@@ -18,7 +18,7 @@ type ServerSettings struct {
     ProxyHandlerTomls   [][]byte
 }
 
-func NewServerSettings() *ServerSettings {
+func NewServerSettings() (*ServerSettings, error) {
     settings      := &ServerSettings{}
 
     configPath := libenv.EnvWithDefault("CONFIG_PATH", "")
@@ -32,9 +32,10 @@ func NewServerSettings() *ServerSettings {
 
     settings.SetDefaults()
     settings.SetEnvOverrides()
-    settings.LoadProxyHandlerTomls()
 
-    return settings
+    err := settings.LoadProxyHandlerTomls()
+
+    return settings, err
 }
 
 func (ss *ServerSettings) SetDefaults() {
@@ -43,7 +44,9 @@ func (ss *ServerSettings) SetDefaults() {
     }
     if ss.DefaultAssetsPath == "" {
         _, currentFilePath, _, _ := runtime.Caller(1)
-        ss.DefaultAssetsPath = path.Join(path.Dir(currentFilePath), "..", "default-assets")
+        currentFileFullPath, _   := filepath.Abs(currentFilePath)
+
+        ss.DefaultAssetsPath = path.Join(path.Dir(currentFileFullPath), "..", "default-assets")
     }
 }
 

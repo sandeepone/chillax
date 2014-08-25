@@ -8,7 +8,12 @@ import (
 )
 
 func main() {
-    settings    := chillax_web_settings.NewServerSettings()
+    settings, err := chillax_web_settings.NewServerSettings()
+
+    if err != nil {
+        panic(err)
+    }
+
     muxProducer := chillax_proxy_muxproducer.NewMuxProducer(settings.ProxyHandlerTomls)
 
     muxProducer.CreateProxyBackends()

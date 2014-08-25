@@ -1,2 +1,2 @@
 HttpPort = "8080"
-ProxyBackendsPath = "/Users/didip/projects/go/src/github.com/didip/chillax/examples/configs/proxy-backends"
+ProxyHandlersPath = "/Users/didip/projects/go/src/github.com/didip/chillax/examples/configs/proxy-handlers"
