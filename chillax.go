@@ -25,7 +25,7 @@ func main() {
 
     mux.PathPrefix("/chillax/static/").Handler(staticHandler)
 
-    mux.HandleFunc("/chillax/proxies", chillax_web_handlers.ProxiesHandler(muxProducer.ProxyHandlers)).Methods("GET")
+    mux.HandleFunc("/chillax/proxies", chillax_web_handlers.ProxiesHandler(settings, muxProducer.ProxyHandlers)).Methods("GET")
 
     http.ListenAndServe(settings.HttpAddress(), mux)
 }

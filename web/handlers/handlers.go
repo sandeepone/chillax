@@ -4,7 +4,9 @@ import (
     "fmt"
     "net/http"
     "html/template"
+    "path/filepath"
     // "github.com/GeertJohan/go.rice"
+    chillax_web_settings "github.com/didip/chillax/web/settings"
     chillax_proxy_handler "github.com/didip/chillax/proxy/handler"
 )
 
@@ -17,14 +19,15 @@ func StaticDirHandler(staticDirectory string) http.Handler {
     return http.FileServer(http.Dir(staticDirectory))
 }
 
-func ProxiesHandler(proxyHandlers []*chillax_proxy_handler.ProxyHandler) func(http.ResponseWriter, *http.Request) {
+func ProxiesHandler(settings *chillax_web_settings.ServerSettings, proxyHandlers []*chillax_proxy_handler.ProxyHandler) func(http.ResponseWriter, *http.Request) {
     return func(w http.ResponseWriter, r *http.Request) {
         data := struct {
             ProxyHandlers []*chillax_proxy_handler.ProxyHandler
         }{
             proxyHandlers,
         }
-        t, _ := template.ParseFiles("/Users/didip/projects/go/src/github.com/didip/chillax/web/default-assets/server-templates/proxies/list.html")
+        templatePath := filepath.Join(settings.DefaultAssetsPath, "server-templates/proxies/list.html")
+        t, _ := template.ParseFiles(templatePath)
         t.Execute(w, data)
     }
 }
