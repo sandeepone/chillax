@@ -2,6 +2,7 @@ package portkeeper
 
 import (
     "fmt"
+    "os/exec"
     "strconv"
     "github.com/didip/chillax/libstring"
     "github.com/didip/chillax/libnumber"
@@ -9,6 +10,10 @@ import (
 )
 
 const MAX_PORT = 65535
+
+func LsofPort(port int) ([]byte, error) {
+    return exec.Command("lsof", "-i", fmt.Sprintf(":%v", port)).Output()
+}
 
 func ReservePort(host string) int {
     host          = libstring.HostWithoutPort(host)

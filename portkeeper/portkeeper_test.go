@@ -2,7 +2,10 @@ package portkeeper
 
 import (
     "fmt"
+    "strings"
+    "os/exec"
     "testing"
+    "github.com/didip/chillax/libtime"
     "github.com/didip/chillax/libstring"
     chillax_storage "github.com/didip/chillax/storage"
 )
@@ -19,6 +22,20 @@ func CheckLengthOfUsedPortsForTest(t *testing.T, dockerHost string, expectation 
     if len(usedPorts) != expectation {
         t.Errorf("Total used ports should be %v. Used ports: %v", expectation, usedPorts)
     }
+}
+
+func TestLsofPort(t *testing.T) {
+    cmd := exec.Command("python", "-m", "SimpleHTTPServer", "33456")
+    cmd.Start()
+
+    libtime.SleepString("1s")
+
+    output, _ := LsofPort(33456)
+    if !strings.Contains(string(output), ":33456") {
+        t.Errorf("lsof should found that port 33456 is taken. Output: %v", string(output))
+    }
+
+    cmd.Process.Kill()
 }
 
 func TestReserveLargestPortWhichIsTheDefault(t *testing.T) {
