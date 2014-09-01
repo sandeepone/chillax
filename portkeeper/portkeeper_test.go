@@ -28,7 +28,7 @@ func TestLsofPort(t *testing.T) {
     cmd := exec.Command("python", "-m", "SimpleHTTPServer", "33456")
     cmd.Start()
 
-    libtime.SleepString("1s")
+    libtime.SleepString("1200ms")
 
     output, _ := LsofPort(33456)
     if !strings.Contains(string(output), ":33456") {

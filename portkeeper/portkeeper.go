@@ -4,6 +4,7 @@ import (
     "fmt"
     "os/exec"
     "strconv"
+    "sync"
     "github.com/didip/chillax/libstring"
     "github.com/didip/chillax/libnumber"
     chillax_storage "github.com/didip/chillax/storage"
@@ -16,8 +17,12 @@ func LsofPort(port int) ([]byte, error) {
 }
 
 func ReservePort(host string) int {
-    host          = libstring.HostWithoutPort(host)
-    store        := chillax_storage.NewStorage()
+    host   = libstring.HostWithoutPort(host)
+    store := chillax_storage.NewStorage()
+    mutex := &sync.Mutex{}
+
+    mutex.Lock()
+
     usedPorts, _ := store.List(fmt.Sprintf("/hosts/%v/used-ports", host))
 
     var reservedPort int
@@ -38,5 +43,8 @@ func ReservePort(host string) int {
     reservedPort     = libnumber.LargestInt([]int{firstGapPort, newSmallestPort})
 
     store.Create(fmt.Sprintf("/hosts/%v/used-ports/%v", host, reservedPort), make([]byte, 0))
+
+    mutex.Unlock()
+
     return reservedPort
 }
