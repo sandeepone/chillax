@@ -4,6 +4,7 @@ import (
     "os"
     "os/user"
     "path"
+    "sync"
     "io/ioutil"
     "github.com/didip/chillax/libenv"
 )
@@ -40,21 +41,32 @@ func (fs *FileSystem) GetRoot() string {
 func (fs *FileSystem) CreateOrUpdate(fullpath string, data []byte) error {
     var err error
 
+    mutex    := &sync.Mutex{}
     fullpath  = path.Join(fs.Root, fullpath)
     basepath := path.Dir(fullpath)
+
+    mutex.Lock()
 
     if _, err = os.Stat(fullpath); os.IsNotExist(err) {
         // Create parent directory
         err = os.MkdirAll(basepath, 0744)
-        if err != nil { return err }
+        if err != nil {
+            mutex.Unlock()
+            return err
+        }
 
         // Create file
         fileHandler, err := os.Create(fullpath)
-        if err != nil { return err }
+        if err != nil {
+            mutex.Unlock()
+            return err
+        }
         defer fileHandler.Close()
     }
 
     err = ioutil.WriteFile(fullpath, data, 0744)
+
+    mutex.Unlock()
 
     return err
 }
