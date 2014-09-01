@@ -8,6 +8,34 @@ import (
     "github.com/didip/chillax/libtime"
 )
 
+func NewDockerProxyBackendForTest() *ProxyBackend {
+    fileHandle, _ := os.Open("./example-docker-backend.toml")
+    bufReader     := bufio.NewReader(fileHandle)
+    definition, _ := ioutil.ReadAll(bufReader)
+    backend       := NewProxyBackend(definition)
+    return backend
+}
+
+func TestSerializeDockerBackendFromToml(t *testing.T) {
+    backend := NewDockerProxyBackendForTest()
+
+    _, err := backend.Serialize()
+
+    if err != nil {
+        t.Errorf("Failed to serialize backend")
+    }
+}
+
+func TestSaveDockerBackend(t *testing.T) {
+    backend := NewDockerProxyBackendForTest()
+
+    err := backend.Save()
+
+    if err != nil {
+        t.Errorf("Failed to save backend")
+    }
+}
+
 func TestIsDocker(t *testing.T) {
     backend := NewDockerProxyBackendForTest()
 

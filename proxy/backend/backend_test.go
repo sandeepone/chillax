@@ -7,8 +7,8 @@ import (
     "io/ioutil"
 )
 
-func NewDockerProxyBackendForTest() *ProxyBackend {
-    fileHandle, _ := os.Open("./example-docker-backend.toml")
+func NewSerializedDockerProxyBackendForTest() *ProxyBackend {
+    fileHandle, _ := os.Open("./tests-data/serialized-docker-backend.toml")
     bufReader     := bufio.NewReader(fileHandle)
     definition, _ := ioutil.ReadAll(bufReader)
     backend       := NewProxyBackend(definition)
@@ -16,7 +16,7 @@ func NewDockerProxyBackendForTest() *ProxyBackend {
 }
 
 func TestDeserializeFromToml(t *testing.T) {
-    backend := NewDockerProxyBackendForTest()
+    backend := NewSerializedDockerProxyBackendForTest()
 
     if backend.Path != "/path/to/scraper" {
         t.Errorf("backend.Path should be /path/to/scraper. Backend: %s", backend)
@@ -40,8 +40,8 @@ func TestDeserializeFromToml(t *testing.T) {
     if backend.Env[0] != "HTTP_PORT=8080" {
         t.Errorf("backend.Docker.Env[0] should == HTTP_PORT=8080. Backend.Env: %s", backend.Env)
     }
-    if backend.Docker.Hosts[0] != "tcp://127.0.0.1:2375" {
-        t.Errorf("backend.Docker.Hosts[0] should == tcp://127.0.0.1:2375. Backend.Docker.Hosts: %s", backend.Docker.Hosts)
+    if backend.Docker.Hosts[0] != "tcp://192.168.59.103:2375" {
+        t.Errorf("backend.Docker.Hosts[0] should == tcp://192.168.59.103:2375. Backend.Docker.Hosts: %s", backend.Docker.Hosts)
     }
     if backend.Docker.Ports[0] != "8080/tcp" {
         t.Errorf("backend.Docker.Ports[0] should == 8080/tcp. Backend.Docker.Ports: %s", backend.Docker.Ports)
@@ -74,24 +74,3 @@ func TestDeserializeFromToml(t *testing.T) {
         t.Errorf("backend.Docker.Containers[0].Env[0] should == backend.Docker.Containers[1].Env[0]")
     }
 }
-
-func TestSerializeFromToml(t *testing.T) {
-    backend := NewDockerProxyBackendForTest()
-
-    _, err := backend.Serialize()
-
-    if err != nil {
-        t.Errorf("Failed to serialize backend")
-    }
-}
-
-func TestSave(t *testing.T) {
-    backend := NewDockerProxyBackendForTest()
-
-    err := backend.Save()
-
-    if err != nil {
-        t.Errorf("Failed to save backend")
-    }
-}
-

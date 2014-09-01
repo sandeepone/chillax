@@ -28,22 +28,6 @@ func TestDeserializeProcessProxyBackendFromToml(t *testing.T) {
     }
 }
 
-func TestCreateProcesses(t *testing.T) {
-    backend := NewProcessProxyBackendForTest()
-
-    err := backend.CreateProcesses()
-    if err != nil {
-        t.Errorf("Failed to create processes. Error: %v", err)
-    }
-
-    if len(backend.Process.Instances) < 1 {
-        t.Errorf("Instances should be recorded inside backend.Process.Instances. Backend.Process.Instances: %v", backend.Process.Instances)
-    }
-    if backend.Process.Instances[0].Host != backend.Process.Hosts[0] {
-        t.Errorf("Instance host was not recorded correctly. Backend.Process.Instances: %v", backend.Process.Instances)
-    }
-}
-
 func TestStartRestartAndStopProcesses(t *testing.T) {
     backend := NewProcessProxyBackendForTest()
     backend.CreateProcesses()
@@ -55,14 +39,14 @@ func TestStartRestartAndStopProcesses(t *testing.T) {
         }
     }
 
-    libtime.SleepString("15ms")
+    // libtime.SleepString("15ms")
 
-    errors = backend.RestartProcesses()
-    for _, err := range errors {
-        if err != nil {
-            t.Errorf("Failed to restart process. Error: %v", err)
-        }
-    }
+    // errors = backend.RestartProcesses()
+    // for _, err := range errors {
+    //     if err != nil {
+    //         t.Errorf("Failed to restart process. Error: %v", err)
+    //     }
+    // }
 
     libtime.SleepString("15ms")
 
