@@ -38,16 +38,45 @@ func TestLsofPort(t *testing.T) {
     cmd.Process.Kill()
 }
 
-func TestReserveLargestPortWhichIsTheDefault(t *testing.T) {
+func TestReservePortShouldNotCareOfHostProtocol(t *testing.T) {
     dockerUri  := "tcp://127.0.0.1:2375"
     dockerHost := libstring.HostWithoutPort(dockerUri)
     storage    := chillax_storage.NewStorage()
 
     storage.Delete(fmt.Sprintf("/hosts/%v/used-ports/", dockerHost))
 
+    ReservePort(dockerUri)
+    CheckLengthOfUsedPortsForTest(t, dockerHost, 1)
+
+    ReservePort(dockerHost)
+    CheckLengthOfUsedPortsForTest(t, dockerHost, 2)
+}
+
+func TestCleanReservedPortsShouldNotCareOfHostProtocol(t *testing.T) {
+    dockerUri  := "tcp://127.0.0.1:2375"
+    dockerHost := libstring.HostWithoutPort(dockerUri)
+    storage    := chillax_storage.NewStorage()
+
+    storage.Delete(fmt.Sprintf("/hosts/%v/used-ports/", dockerHost))
+
+    ReservePort(dockerUri)
+    CleanReservedPorts(dockerUri)
     CheckLengthOfUsedPortsForTest(t, dockerHost, 0)
 
-    port := ReservePort(dockerUri)
+    ReservePort(dockerHost)
+    CleanReservedPorts(dockerHost)
+    CheckLengthOfUsedPortsForTest(t, dockerHost, 0)
+}
+
+func TestReserveLargestPortWhichIsTheDefault(t *testing.T) {
+    dockerHost := "127.0.0.1"
+    storage    := chillax_storage.NewStorage()
+
+    storage.Delete(fmt.Sprintf("/hosts/%v/used-ports/", dockerHost))
+
+    CheckLengthOfUsedPortsForTest(t, dockerHost, 0)
+
+    port := ReservePort(dockerHost)
 
     if port != MAX_PORT {
         t.Errorf("port should equal to %v", MAX_PORT)
@@ -55,23 +84,26 @@ func TestReserveLargestPortWhichIsTheDefault(t *testing.T) {
 
     CheckLengthOfUsedPortsForTest(t, dockerHost, 1)
 
-    storage.Delete(fmt.Sprintf("/hosts/%v/used-ports/", dockerHost))
+    // Since we are not actually using the port, CleanReservedPorts will delete port correctly.
+    err := CleanReservedPorts(dockerHost)
+    if err != nil {
+        t.Errorf("CleanReservedPorts should work. Error: %v", err)
+    }
 
     CheckLengthOfUsedPortsForTest(t, dockerHost, 0)
 }
 
 func TestReserveGapPort(t *testing.T) {
-    dockerUri  := "tcp://127.0.0.1:2375"
-    dockerHost := libstring.HostWithoutPort(dockerUri)
+    dockerHost := "127.0.0.1"
     storage    := chillax_storage.NewStorage()
 
     storage.Delete(fmt.Sprintf("/hosts/%v/used-ports/", dockerHost))
 
     CheckLengthOfUsedPortsForTest(t, dockerHost, 0)
 
-    ReservePort(dockerUri)
+    ReservePort(dockerHost)
     deleteme := ReservePort(dockerHost)
-    ReservePort(dockerUri)
+    ReservePort(dockerHost)
 
     CheckLengthOfUsedPortsForTest(t, dockerHost, 3)
 
@@ -79,13 +111,14 @@ func TestReserveGapPort(t *testing.T) {
 
     CheckLengthOfUsedPortsForTest(t, dockerHost, 2)
 
-    port := ReservePort(dockerUri)
+    port := ReservePort(dockerHost)
 
     if port != deleteme {
         t.Errorf("ReservePort did not regenerate gap port. Port: %v", port)
     }
 
-    storage.Delete(fmt.Sprintf("/hosts/%v/used-ports/", dockerHost))
+    // Since we are not actually using the port, CleanReservedPorts will delete port correctly.
+    CleanReservedPorts(dockerHost)
 
     CheckLengthOfUsedPortsForTest(t, dockerHost, 0)
 }
