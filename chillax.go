@@ -1,31 +1,16 @@
 package main
 
 import (
-    "net/http"
-    chillax_web_handlers "github.com/didip/chillax/web/handlers"
-    chillax_web_settings "github.com/didip/chillax/web/settings"
-    chillax_proxy_muxproducer "github.com/didip/chillax/proxy/muxproducer"
+    chillax_web_server "github.com/didip/chillax/web/server"
 )
 
 func main() {
-    settings, err := chillax_web_settings.NewServerSettings()
-
+    server, err := chillax_web_server.NewServer()
     if err != nil {
         panic(err)
     }
 
-    muxProducer := chillax_proxy_muxproducer.NewMuxProducer(settings.ProxyHandlerTomls)
+    mux := server.NewGorillaMux()
 
-    muxProducer.CreateProxyBackends()
-    muxProducer.StartProxyBackends()
-    mux := muxProducer.GorillaMuxWithProxyBackends()
-
-    staticHandler := chillax_web_handlers.StaticDirHandler(settings.DefaultAssetsPath)
-    staticHandler  = http.StripPrefix("/chillax/static/", staticHandler)
-
-    mux.PathPrefix("/chillax/static/").Handler(staticHandler)
-
-    mux.HandleFunc("/chillax/proxies", chillax_web_handlers.ProxiesHandler(settings, muxProducer.ProxyHandlers)).Methods("GET")
-
-    http.ListenAndServe(settings.HttpAddress(), mux)
+    server.Serve(mux)
 }
