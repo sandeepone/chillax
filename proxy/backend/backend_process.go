@@ -6,7 +6,6 @@ import (
     "strings"
     "strconv"
     "errors"
-    // "encoding/gob"
     "github.com/didip/chillax/libnet"
     "github.com/didip/chillax/libprocess"
     chillax_portkeeper "github.com/didip/chillax/portkeeper"
@@ -74,22 +73,13 @@ func (pb *ProxyBackend) CreateProcesses() error {
             hostIndex = i % numHosts
         }
 
-        host := pb.Process.Hosts[hostIndex]
+        host    := pb.Process.Hosts[hostIndex]
+        newPort := chillax_portkeeper.ReservePort(host)
 
-        //
-        // Check if chosen host is local or not
-        //
-        if libnet.RemoteToLocalHostEquality(host) {
-            newPort := chillax_portkeeper.ReservePort(host)
+        pb.Process.Instances[i] = pb.NewProxyBackendProcessInstanceConfig(host, newPort)
 
-            pb.Process.Instances[i] = pb.NewProxyBackendProcessInstanceConfig(host, newPort)
-
-            err := pb.Save()
-            if err != nil { return err }
-        } else {
-
-        }
-
+        err := pb.Save()
+        if err != nil { return err }
     }
     return nil
 }
@@ -105,11 +95,16 @@ func (pb *ProxyBackend) StartProcesses() []error {
     }
 
     for i, instance := range pb.Process.Instances {
-        err := instance.ProcessWrapper.StartAndWatch()
-        if err == nil {
-            err = pb.Save()
+        //
+        // Start process only if instance.Host is local
+        //
+        if libnet.RemoteToLocalHostEquality(instance.Host) {
+            err := instance.ProcessWrapper.StartAndWatch()
+            if err == nil {
+                err = pb.Save()
+            }
+            errorSlice[i] = err
         }
-        errorSlice[i] = err
     }
 
     return errorSlice
