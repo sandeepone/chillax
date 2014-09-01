@@ -8,7 +8,7 @@ import (
     chillax_storage "github.com/didip/chillax/storage"
 )
 
-const MAX_PORT = 65536
+const MAX_PORT = 65535
 
 func ReservePort(host string) int {
     host          = libstring.HostWithoutPort(host)
