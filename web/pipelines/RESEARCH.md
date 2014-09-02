@@ -1,5 +1,7 @@
 * A pipeline consists of multiple stages.
 
+* A pipeline can have interval for reoccuring job. Or it can be created for 1 time thing.
+
 * Each pipeline is handled by 1 goroutine.
 
 * Each pipeline definition is serialized to storage.
@@ -19,3 +21,5 @@
 * Each stage failure is serialized on storage.
 
 * Each stage success is recorded as LastSuccessAt on storage.
+
+* This blog is a great inspiration: http://blog.golang.org/pipelines. Almost exactly what I want down to the terminology.
