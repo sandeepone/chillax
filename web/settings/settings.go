@@ -12,14 +12,20 @@ import (
 )
 
 type ServerSettings struct {
-    HttpPort            string
+    // HTTP port to listen to
+    HttpPort string
+
+    // Timeout is the duration to allow outstanding requests to survive
+    // before forcefully terminating them.
+    RequestTimeoutOnRestart string
+
     ProxyHandlersPath   string
     DefaultAssetsPath   string
     ProxyHandlerTomls   [][]byte
 }
 
 func NewServerSettings() (*ServerSettings, error) {
-    settings      := &ServerSettings{}
+    settings := &ServerSettings{}
 
     configPath := libenv.EnvWithDefault("CONFIG_PATH", "")
     if configPath != "" {
@@ -42,6 +48,9 @@ func (ss *ServerSettings) SetDefaults() {
     if ss.HttpPort == "" {
         ss.HttpPort = "80"
     }
+    if ss.RequestTimeoutOnRestart == "" {
+        ss.RequestTimeoutOnRestart = "3s"
+    }
     if ss.DefaultAssetsPath == "" {
         _, currentFilePath, _, _ := runtime.Caller(1)
         currentFileFullPath, _   := filepath.Abs(currentFilePath)
@@ -51,9 +60,10 @@ func (ss *ServerSettings) SetDefaults() {
 }
 
 func (ss *ServerSettings) SetEnvOverrides() {
-    ss.HttpPort          = libenv.EnvWithDefault("HTTP_PORT", ss.HttpPort)
-    ss.ProxyHandlersPath = libenv.EnvWithDefault("PROXY_HANDLERS_PATH", ss.ProxyHandlersPath)
-    ss.DefaultAssetsPath = libenv.EnvWithDefault("DEFAULT_ASSETS_PATH", ss.DefaultAssetsPath)
+    ss.HttpPort                = libenv.EnvWithDefault("HTTP_PORT", ss.HttpPort)
+    ss.RequestTimeoutOnRestart = libenv.EnvWithDefault("REQUEST_TIMEOUT_ON_RESTART", ss.RequestTimeoutOnRestart)
+    ss.ProxyHandlersPath       = libenv.EnvWithDefault("PROXY_HANDLERS_PATH", ss.ProxyHandlersPath)
+    ss.DefaultAssetsPath       = libenv.EnvWithDefault("DEFAULT_ASSETS_PATH", ss.DefaultAssetsPath)
 }
 
 func (ss *ServerSettings) LoadProxyHandlerTomls() error {

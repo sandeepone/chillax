@@ -13,12 +13,14 @@ import (
 func NewServer() (*Server, error) {
     settings, err := chillax_web_settings.NewServerSettings()
 
+    requestTimeoutOnRestart, err := time.ParseDuration(settings.RequestTimeoutOnRestart)
+
     server := &Server{
         AdminProxiesPath: "/chillax/proxies",
         AdminStaticPath: "/chillax/static/",
         Settings: settings,
         Server: &graceful.Server{
-            Timeout: 5 * time.Second,
+            Timeout: requestTimeoutOnRestart,
             Server: &http.Server{Addr: settings.HttpAddress()},
         },
     }
