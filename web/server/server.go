@@ -14,6 +14,10 @@ func NewServer() (*Server, error) {
     settings, err := chillax_web_settings.NewServerSettings()
 
     requestTimeoutOnRestart, err := time.ParseDuration(settings.RequestTimeoutOnRestart)
+    if err != nil {
+        settings.RequestTimeoutOnRestart = "3s"
+        requestTimeoutOnRestart, _ = time.ParseDuration(settings.RequestTimeoutOnRestart)
+    }
 
     server := &Server{
         AdminProxiesPath: "/chillax/proxies",
