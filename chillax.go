@@ -12,5 +12,7 @@ func main() {
 
     mux := server.NewGorillaMux()
 
-    server.Serve(mux)
+    server.Handler = mux
+
+    server.ListenAndServe()
 }

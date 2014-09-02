@@ -1,7 +1,9 @@
 package server
 
 import (
+    "time"
     "net/http"
+    "github.com/stretchr/graceful"
     gorilla_mux "github.com/gorilla/mux"
     chillax_web_handlers "github.com/didip/chillax/web/handlers"
     chillax_web_settings "github.com/didip/chillax/web/settings"
@@ -9,17 +11,24 @@ import (
 )
 
 func NewServer() (*Server, error) {
-    var err error
+    settings, err := chillax_web_settings.NewServerSettings()
 
-    server := &Server{}
-    server.AdminProxiesPath = "/chillax/proxies"
-    server.AdminStaticPath  = "/chillax/static/"
+    server := &Server{
+        AdminProxiesPath: "/chillax/proxies",
+        AdminStaticPath: "/chillax/static/",
+        Settings: settings,
+        Server: &graceful.Server{
+            Timeout: 5 * time.Second,
+            Server: &http.Server{Addr: settings.HttpAddress()},
+        },
+    }
 
-    server.Settings, err = chillax_web_settings.NewServerSettings()
     return server, err
 }
 
 type Server struct {
+    *graceful.Server
+
     Settings         *chillax_web_settings.ServerSettings
     AdminProxiesPath string
     AdminStaticPath  string
@@ -43,8 +52,4 @@ func (s *Server) NewGorillaMux() *gorilla_mux.Router {
     mux.PathPrefix(s.AdminStaticPath).Handler(staticHandler)
 
     return mux
-}
-
-func (s *Server) Serve(handler http.Handler) error {
-    return http.ListenAndServe(s.Settings.HttpAddress(), handler)
 }
