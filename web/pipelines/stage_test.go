@@ -23,12 +23,11 @@ func TestStageRunBadRequest(t *testing.T) {
     stage := NewStage("http://localhost:3000")
     stage.Timeout = 1 * time.Millisecond
 
-    stagerun, err := stage.Run()
+    _, errChan := stage.Run()
+
+    err := <- errChan
 
     if err == nil {
         t.Error("Request should fail.")
-    }
-    if stagerun.TimestampUnixNano < 0 {
-        t.Error("Request should fail and set stagerun.TimestampUnixNano.")
     }
 }
