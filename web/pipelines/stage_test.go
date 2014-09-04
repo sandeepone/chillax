@@ -5,34 +5,30 @@ import (
     "testing"
 )
 
-func TestStageNewRequest(t *testing.T) {
-    stage := &Stage{}
+func TestNewStage(t *testing.T) {
+    stage := NewStage("http://localhost:3000")
 
-    req := stage.NewRequest("http://localhost:3000")
-
-    if req.Uri != "http://localhost:3000" {
+    if stage.Uri != "http://localhost:3000" {
         t.Error("URI was not set correctly")
     }
-    if req.Method != "POST" {
+    if stage.Method != "POST" {
         t.Error("Default method should be POST.")
     }
-    if req.Timeout != 1 * time.Second {
+    if stage.Timeout != 1 * time.Second {
         t.Error("Default timeout should be 1 second.")
     }
 }
 
 func TestStageRunBadRequest(t *testing.T) {
-    stage := &Stage{}
+    stage := NewStage("http://localhost:3000")
+    stage.Timeout = 1 * time.Millisecond
 
-    req := stage.NewRequest("http://localhost:3000")
-    req.Timeout = 1 * time.Millisecond
-
-    err := stage.Run(req)
+    stagerun, err := stage.Run()
 
     if err == nil {
         t.Error("Request should fail.")
     }
-    if stage.LastFailUnixNano < 0 {
-        t.Error("Request should fail and set req.LastFailUnixNano.")
+    if stagerun.TimestampUnixNano < 0 {
+        t.Error("Request should fail and set stagerun.TimestampUnixNano.")
     }
 }

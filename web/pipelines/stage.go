@@ -3,27 +3,42 @@ package pipelines
 import (
     "time"
     "github.com/franela/goreq"
+    "github.com/tuxychandru/pubsub"
 )
 
+func NewStage(uri string) *Stage {
+    return &Stage{&goreq.Request{
+            Uri:     uri,
+            Method:  "POST",
+            Timeout: 1 * time.Second,
+        },
+    }
+}
+
+type StageRun struct {
+    TimestampUnixNano int64
+}
+
 type Stage struct {
-    LastSuccessUnixNano int64
-    LastFailUnixNano    int64
+    *goreq.Request
 }
 
-func (s *Stage) NewRequest(uri string) *goreq.Request {
-    return &goreq.Request{
-        Uri:     uri,
-        Method:  "POST",
-        Timeout: 1 * time.Second,
-    }
+func (s *Stage) NewStageRun() *StageRun {
+    sr := &StageRun{}
+    sr.TimestampUnixNano = time.Now().UnixNano()
+    return sr
 }
 
-func (s *Stage) Run(req *goreq.Request) error {
-    _, err := req.Do()
+func (s *Stage) Run() (*StageRun, error) {
+    sr := s.NewStageRun()
+
+    _, err := s.Do()
     if err == nil {
-        s.LastSuccessUnixNano = time.Now().UnixNano()
     } else {
-        s.LastFailUnixNano = time.Now().UnixNano()
     }
-    return err
+    return sr, err
+}
+
+func (s *Stage) NewPubSub(bufferSize int) *pubsub.PubSub {
+    return pubsub.New(bufferSize)
 }
