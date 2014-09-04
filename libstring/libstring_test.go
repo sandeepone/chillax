@@ -53,3 +53,24 @@ func TestSplitDockerPorts(t *testing.T) {
     }
 }
 
+func TestEnvSubDollar(t *testing.T) {
+    gopath := os.Getenv("GOPATH")
+    input  := "/blah$GOPATH"
+    output := EnvSubDollar(input)
+
+    if output != "/blah" + gopath {
+        t.Errorf("Failed to substitute $ENV correctly. Output: %v", output)
+    }
+}
+
+func TestEnvSubCurly(t *testing.T) {
+    gopath := os.Getenv("GOPATH")
+
+    for _, input := range []string{"/blah{GOPATH}", "/blah{ GOPATH}", "/blah{GOPATH }", "/blah{ GOPATH }"} {
+        output := EnvSubCurly(input)
+
+        if output != "/blah" + gopath {
+            t.Errorf("Failed to substitute {ENV} correctly. Output: %v", output)
+        }
+    }
+}

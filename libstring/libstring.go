@@ -60,3 +60,51 @@ func SplitDockerPorts(ports string) (string, string, string) {
 
     return hostIp, hostPort, containerPort
 }
+
+func EnvSubDollar(input string) string {
+    if !strings.Contains(input, "$") {
+        return input
+    }
+
+    output := input
+
+    for _, e := range os.Environ() {
+        if !strings.Contains(output, "$") {
+            return output
+        }
+
+        pair := strings.Split(e, "=")
+
+        output = strings.Replace(output, "$" + pair[0], pair[1], -1)
+    }
+
+    return output
+}
+
+func EnvSubCurly(input string) string {
+    if !strings.Contains(input, "{") && !strings.Contains(input, "}") {
+        return input
+    }
+
+    output := input
+
+    for _, e := range os.Environ() {
+        if !strings.Contains(output, "{") && !strings.Contains(output, "}") {
+            return output
+        }
+
+        pair  := strings.Split(e, "=")
+        key   := pair[0]
+        value := pair[1]
+
+        for _, toBeReplaced := range []string{"{"+key+"}", "{ "+key+"}", "{"+key+" }", "{ "+key+" }"} {
+            if !strings.Contains(output, "{") && !strings.Contains(output, "}") {
+                return output
+            }
+
+            output = strings.Replace(output, toBeReplaced, value, -1)
+        }
+    }
+
+    return output
+}
