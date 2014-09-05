@@ -1,11 +1,6 @@
 package pipelines
 
-import (
-	"time"
-
-	"github.com/BurntSushi/toml"
-	"github.com/franela/goreq"
-)
+import "github.com/BurntSushi/toml"
 
 type Pipeline struct {
 	RunMixin
@@ -13,14 +8,7 @@ type Pipeline struct {
 }
 
 func NewPipeline(definition string) *Pipeline {
-	p := &Pipeline{
-		RunMixin: RunMixin{
-			goreq.Request{
-				Method:  "POST",
-				Timeout: 1 * time.Second,
-			},
-		},
-	}
+	p := &Pipeline{}
 
 	toml.Decode(definition, p)
 

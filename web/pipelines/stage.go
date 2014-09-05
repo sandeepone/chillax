@@ -13,9 +13,11 @@ func NewStage(uri string) *Stage {
 	stage := &Stage{
 		RunMixin: RunMixin{
 			goreq.Request{
-				Uri:     uri,
-				Method:  "POST",
-				Timeout: 1 * time.Second,
+				Uri:         uri,
+				Method:      "POST",
+				Timeout:     1 * time.Second,
+				Accept:      "application/json",
+				ContentType: "application/json",
 			},
 		},
 		Stages: make([]*Stage, 0),
