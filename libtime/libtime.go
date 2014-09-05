@@ -1,13 +1,15 @@
 package libtime
 
 import (
-    "time"
+	"time"
 )
 
 func SleepString(definition string) error {
-    delayTime, err := time.ParseDuration(definition)
-    if err != nil { return err }
+	delayTime, err := time.ParseDuration(definition)
+	if err != nil {
+		return err
+	}
 
-    time.Sleep(delayTime)
-    return nil
+	time.Sleep(delayTime)
+	return nil
 }

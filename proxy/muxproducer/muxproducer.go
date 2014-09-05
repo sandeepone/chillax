@@ -1,72 +1,78 @@
 package muxproducer
 
 import (
-    gorilla_mux "github.com/gorilla/mux"
-    chillax_proxy_handler "github.com/didip/chillax/proxy/handler"
+	chillax_proxy_handler "github.com/didip/chillax/proxy/handler"
+	gorilla_mux "github.com/gorilla/mux"
 )
 
-func NewMuxProducer(proxyHandlerTomls [][]byte) (*MuxProducer) {
-    mp := &MuxProducer{}
+func NewMuxProducer(proxyHandlerTomls [][]byte) *MuxProducer {
+	mp := &MuxProducer{}
 
-    mp.LoadProxyHandlersFromConfig(proxyHandlerTomls)
+	mp.LoadProxyHandlersFromConfig(proxyHandlerTomls)
 
-    return mp
+	return mp
 }
 
 type MuxProducer struct {
-    ProxyHandlers []*chillax_proxy_handler.ProxyHandler
+	ProxyHandlers []*chillax_proxy_handler.ProxyHandler
 }
 
 func (mp *MuxProducer) LoadProxyHandlersFromConfig(proxyHandlerTomls [][]byte) {
-    mp.ProxyHandlers = make([]*chillax_proxy_handler.ProxyHandler, len(proxyHandlerTomls))
+	mp.ProxyHandlers = make([]*chillax_proxy_handler.ProxyHandler, len(proxyHandlerTomls))
 
-    for i, definition := range proxyHandlerTomls {
-        mp.ProxyHandlers[i] = chillax_proxy_handler.NewProxyHandler(definition)
-    }
+	for i, definition := range proxyHandlerTomls {
+		mp.ProxyHandlers[i] = chillax_proxy_handler.NewProxyHandler(definition)
+	}
 }
 
 func (mp *MuxProducer) ReloadProxyHandlers() {
-    mp.ProxyHandlers = chillax_proxy_handler.NewProxyHandlers()
+	mp.ProxyHandlers = chillax_proxy_handler.NewProxyHandlers()
 }
 
 func (mp *MuxProducer) CreateProxyBackends() []error {
-    errors := make([]error, 0)
+	errors := make([]error, 0)
 
-    for _, handler := range mp.ProxyHandlers {
-        err := handler.CreateBackends()
-        if err != nil { errors = append(errors, err) }
-    }
+	for _, handler := range mp.ProxyHandlers {
+		err := handler.CreateBackends()
+		if err != nil {
+			errors = append(errors, err)
+		}
+	}
 
-    return errors
+	return errors
 }
 
 func (mp *MuxProducer) StartProxyBackends() []error {
-    errors := make([]error, 0)
+	errors := make([]error, 0)
 
-    for _, handler := range mp.ProxyHandlers {
-        errs := handler.StartBackends()
-        if errs != nil { errors = append(errors, errs...) }
-    }
+	for _, handler := range mp.ProxyHandlers {
+		errs := handler.StartBackends()
+		if errs != nil {
+			errors = append(errors, errs...)
+		}
+	}
 
-    return errors
+	return errors
 }
 
 func (mp *MuxProducer) StopProxyBackends() []error {
-    errors := make([]error, 0)
+	errors := make([]error, 0)
 
-    for _, handler := range mp.ProxyHandlers {
-        errs := handler.StopBackends()
-        if errs != nil { errors = append(errors, errs...) }
-    }
+	for _, handler := range mp.ProxyHandlers {
+		errs := handler.StopBackends()
+		if errs != nil {
+			errors = append(errors, errs...)
+		}
+	}
 
-    return errors
+	return errors
 }
 
 func (mp *MuxProducer) GorillaMuxWithProxyBackends() *gorilla_mux.Router {
-    mux := gorilla_mux.NewRouter()
+	mux := gorilla_mux.NewRouter()
 
-    for _, handler := range mp.ProxyHandlers {
-        mux.HandleFunc(handler.Backend.Path, handler.Function())
-    }
-    return mux
+	for _, handler := range mp.ProxyHandlers {
+		mux.HandleFunc(handler.Backend.Path, handler.Function())
+	}
+	return mux
 }

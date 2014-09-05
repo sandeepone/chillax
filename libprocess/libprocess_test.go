@@ -1,159 +1,159 @@
 package libprocess
 
 import (
-    "encoding/json"
-    "testing"
-    "github.com/didip/chillax/libtime"
+	"encoding/json"
+	"github.com/didip/chillax/libtime"
+	"testing"
 )
 
 func NewProcessWrapperForTest() *ProcessWrapper {
-    p := &ProcessWrapper{
-        Name:    "SimpleHTTPServer",
-        Command: "/usr/bin/python -m SimpleHTTPServer",
-    }
-    p.SetDefaults()
-    p.Ping = "10ms"
-    return p
+	p := &ProcessWrapper{
+		Name:    "SimpleHTTPServer",
+		Command: "/usr/bin/python -m SimpleHTTPServer",
+	}
+	p.SetDefaults()
+	p.Ping = "10ms"
+	return p
 }
 
 func CheckBasicStartForTest(t *testing.T, p *ProcessWrapper) {
-    err := p.Start()
-    if err != nil {
-        t.Errorf("Unable to start process. Error: %v", err)
-    }
-    if p.Status != "started" {
-        t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
-    }
-    if p.Pid <= 0 || p.CmdStruct.Process.Pid <= 0 {
-        t.Errorf("Process should start with PID > 0. p.Pid: %v, p.CmdStruct.Process.Pid: %v", p.Pid, p.CmdStruct.Process.Pid)
-    }
-    if p.Pid != p.CmdStruct.Process.Pid {
-        t.Errorf("ProcessWrapper PID should == Process PID")
-    }
+	err := p.Start()
+	if err != nil {
+		t.Errorf("Unable to start process. Error: %v", err)
+	}
+	if p.Status != "started" {
+		t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
+	}
+	if p.Pid <= 0 || p.CmdStruct.Process.Pid <= 0 {
+		t.Errorf("Process should start with PID > 0. p.Pid: %v, p.CmdStruct.Process.Pid: %v", p.Pid, p.CmdStruct.Process.Pid)
+	}
+	if p.Pid != p.CmdStruct.Process.Pid {
+		t.Errorf("ProcessWrapper PID should == Process PID")
+	}
 }
 
 func CheckStartAndWatchForTest(t *testing.T, p *ProcessWrapper) {
-    err := p.StartAndWatch()
-    if err != nil {
-        t.Errorf("Unable to start process. Error: %v", err)
-    }
-    if p.Status != "started" {
-        t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
-    }
-    if p.Pid <= 0 || p.CmdStruct.Process.Pid <= 0 {
-        t.Errorf("Process should start with PID > 0. p.Pid: %v, p.CmdStruct.Process.Pid: %v", p.Pid, p.CmdStruct.Process.Pid)
-    }
-    if p.Pid != p.CmdStruct.Process.Pid {
-        t.Errorf("ProcessWrapper PID should == Process PID")
-    }
+	err := p.StartAndWatch()
+	if err != nil {
+		t.Errorf("Unable to start process. Error: %v", err)
+	}
+	if p.Status != "started" {
+		t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
+	}
+	if p.Pid <= 0 || p.CmdStruct.Process.Pid <= 0 {
+		t.Errorf("Process should start with PID > 0. p.Pid: %v, p.CmdStruct.Process.Pid: %v", p.Pid, p.CmdStruct.Process.Pid)
+	}
+	if p.Pid != p.CmdStruct.Process.Pid {
+		t.Errorf("ProcessWrapper PID should == Process PID")
+	}
 }
 
 func CheckBasicStopForTest(t *testing.T, p *ProcessWrapper) {
-    err := p.Stop()
-    if err != nil {
-        t.Errorf("Unable to stop process. Error: %v", err)
-    }
-    if p.Status != "stopped" {
-        t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
-    }
+	err := p.Stop()
+	if err != nil {
+		t.Errorf("Unable to stop process. Error: %v", err)
+	}
+	if p.Status != "stopped" {
+		t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
+	}
 }
 
 func TestToJson(t *testing.T) {
-    p := NewProcessWrapperForTest()
+	p := NewProcessWrapperForTest()
 
-    CheckBasicStartForTest(t, p)
+	CheckBasicStartForTest(t, p)
 
-    inJson, _ := p.ToJson()
+	inJson, _ := p.ToJson()
 
-    var deserializedData map[string]interface{}
+	var deserializedData map[string]interface{}
 
-    err := json.Unmarshal(inJson, &deserializedData)
-    if err != nil {
-        t.Errorf("Unable to deserialize JSON. Error: %v", err)
-    }
+	err := json.Unmarshal(inJson, &deserializedData)
+	if err != nil {
+		t.Errorf("Unable to deserialize JSON. Error: %v", err)
+	}
 
-    if deserializedData["Name"].(string) != p.Name {
-        t.Errorf("Bad deserialization")
-    }
+	if deserializedData["Name"].(string) != p.Name {
+		t.Errorf("Bad deserialization")
+	}
 
-    CheckBasicStopForTest(t, p)
+	CheckBasicStopForTest(t, p)
 }
 
 func TestProcessStartRestartStop(t *testing.T) {
-    p := NewProcessWrapperForTest()
+	p := NewProcessWrapperForTest()
 
-    CheckBasicStartForTest(t, p)
+	CheckBasicStartForTest(t, p)
 
-    err := p.Restart()
-    if err != nil {
-        t.Errorf("Unable to restart process. Error: %v", err)
-    }
-    if p.Status != "restarted" {
-        t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
-    }
+	err := p.Restart()
+	if err != nil {
+		t.Errorf("Unable to restart process. Error: %v", err)
+	}
+	if p.Status != "restarted" {
+		t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
+	}
 
-    CheckBasicStopForTest(t, p)
+	CheckBasicStopForTest(t, p)
 }
 
 func TestProcessStartAndWatch(t *testing.T) {
-    p := NewProcessWrapperForTest()
+	p := NewProcessWrapperForTest()
 
-    CheckStartAndWatchForTest(t, p)
+	CheckStartAndWatchForTest(t, p)
 
-    libtime.SleepString("14ms")
+	libtime.SleepString("14ms")
 
-    if p.Status != "running" {
-        t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
-    }
+	if p.Status != "running" {
+		t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
+	}
 
-    firstPid := p.Pid
+	firstPid := p.Pid
 
-    if p.CmdStruct.Process.Pid > 0 {
-        err := p.CmdStruct.Process.Kill()
-        if err != nil {
-            t.Errorf("Unable to kill process manually.")
-        }
-        libtime.SleepString("120ms")
+	if p.CmdStruct.Process.Pid > 0 {
+		err := p.CmdStruct.Process.Kill()
+		if err != nil {
+			t.Errorf("Unable to kill process manually.")
+		}
+		libtime.SleepString("120ms")
 
-        secondPid := p.Pid
+		secondPid := p.Pid
 
-        if firstPid == secondPid {
-            t.Errorf("New process should have generated new PID. firstPid: %v, secondPid: %v", firstPid, secondPid)
-        }
-    }
+		if firstPid == secondPid {
+			t.Errorf("New process should have generated new PID. firstPid: %v, secondPid: %v", firstPid, secondPid)
+		}
+	}
 
-    CheckBasicStopForTest(t, p)
+	CheckBasicStopForTest(t, p)
 }
 
 func TestProcessRestartAndWatch(t *testing.T) {
-    p := NewProcessWrapperForTest()
+	p := NewProcessWrapperForTest()
 
-    CheckStartAndWatchForTest(t, p)
+	CheckStartAndWatchForTest(t, p)
 
-    libtime.SleepString("14ms")
+	libtime.SleepString("14ms")
 
-    if p.Status != "running" {
-        t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
-    }
+	if p.Status != "running" {
+		t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
+	}
 
-    firstPid := p.Pid
+	firstPid := p.Pid
 
-    err := p.RestartAndWatch()
-    if err != nil {
-        t.Errorf("Unable to restart and watch process. Error: %v", err)
-    }
+	err := p.RestartAndWatch()
+	if err != nil {
+		t.Errorf("Unable to restart and watch process. Error: %v", err)
+	}
 
-    if p.Status != "restarted" {
-        t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
-    }
+	if p.Status != "restarted" {
+		t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
+	}
 
-    libtime.SleepString("14ms")
+	libtime.SleepString("14ms")
 
-    secondPid := p.Pid
+	secondPid := p.Pid
 
-    if firstPid == secondPid {
-        t.Errorf("New process should have generated new PID. firstPid: %v, secondPid: %v", firstPid, secondPid)
-    }
+	if firstPid == secondPid {
+		t.Errorf("New process should have generated new PID. firstPid: %v, secondPid: %v", firstPid, secondPid)
+	}
 
-    CheckBasicStopForTest(t, p)
+	CheckBasicStopForTest(t, p)
 }

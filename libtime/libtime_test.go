@@ -1,11 +1,11 @@
 package libtime
 
 import (
-    "testing"
+	"testing"
 )
 
 func TestSleepString(t *testing.T) {
-    if SleepString("1ms") != nil {
-        t.Errorf("Failed to sleep")
-    }
+	if SleepString("1ms") != nil {
+		t.Errorf("Failed to sleep")
+	}
 }

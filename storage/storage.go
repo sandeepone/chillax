@@ -1,102 +1,102 @@
 package storage
 
 import (
-    "os"
-    "os/user"
-    "path"
-    "sync"
-    "io/ioutil"
-    "github.com/didip/chillax/libenv"
+	"github.com/didip/chillax/libenv"
+	"io/ioutil"
+	"os"
+	"os/user"
+	"path"
+	"sync"
 )
 
 func NewStorage() Storer {
-    storageType := libenv.EnvWithDefault("STORAGE_TYPE", "FileSystem")
-    if storageType == "FileSystem" {
-        currentUser, _ := user.Current()
+	storageType := libenv.EnvWithDefault("STORAGE_TYPE", "FileSystem")
+	if storageType == "FileSystem" {
+		currentUser, _ := user.Current()
 
-        store     := &FileSystem{}
-        store.Root = currentUser.HomeDir + "/chillax"
-        return store
-    }
-    return nil
+		store := &FileSystem{}
+		store.Root = currentUser.HomeDir + "/chillax"
+		return store
+	}
+	return nil
 }
 
 type Storer interface {
-    GetRoot()              string
-    Create(string, []byte) error
-    Update(string, []byte) error
-    Get(string)            ([]byte, error)
-    List(string)           ([]string, error)
-    Delete(string)         error
+	GetRoot() string
+	Create(string, []byte) error
+	Update(string, []byte) error
+	Get(string) ([]byte, error)
+	List(string) ([]string, error)
+	Delete(string) error
 }
 
 type FileSystem struct {
-    Root string
+	Root string
 }
 
 func (fs *FileSystem) GetRoot() string {
-    return fs.Root
+	return fs.Root
 }
 
 func (fs *FileSystem) CreateOrUpdate(fullpath string, data []byte) error {
-    var err error
+	var err error
 
-    mutex    := &sync.Mutex{}
-    fullpath  = path.Join(fs.Root, fullpath)
-    basepath := path.Dir(fullpath)
+	mutex := &sync.Mutex{}
+	fullpath = path.Join(fs.Root, fullpath)
+	basepath := path.Dir(fullpath)
 
-    mutex.Lock()
+	mutex.Lock()
 
-    if _, err = os.Stat(fullpath); os.IsNotExist(err) {
-        // Create parent directory
-        err = os.MkdirAll(basepath, 0744)
-        if err != nil {
-            mutex.Unlock()
-            return err
-        }
+	if _, err = os.Stat(fullpath); os.IsNotExist(err) {
+		// Create parent directory
+		err = os.MkdirAll(basepath, 0744)
+		if err != nil {
+			mutex.Unlock()
+			return err
+		}
 
-        // Create file
-        fileHandler, err := os.Create(fullpath)
-        if err != nil {
-            mutex.Unlock()
-            return err
-        }
-        defer fileHandler.Close()
-    }
+		// Create file
+		fileHandler, err := os.Create(fullpath)
+		if err != nil {
+			mutex.Unlock()
+			return err
+		}
+		defer fileHandler.Close()
+	}
 
-    err = ioutil.WriteFile(fullpath, data, 0744)
+	err = ioutil.WriteFile(fullpath, data, 0744)
 
-    mutex.Unlock()
+	mutex.Unlock()
 
-    return err
+	return err
 }
 
 func (fs *FileSystem) Create(fullpath string, data []byte) error {
-    return fs.CreateOrUpdate(fullpath, data)
+	return fs.CreateOrUpdate(fullpath, data)
 }
 
 func (fs *FileSystem) Update(fullpath string, data []byte) error {
-    return fs.CreateOrUpdate(fullpath, data)
+	return fs.CreateOrUpdate(fullpath, data)
 }
 
 func (fs *FileSystem) Get(fullpath string) ([]byte, error) {
-    fullpath = path.Join(fs.Root, fullpath)
-    return ioutil.ReadFile(fullpath)
+	fullpath = path.Join(fs.Root, fullpath)
+	return ioutil.ReadFile(fullpath)
 }
 
 func (fs *FileSystem) List(fullpath string) ([]string, error) {
-    fullpath    = path.Join(fs.Root, fullpath)
-    files, err := ioutil.ReadDir(fullpath)
-    names      := make([]string, len(files))
+	fullpath = path.Join(fs.Root, fullpath)
+	files, err := ioutil.ReadDir(fullpath)
+	names := make([]string, len(files))
 
-    for index, f := range files {
-        names[index] = f.Name()
-    }
+	for index, f := range files {
+		names[index] = f.Name()
+	}
 
-    return names, err
+	return names, err
 }
 
 func (fs *FileSystem) Delete(fullpath string) error {
-    fullpath = path.Join(fs.Root, fullpath)
-    return os.RemoveAll(fullpath)
+	fullpath = path.Join(fs.Root, fullpath)
+	return os.RemoveAll(fullpath)
 }
