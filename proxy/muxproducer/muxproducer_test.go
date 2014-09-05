@@ -13,8 +13,8 @@ func NewMuxProducerForTest(t *testing.T) *MuxProducer {
     fullpath, _ := filepath.Abs("../../examples/configs/proxy-handlers")
     os.Setenv("PROXY_HANDLERS_PATH", fullpath)
 
-    settings := chillax_web_settings.NewServerSettings()
-    mp       := NewMuxProducer(settings.ProxyHandlerTomls)
+    settings, _ := chillax_web_settings.NewServerSettings()
+    mp          := NewMuxProducer(settings.ProxyHandlerTomls)
 
     return mp
 }
