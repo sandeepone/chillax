@@ -8,11 +8,27 @@ import (
 	"github.com/tuxychandru/pubsub"
 )
 
-type RunMixin struct {
+type PipelineAndStageMixin struct {
 	goreq.Request
+	Body   map[string]interface{}
+	Stages []*Stage
 }
 
-func (rm *RunMixin) NewRunInstance() *RunInstance {
+func (rm *PipelineAndStageMixin) MergeBodyToStagesBody() {
+	for _, stage := range rm.Stages {
+		if stage.Body == nil {
+			stage.Body = rm.Body
+		} else {
+			for pipelineKey, pipelineValue := range rm.Body {
+				if stage.Body[pipelineKey] == nil {
+					stage.Body[pipelineKey] = pipelineValue
+				}
+			}
+		}
+	}
+}
+
+func (rm *PipelineAndStageMixin) NewRunInstance() *RunInstance {
 	ri := &RunInstance{}
 	ri.TimestampUnixNano = time.Now().UnixNano()
 	ri.TimestampUnixNanoString = fmt.Sprintf("%v", ri.TimestampUnixNano)
@@ -20,7 +36,7 @@ func (rm *RunMixin) NewRunInstance() *RunInstance {
 	return ri
 }
 
-func (rm *RunMixin) Run() (chan interface{}, chan interface{}) {
+func (rm *PipelineAndStageMixin) Run() (chan interface{}, chan interface{}) {
 	sr := rm.NewRunInstance()
 
 	responseChan := sr.PubSub.Sub(sr.TimestampUnixNanoString + "-response")
