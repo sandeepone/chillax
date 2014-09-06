@@ -27,5 +27,6 @@ func NewStage(uri string) *Stage {
 
 type Stage struct {
 	RunMixin
+	Body   map[string]interface{}
 	Stages []*Stage
 }
