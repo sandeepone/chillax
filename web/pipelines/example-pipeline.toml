@@ -1,15 +1,16 @@
 [Body]
 AwsAccessKey = "abc"
 AwsSecretKey = "xyz"
+Token = "default"
 
 [[Stages]]
 Uri = "http://localhost:3000/work/step-01"
 
   [Stages.Body]
-  Token = "abc"
+  Token = "hahaha"
 
 [[Stages]]
 Uri = "http://localhost:3000/work/step-02"
 
   [Stages.Body]
-  Token = "abcdef"
+  Token = "lolz"

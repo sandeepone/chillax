@@ -11,22 +11,23 @@ import (
 // By default, the HTTP verb is set to POST and timeout is set to 1 second.
 func NewStage(uri string) *Stage {
 	stage := &Stage{
-		RunMixin: RunMixin{
-			goreq.Request{
+		PipelineAndStageMixin: PipelineAndStageMixin{
+			Request: goreq.Request{
 				Uri:         uri,
 				Method:      "POST",
 				Timeout:     1 * time.Second,
 				Accept:      "application/json",
 				ContentType: "application/json",
 			},
+			Body: make(map[string]interface{}),
 		},
-		Stages: make([]*Stage, 0),
 	}
+
+	stage.MergeBodyToStagesBody()
+
 	return stage
 }
 
 type Stage struct {
-	RunMixin
-	Body   map[string]interface{}
-	Stages []*Stage
+	PipelineAndStageMixin
 }

@@ -28,7 +28,7 @@ func TestNewPipeline(t *testing.T) {
 		t.Errorf("Failed to parse pipeline TOML definition. pipeline.Body[AwsSecretKey]: %v", pipeline.Body["AwsSecretKey"])
 	}
 
-	for _, stage := range pipeline.Stages {
+	for i, stage := range pipeline.Stages {
 		if stage.Body == nil {
 			t.Errorf("Pipeline body should be copied to stages if each stage does not have body. stage.Body: %v", stage.Body)
 		}
@@ -37,6 +37,17 @@ func TestNewPipeline(t *testing.T) {
 		}
 		if stage.Body["AwsSecretKey"] != "xyz" {
 			t.Errorf("stage.Body is missing a key. stage.Body[AwsSecretKey]: %v", stage.Body["AwsSecretKey"])
+		}
+
+		if i == 0 {
+			if stage.Body["Token"] != "hahaha" {
+				t.Errorf("stage.Body[Token] should not be overriden. stage.Body[Token]: %v", stage.Body["Token"])
+			}
+		}
+		if i == 1 {
+			if stage.Body["Token"] != "lolz" {
+				t.Errorf("stage.Body[Token] should not be overriden. stage.Body[Token]: %v", stage.Body["Token"])
+			}
 		}
 	}
 }
