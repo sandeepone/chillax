@@ -10,8 +10,11 @@ import (
 
 type PipelineAndStageMixin struct {
 	goreq.Request
-	Body   map[string]interface{}
-	Stages []*Stage
+
+	// Default is "1s"
+	TimeoutString string
+	Body          map[string]interface{}
+	Stages        []*Stage
 }
 
 func (rm *PipelineAndStageMixin) MergeBodyToStagesBody() {

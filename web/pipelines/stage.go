@@ -1,33 +1,30 @@
 package pipelines
 
-import (
-	"time"
-
-	"github.com/franela/goreq"
-)
-
-// Create new Stage struct
-// Every Stage is capable to make HTTP call.
-// By default, the HTTP verb is set to POST and timeout is set to 1 second.
-func NewStage(uri string) *Stage {
-	stage := &Stage{
-		PipelineAndStageMixin: PipelineAndStageMixin{
-			Request: goreq.Request{
-				Uri:         uri,
-				Method:      "POST",
-				Timeout:     1 * time.Second,
-				Accept:      "application/json",
-				ContentType: "application/json",
-			},
-			Body: make(map[string]interface{}),
-		},
-	}
-
-	stage.MergeBodyToStagesBody()
-
-	return stage
-}
+import "time"
 
 type Stage struct {
 	PipelineAndStageMixin
+}
+
+func (s *Stage) SetDefaults() {
+	var err error
+
+	if s.Method == "" {
+		s.Method = "POST"
+	}
+
+	if s.TimeoutString == "" {
+		s.TimeoutString = "1s"
+	}
+
+	s.Timeout, err = time.ParseDuration(s.TimeoutString)
+	if err != nil {
+		s.TimeoutString = "1s"
+		s.Timeout, _ = time.ParseDuration(s.TimeoutString)
+	}
+
+	s.Accept = "application/json"
+	s.ContentType = "application/json"
+
+	s.MergeBodyToStagesBody()
 }

@@ -1,16 +1,24 @@
 package pipelines
 
 import (
+	"bufio"
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 )
 
-func TestNewStage(t *testing.T) {
-	stage := NewStage("http://localhost:3000")
+func NewStageForTest() *Stage {
+	fileHandle, _ := os.Open("./example-pipeline.toml")
+	bufReader := bufio.NewReader(fileHandle)
+	definition, _ := ioutil.ReadAll(bufReader)
+	pipeline := NewPipeline(string(definition))
+	return pipeline.Stages[0]
+}
 
-	if stage.Uri != "http://localhost:3000" {
-		t.Error("URI was not set correctly")
-	}
+func TestNewStage(t *testing.T) {
+	stage := NewStageForTest()
+
 	if stage.Method != "POST" {
 		t.Error("Default method should be POST.")
 	}
@@ -20,7 +28,7 @@ func TestNewStage(t *testing.T) {
 }
 
 func TestStageRunBadRequest(t *testing.T) {
-	stage := NewStage("http://localhost:3000")
+	stage := NewStageForTest()
 	stage.Timeout = 1 * time.Millisecond
 
 	_, errChan := stage.Run()
