@@ -14,3 +14,6 @@ Uri = "http://localhost:3000/work/step-02"
 
   [Stages.Body]
   Token = "lolz"
+
+  [[Stages.Stages]]
+  Uri = "http://localhost:3000/work/step-02-01"

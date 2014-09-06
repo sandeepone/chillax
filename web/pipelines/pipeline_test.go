@@ -39,15 +39,34 @@ func TestNewPipeline(t *testing.T) {
 			t.Errorf("stage.Body is missing a key. stage.Body[AwsSecretKey]: %v", stage.Body["AwsSecretKey"])
 		}
 
+		// First stage
 		if i == 0 {
 			if stage.Body["Token"] != "hahaha" {
 				t.Errorf("stage.Body[Token] should not be overriden. stage.Body[Token]: %v", stage.Body["Token"])
 			}
 		}
+
+		// Last stage
 		if i == 1 {
 			if stage.Body["Token"] != "lolz" {
 				t.Errorf("stage.Body[Token] should not be overriden. stage.Body[Token]: %v", stage.Body["Token"])
 			}
 		}
+	}
+}
+
+func TestNestingStages(t *testing.T) {
+	pipeline := NewPipelineForTest()
+
+	stage := pipeline.Stages[1]
+
+	if len(stage.Stages) != 1 {
+		t.Errorf("final stage should contain 1 substage. stage.Stages: %v", stage.Stages)
+	}
+
+	substage := stage.Stages[0]
+
+	if substage.Uri != "http://localhost:3000/work/step-02-01" {
+		t.Errorf("substage.Uri must be correct. substage.Uri: %v", substage.Uri)
 	}
 }
