@@ -17,12 +17,12 @@ type PipelineAndStageMixin struct {
 	Stages        []*Stage
 }
 
-func (rm *PipelineAndStageMixin) MergeBodyToChildrenBody() {
-	for _, stage := range rm.Stages {
+func (mixin *PipelineAndStageMixin) MergeBodyToChildrenBody() {
+	for _, stage := range mixin.Stages {
 		if stage.Body == nil {
-			stage.Body = rm.Body
+			stage.Body = mixin.Body
 		} else {
-			for pipelineKey, pipelineValue := range rm.Body {
+			for pipelineKey, pipelineValue := range mixin.Body {
 				if stage.Body[pipelineKey] == nil {
 					stage.Body[pipelineKey] = pipelineValue
 				}
@@ -31,31 +31,39 @@ func (rm *PipelineAndStageMixin) MergeBodyToChildrenBody() {
 	}
 }
 
-func (rm *PipelineAndStageMixin) NewRunInstance() *RunInstance {
+func (mixin *PipelineAndStageMixin) NewRunInstance() *RunInstance {
 	ri := &RunInstance{}
 	ri.TimestampUnixNano = time.Now().UnixNano()
 	ri.TimestampUnixNanoString = fmt.Sprintf("%v", ri.TimestampUnixNano)
 	ri.PubSub = pubsub.New(1)
 	ri.responseChan = ri.PubSub.Sub(ri.TimestampUnixNanoString + "-response")
 	ri.errChan = ri.PubSub.Sub(ri.TimestampUnixNanoString + "-error")
-	ri.RunInstances = make([]*RunInstance, len(rm.Stages))
+	ri.RunInstances = make([]*RunInstance, len(mixin.Stages))
 
 	return ri
 }
 
-func (rm *PipelineAndStageMixin) Run() *RunInstance {
-	runInstance := rm.NewRunInstance()
+func (mixin *PipelineAndStageMixin) Run() *RunInstance {
+	runInstance := mixin.NewRunInstance()
 
-	go func(responseChan chan interface{}, errChan chan interface{}) {
-		resp, err := rm.Do()
+	go func(runInstance *RunInstance) {
+		resp, err := mixin.Do()
 
-		responseChan <- resp
-		errChan <- err
+		runInstance.responseChan <- resp
+		runInstance.errChan <- err
 
-	}(runInstance.responseChan, runInstance.errChan)
+	}(runInstance)
 
-	for i, stage := range rm.Stages {
-		runInstance.RunInstances[i] = stage.Run()
+	for i, stage := range mixin.Stages {
+		go func(runInstance *RunInstance) {
+			var parentErr interface{}
+
+			parentErr = <-runInstance.errChan
+
+			if parentErr == nil {
+				runInstance.RunInstances[i] = stage.Run()
+			}
+		}(runInstance)
 	}
 
 	return runInstance
