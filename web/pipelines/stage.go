@@ -26,5 +26,5 @@ func (s *Stage) SetDefaults() {
 	s.Accept = "application/json"
 	s.ContentType = "application/json"
 
-	s.MergeBodyToStagesBody()
+	s.MergeBodyToChildrenBody()
 }

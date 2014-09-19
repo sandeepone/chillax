@@ -70,3 +70,13 @@ func TestNestingStages(t *testing.T) {
 		t.Errorf("substage.Uri must be correct. substage.Uri: %v", substage.Uri)
 	}
 }
+
+func TestNestedRuns(t *testing.T) {
+	pipeline := NewPipelineForTest()
+
+	runInstance := pipeline.Run()
+
+	if len(runInstance.RunInstances) != 2 {
+		t.Errorf("pipeline.Run should have 2 runInstances. runInstance.RunInstances: %v", runInstance.RunInstances)
+	}
+}

@@ -24,27 +24,11 @@ func (p *Pipeline) SetDefaults() {
 	}
 
 	p.SetStagesDefaults()
-	p.MergeBodyToStagesBody()
+	p.MergeBodyToChildrenBody()
 }
 
 func (p *Pipeline) SetStagesDefaults() {
 	for _, stage := range p.Stages {
 		stage.SetDefaults()
 	}
-}
-
-// Run all stages under 1 pipeline.
-// Returns slice of tuple: outChan and errChan
-func (p *Pipeline) RunStages() [][]chan interface{} {
-	stagesChans := make([][]chan interface{}, len(p.Stages))
-
-	for i, stage := range p.Stages {
-		outChan, errChan := stage.Run()
-
-		stagesChans[i] = make([]chan interface{}, 2)
-		stagesChans[i][0] = outChan
-		stagesChans[i][1] = errChan
-	}
-
-	return stagesChans
 }

@@ -31,9 +31,9 @@ func TestStageRunBadRequest(t *testing.T) {
 	stage := NewStageForTest()
 	stage.Timeout = 1 * time.Millisecond
 
-	_, errChan := stage.Run()
+	runInstance := stage.Run()
 
-	err := <-errChan
+	err := <-runInstance.errChan
 
 	if err == nil {
 		t.Error("Request should fail.")

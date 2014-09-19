@@ -17,7 +17,7 @@ type PipelineAndStageMixin struct {
 	Stages        []*Stage
 }
 
-func (rm *PipelineAndStageMixin) MergeBodyToStagesBody() {
+func (rm *PipelineAndStageMixin) MergeBodyToChildrenBody() {
 	for _, stage := range rm.Stages {
 		if stage.Body == nil {
 			stage.Body = rm.Body
@@ -36,27 +36,36 @@ func (rm *PipelineAndStageMixin) NewRunInstance() *RunInstance {
 	ri.TimestampUnixNano = time.Now().UnixNano()
 	ri.TimestampUnixNanoString = fmt.Sprintf("%v", ri.TimestampUnixNano)
 	ri.PubSub = pubsub.New(1)
+	ri.responseChan = ri.PubSub.Sub(ri.TimestampUnixNanoString + "-response")
+	ri.errChan = ri.PubSub.Sub(ri.TimestampUnixNanoString + "-error")
+	ri.RunInstances = make([]*RunInstance, len(rm.Stages))
+
 	return ri
 }
 
-func (rm *PipelineAndStageMixin) Run() (chan interface{}, chan interface{}) {
-	sr := rm.NewRunInstance()
-
-	responseChan := sr.PubSub.Sub(sr.TimestampUnixNanoString + "-response")
-	errChan := sr.PubSub.Sub(sr.TimestampUnixNanoString + "-error")
+func (rm *PipelineAndStageMixin) Run() *RunInstance {
+	runInstance := rm.NewRunInstance()
 
 	go func(responseChan chan interface{}, errChan chan interface{}) {
 		resp, err := rm.Do()
 
 		responseChan <- resp
 		errChan <- err
-	}(responseChan, errChan)
 
-	return responseChan, errChan
+	}(runInstance.responseChan, runInstance.errChan)
+
+	for i, stage := range rm.Stages {
+		runInstance.RunInstances[i] = stage.Run()
+	}
+
+	return runInstance
 }
 
 type RunInstance struct {
 	TimestampUnixNano       int64
 	TimestampUnixNanoString string
 	PubSub                  *pubsub.PubSub
+	responseChan            chan interface{}
+	errChan                 chan interface{}
+	RunInstances            []*RunInstance
 }
