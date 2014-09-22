@@ -31,49 +31,82 @@ func (mixin *PipelineAndStageMixin) MergeBodyToChildrenBody() {
 	}
 }
 
+func (mixin *PipelineAndStageMixin) Run() *RunInstance {
+	runInstance := mixin.NewRunInstance()
+
+	go func() {
+		if mixin.Uri != "" {
+			resp, err := mixin.Do()
+
+			runInstance.PubResponse(resp)
+			runInstance.PubError(err)
+		}
+
+		runInstancesChan := make(chan *RunInstance)
+
+		for _, stage := range mixin.Stages {
+			go func() {
+				if mixin.Uri == "" {
+					runInstancesChan <- stage.Run()
+				} else {
+					var parentErr interface{}
+
+					parentErr = <-runInstance.SubError()
+					parentErr = parentErr.(error)
+
+					if parentErr == nil {
+						runInstancesChan <- stage.Run()
+					}
+				}
+			}()
+		}
+
+		for childRunInstance := range runInstancesChan {
+			runInstance.RunInstances = append(runInstance.RunInstances, childRunInstance)
+		}
+		close(runInstancesChan)
+	}()
+
+	return runInstance
+}
+
 func (mixin *PipelineAndStageMixin) NewRunInstance() *RunInstance {
 	ri := &RunInstance{}
 	ri.TimestampUnixNano = time.Now().UnixNano()
 	ri.TimestampUnixNanoString = fmt.Sprintf("%v", ri.TimestampUnixNano)
 	ri.PubSub = pubsub.New(1)
-	ri.responseChan = ri.PubSub.Sub(ri.TimestampUnixNanoString + "-response")
-	ri.errChan = ri.PubSub.Sub(ri.TimestampUnixNanoString + "-error")
-	ri.RunInstances = make([]*RunInstance, len(mixin.Stages))
+	ri.RunInstances = make([]*RunInstance, 0)
 
 	return ri
-}
-
-func (mixin *PipelineAndStageMixin) Run() *RunInstance {
-	runInstance := mixin.NewRunInstance()
-
-	go func(runInstance *RunInstance) {
-		resp, err := mixin.Do()
-
-		runInstance.responseChan <- resp
-		runInstance.errChan <- err
-
-	}(runInstance)
-
-	for i, stage := range mixin.Stages {
-		go func(runInstance *RunInstance) {
-			var parentErr interface{}
-
-			parentErr = <-runInstance.errChan
-
-			if parentErr == nil {
-				runInstance.RunInstances[i] = stage.Run()
-			}
-		}(runInstance)
-	}
-
-	return runInstance
 }
 
 type RunInstance struct {
 	TimestampUnixNano       int64
 	TimestampUnixNanoString string
 	PubSub                  *pubsub.PubSub
-	responseChan            chan interface{}
-	errChan                 chan interface{}
 	RunInstances            []*RunInstance
+}
+
+func (ri *RunInstance) ResponseTopic() string {
+	return ri.TimestampUnixNanoString + "-response"
+}
+
+func (ri *RunInstance) ErrorTopic() string {
+	return ri.TimestampUnixNanoString + "-error"
+}
+
+func (ri *RunInstance) PubResponse(data interface{}) {
+	ri.PubSub.Pub(data, ri.ResponseTopic())
+}
+
+func (ri *RunInstance) PubError(data error) {
+	ri.PubSub.Pub(data, ri.ErrorTopic())
+}
+
+func (ri *RunInstance) SubResponse() chan interface{} {
+	return ri.PubSub.Sub(ri.ResponseTopic())
+}
+
+func (ri *RunInstance) SubError() chan interface{} {
+	return ri.PubSub.Sub(ri.ErrorTopic())
 }

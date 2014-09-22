@@ -2,6 +2,7 @@ package pipelines
 
 import (
 	"bufio"
+	"github.com/didip/chillax/libtime"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -76,7 +77,25 @@ func TestNestedRuns(t *testing.T) {
 
 	runInstance := pipeline.Run()
 
+	libtime.SleepString("1s")
+
 	if len(runInstance.RunInstances) != 2 {
 		t.Errorf("pipeline.Run should have 2 runInstances. runInstance.RunInstances: %v", runInstance.RunInstances)
+	}
+
+	for _, childLvl1RunInstance := range runInstance.RunInstances {
+		if childLvl1RunInstance == nil {
+			t.Fatalf("Children RunInstances should not be nil.")
+		}
+	}
+
+	for _, childLvl1RunInstance := range runInstance.RunInstances {
+		errChan := childLvl1RunInstance.SubError()
+
+		err := <-errChan
+
+		if err == nil {
+			t.Errorf("All stages are expected to be broken. Error: %v", err)
+		}
 	}
 }

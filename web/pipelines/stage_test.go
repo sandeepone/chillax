@@ -33,7 +33,9 @@ func TestStageRunBadRequest(t *testing.T) {
 
 	runInstance := stage.Run()
 
-	err := <-runInstance.errChan
+	errChan := runInstance.SubError()
+
+	err := <-errChan
 
 	if err == nil {
 		t.Error("Request should fail.")
