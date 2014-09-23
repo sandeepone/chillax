@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/franela/goreq"
-	"github.com/tuxychandru/pubsub"
 )
 
 type PipelineAndStageMixin struct {
@@ -36,27 +35,15 @@ func (mixin *PipelineAndStageMixin) Run() *RunInstance {
 
 	go func() {
 		if mixin.Uri != "" {
-			resp, err := mixin.Do()
-
-			runInstance.PubResponse(resp)
-			runInstance.PubError(err)
+			runInstance.Response, runInstance.Error = mixin.Do()
 		}
 
 		runInstancesChan := make(chan *RunInstance)
 
 		for _, stage := range mixin.Stages {
 			go func() {
-				if mixin.Uri == "" {
+				if runInstance.Error == nil {
 					runInstancesChan <- stage.Run()
-				} else {
-					var parentErr interface{}
-
-					parentErr = <-runInstance.SubError()
-					parentErr = parentErr.(error)
-
-					if parentErr == nil {
-						runInstancesChan <- stage.Run()
-					}
 				}
 			}()
 		}
@@ -74,7 +61,6 @@ func (mixin *PipelineAndStageMixin) NewRunInstance() *RunInstance {
 	ri := &RunInstance{}
 	ri.TimestampUnixNano = time.Now().UnixNano()
 	ri.TimestampUnixNanoString = fmt.Sprintf("%v", ri.TimestampUnixNano)
-	ri.PubSub = pubsub.New(1)
 	ri.RunInstances = make([]*RunInstance, 0)
 
 	return ri
@@ -83,30 +69,7 @@ func (mixin *PipelineAndStageMixin) NewRunInstance() *RunInstance {
 type RunInstance struct {
 	TimestampUnixNano       int64
 	TimestampUnixNanoString string
-	PubSub                  *pubsub.PubSub
+	Response                *goreq.Response
+	Error                   error
 	RunInstances            []*RunInstance
-}
-
-func (ri *RunInstance) ResponseTopic() string {
-	return ri.TimestampUnixNanoString + "-response"
-}
-
-func (ri *RunInstance) ErrorTopic() string {
-	return ri.TimestampUnixNanoString + "-error"
-}
-
-func (ri *RunInstance) PubResponse(data interface{}) {
-	ri.PubSub.Pub(data, ri.ResponseTopic())
-}
-
-func (ri *RunInstance) PubError(data error) {
-	ri.PubSub.Pub(data, ri.ErrorTopic())
-}
-
-func (ri *RunInstance) SubResponse() chan interface{} {
-	return ri.PubSub.Sub(ri.ResponseTopic())
-}
-
-func (ri *RunInstance) SubError() chan interface{} {
-	return ri.PubSub.Sub(ri.ErrorTopic())
 }

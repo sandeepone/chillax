@@ -77,7 +77,7 @@ func TestNestedRuns(t *testing.T) {
 
 	runInstance := pipeline.Run()
 
-	libtime.SleepString("1s")
+	libtime.SleepString("100ms")
 
 	if len(runInstance.RunInstances) != 2 {
 		t.Errorf("pipeline.Run should have 2 runInstances. runInstance.RunInstances: %v", runInstance.RunInstances)
@@ -90,12 +90,8 @@ func TestNestedRuns(t *testing.T) {
 	}
 
 	for _, childLvl1RunInstance := range runInstance.RunInstances {
-		errChan := childLvl1RunInstance.SubError()
-
-		err := <-errChan
-
-		if err == nil {
-			t.Errorf("All stages are expected to be broken. Error: %v", err)
+		if childLvl1RunInstance.Error == nil {
+			t.Errorf("All stages are expected to be broken. Error: %v", childLvl1RunInstance.Error)
 		}
 	}
 }

@@ -26,18 +26,3 @@ func TestNewStage(t *testing.T) {
 		t.Error("Default timeout should be 1 second.")
 	}
 }
-
-func TestStageRunBadRequest(t *testing.T) {
-	stage := NewStageForTest()
-	stage.Timeout = 1 * time.Millisecond
-
-	runInstance := stage.Run()
-
-	errChan := runInstance.SubError()
-
-	err := <-errChan
-
-	if err == nil {
-		t.Error("Request should fail.")
-	}
-}
