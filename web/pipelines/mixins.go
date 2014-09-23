@@ -43,11 +43,12 @@ func (mixin *PipelineAndStageMixin) Run() *RunInstance {
 			}
 		}
 
-		if runInstance.Error == nil {
+		if runInstance.Error == nil && len(mixin.Stages) > 0 {
 			runInstancesChan := make(chan *RunInstance)
 
 			for _, stage := range mixin.Stages {
 				go func() {
+					// Merge the JSON body of previous stage to next stage.
 					if runInstance.ResponseBodyBytes != nil {
 						json.Unmarshal(runInstance.ResponseBodyBytes, stage.Body)
 					}
