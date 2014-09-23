@@ -1,10 +1,11 @@
 package pipelines
 
 import (
+	"encoding/json"
 	"fmt"
-	"time"
-
 	"github.com/franela/goreq"
+	"io/ioutil"
+	"time"
 )
 
 type PipelineAndStageMixin struct {
@@ -36,22 +37,30 @@ func (mixin *PipelineAndStageMixin) Run() *RunInstance {
 	go func() {
 		if mixin.Uri != "" {
 			runInstance.Response, runInstance.Error = mixin.Do()
+
+			if runInstance.Error == nil && runInstance.Response != nil {
+				runInstance.ResponseBodyBytes, runInstance.Error = ioutil.ReadAll(runInstance.Response.Body)
+			}
 		}
 
-		runInstancesChan := make(chan *RunInstance)
+		if runInstance.Error == nil {
+			runInstancesChan := make(chan *RunInstance)
 
-		for _, stage := range mixin.Stages {
-			go func() {
-				if runInstance.Error == nil {
+			for _, stage := range mixin.Stages {
+				go func() {
+					if runInstance.ResponseBodyBytes != nil {
+						json.Unmarshal(runInstance.ResponseBodyBytes, stage.Body)
+					}
+
 					runInstancesChan <- stage.Run()
-				}
-			}()
-		}
+				}()
+			}
 
-		for childRunInstance := range runInstancesChan {
-			runInstance.RunInstances = append(runInstance.RunInstances, childRunInstance)
+			for childRunInstance := range runInstancesChan {
+				runInstance.RunInstances = append(runInstance.RunInstances, childRunInstance)
+			}
+			close(runInstancesChan)
 		}
-		close(runInstancesChan)
 	}()
 
 	return runInstance
@@ -70,6 +79,7 @@ type RunInstance struct {
 	TimestampUnixNano       int64
 	TimestampUnixNanoString string
 	Response                *goreq.Response
+	ResponseBodyBytes       []byte
 	Error                   error
 	RunInstances            []*RunInstance
 }
