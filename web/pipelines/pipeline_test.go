@@ -2,9 +2,13 @@ package pipelines
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/didip/chillax/libtime"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -72,7 +76,7 @@ func TestNestingStages(t *testing.T) {
 	}
 }
 
-func TestNestedRuns(t *testing.T) {
+func TestBadNestedRuns(t *testing.T) {
 	pipeline := NewPipelineForTest()
 
 	runInstance := pipeline.Run()
@@ -87,11 +91,41 @@ func TestNestedRuns(t *testing.T) {
 		if childLvl1RunInstance == nil {
 			t.Fatalf("Children RunInstances should not be nil.")
 		}
-	}
-
-	for _, childLvl1RunInstance := range runInstance.RunInstances {
 		if childLvl1RunInstance.Error == nil {
 			t.Errorf("All stages are expected to be broken. Error: %v", childLvl1RunInstance.Error)
 		}
 	}
+}
+
+func TestGoodNestedRuns(t *testing.T) {
+	server0Body := `{"pick": "me"}`
+
+	server0 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, server0Body)
+	}))
+	defer server0.Close()
+
+	pipeline := NewPipelineForTest()
+
+	stage0 := pipeline.Stages[0]
+	stage0.Uri = server0.URL
+
+	runInstance := pipeline.Run()
+
+	libtime.SleepString("75ms")
+
+	stage0RunInstance := runInstance.RunInstances[0]
+	stage1RunInstance := runInstance.RunInstances[1]
+
+	if stage0RunInstance.Error != nil {
+		t.Errorf("stage0RunInstance should complete successfully. Error: %v", stage0RunInstance.Error)
+	}
+	if stage1RunInstance.Error == nil {
+		t.Errorf("stage1RunInstance should Fail. Error: %v", stage1RunInstance.Error)
+	}
+
+	if !strings.Contains(string(stage0RunInstance.ResponseBodyBytes), server0Body) {
+		t.Errorf("stage0RunInstance received wrong ResponseBodyBytes. ResponseBodyBytes: %v", string(stage0RunInstance.ResponseBodyBytes))
+	}
+
 }

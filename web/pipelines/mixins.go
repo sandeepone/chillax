@@ -50,7 +50,7 @@ func (mixin *PipelineAndStageMixin) Run() *RunInstance {
 			for i, stage := range mixin.Stages {
 				wg.Add(1)
 
-				go func(runInstance *RunInstance, i int) {
+				go func(runInstance *RunInstance, i int, stage *Stage) {
 					defer wg.Done()
 
 					// Merge the JSON body of previous stage to next stage.
@@ -59,7 +59,7 @@ func (mixin *PipelineAndStageMixin) Run() *RunInstance {
 					}
 
 					runInstance.RunInstances[i] = stage.Run()
-				}(runInstance, i)
+				}(runInstance, i, stage)
 			}
 			wg.Wait()
 		}
