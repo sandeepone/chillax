@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/franela/goreq"
 	"io/ioutil"
+	"sync"
 	"time"
 )
 
@@ -44,23 +45,23 @@ func (mixin *PipelineAndStageMixin) Run() *RunInstance {
 		}
 
 		if runInstance.Error == nil && len(mixin.Stages) > 0 {
-			runInstancesChan := make(chan *RunInstance)
+			var wg sync.WaitGroup
 
-			for _, stage := range mixin.Stages {
-				go func() {
+			for i, stage := range mixin.Stages {
+				wg.Add(1)
+
+				go func(runInstance *RunInstance, i int) {
+					defer wg.Done()
+
 					// Merge the JSON body of previous stage to next stage.
 					if runInstance.ResponseBodyBytes != nil {
 						json.Unmarshal(runInstance.ResponseBodyBytes, stage.Body)
 					}
 
-					runInstancesChan <- stage.Run()
-				}()
+					runInstance.RunInstances[i] = stage.Run()
+				}(runInstance, i)
 			}
-
-			for childRunInstance := range runInstancesChan {
-				runInstance.RunInstances = append(runInstance.RunInstances, childRunInstance)
-			}
-			close(runInstancesChan)
+			wg.Wait()
 		}
 	}()
 
@@ -71,7 +72,7 @@ func (mixin *PipelineAndStageMixin) NewRunInstance() *RunInstance {
 	ri := &RunInstance{}
 	ri.TimestampUnixNano = time.Now().UnixNano()
 	ri.TimestampUnixNanoString = fmt.Sprintf("%v", ri.TimestampUnixNano)
-	ri.RunInstances = make([]*RunInstance, 0)
+	ri.RunInstances = make([]*RunInstance, len(mixin.Stages))
 
 	return ri
 }
