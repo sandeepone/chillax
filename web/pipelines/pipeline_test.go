@@ -98,34 +98,79 @@ func TestBadNestedRuns(t *testing.T) {
 }
 
 func TestGoodNestedRuns(t *testing.T) {
+	// Setup mock endpoints for stage[0], stage[1], and stage[1[0]]
 	server0Body := `{"pick": "me"}`
-
 	server0 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, server0Body)
 	}))
 	defer server0.Close()
 
+	server1Body := `{"nextParam": "aaa", "result": "success!"}`
+	server1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, server1Body)
+	}))
+	defer server1.Close()
+
+	server10Body := `{"result": "success again!"}`
+	server10 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, server10Body)
+	}))
+	defer server10.Close()
+
+	// Create a new pipeline
 	pipeline := NewPipelineForTest()
 
+	// Stub pipeline endpoint URLs with mock endpoints.
 	stage0 := pipeline.Stages[0]
 	stage0.Uri = server0.URL
+
+	stage1 := pipeline.Stages[1]
+	stage1.Uri = server1.URL
+
+	stage10 := pipeline.Stages[1].Stages[0]
+	stage10.Uri = server10.URL
 
 	runInstance := pipeline.Run()
 
 	libtime.SleepString("75ms")
 
+	// Assert RunInstance of stage[0]
 	stage0RunInstance := runInstance.RunInstances[0]
-	stage1RunInstance := runInstance.RunInstances[1]
 
 	if stage0RunInstance.Error != nil {
 		t.Errorf("stage0RunInstance should complete successfully. Error: %v", stage0RunInstance.Error)
 	}
-	if stage1RunInstance.Error == nil {
-		t.Errorf("stage1RunInstance should Fail. Error: %v", stage1RunInstance.Error)
-	}
-
 	if !strings.Contains(string(stage0RunInstance.ResponseBodyBytes), server0Body) {
 		t.Errorf("stage0RunInstance received wrong ResponseBodyBytes. ResponseBodyBytes: %v", string(stage0RunInstance.ResponseBodyBytes))
 	}
 
+	// Assert RunInstance of stage[1]
+	stage1RunInstance := runInstance.RunInstances[1]
+
+	if stage1RunInstance.Error != nil {
+		t.Errorf("stage1RunInstance should complete successfully. Error: %v", stage1RunInstance.Error)
+	}
+	if !strings.Contains(string(stage1RunInstance.ResponseBodyBytes), server1Body) {
+		t.Errorf("stage1RunInstance received wrong ResponseBodyBytes. ResponseBodyBytes: %v", string(stage1RunInstance.ResponseBodyBytes))
+	}
+
+	// Next stage, which is stage[1[0]], should contain params from stage[1]
+	if stage10.Body["Token"] != "lolz" {
+		t.Errorf("stage10.Body is incorrect. stage10.Body: %v", stage10.Body)
+	}
+	if stage10.Body["nextParam"] != "aaa" {
+		t.Errorf("stage10.Body is incorrect. stage10.Body: %v", stage10.Body)
+	}
+	if stage10.Body["result"] != "success!" {
+		t.Errorf("stage10.Body is incorrect. stage10.Body: %v", stage10.Body)
+	}
+
+	// Assert RunInstance of stage[1[0]]
+	stage10RunInstance := runInstance.RunInstances[1].RunInstances[0]
+	if stage10RunInstance.Error != nil {
+		t.Errorf("stage10RunInstance should complete successfully. Error: %v", stage10RunInstance.Error)
+	}
+	if !strings.Contains(string(stage10RunInstance.ResponseBodyBytes), server10Body) {
+		t.Errorf("stage10RunInstance received wrong ResponseBodyBytes. ResponseBodyBytes: %v", string(stage10RunInstance.ResponseBodyBytes))
+	}
 }

@@ -54,8 +54,8 @@ func (mixin *PipelineAndStageMixin) Run() *RunInstance {
 					defer wg.Done()
 
 					// Merge the JSON body of previous stage to next stage.
-					if runInstance.ResponseBodyBytes != nil {
-						json.Unmarshal(runInstance.ResponseBodyBytes, stage.Body)
+					if len(runInstance.ResponseBodyBytes) > 0 {
+						json.Unmarshal(runInstance.ResponseBodyBytes, &stage.Body)
 					}
 
 					runInstance.RunInstances[i] = stage.Run()
