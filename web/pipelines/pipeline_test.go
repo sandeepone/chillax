@@ -3,7 +3,6 @@ package pipelines
 import (
 	"bufio"
 	"fmt"
-	"github.com/didip/chillax/libtime"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -126,8 +125,6 @@ func TestGoodNestedRuns(t *testing.T) {
 	stage10.Uri = server10.URL
 
 	runInstance := pipeline.Run()
-
-	libtime.SleepString("75ms")
 
 	// Assert RunInstance of stage[0]
 	stage0RunInstance := runInstance.RunInstances[0]
