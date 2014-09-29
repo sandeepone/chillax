@@ -81,18 +81,13 @@ func TestBadNestedRuns(t *testing.T) {
 
 	runInstance := pipeline.Run()
 
-	libtime.SleepString("100ms")
-
 	if len(runInstance.RunInstances) != 2 {
 		t.Errorf("pipeline.Run should have 2 runInstances. runInstance.RunInstances: %v", runInstance.RunInstances)
 	}
 
 	for _, childLvl1RunInstance := range runInstance.RunInstances {
-		if childLvl1RunInstance == nil {
-			t.Fatalf("Children RunInstances should not be nil.")
-		}
-		if childLvl1RunInstance.Error == nil {
-			t.Errorf("All stages are expected to be broken. Error: %v", childLvl1RunInstance.Error)
+		if childLvl1RunInstance.ErrorMessage == "" {
+			t.Errorf("All stages are expected to be broken. Error: %v", childLvl1RunInstance.ErrorMessage)
 		}
 	}
 }
@@ -137,21 +132,21 @@ func TestGoodNestedRuns(t *testing.T) {
 	// Assert RunInstance of stage[0]
 	stage0RunInstance := runInstance.RunInstances[0]
 
-	if stage0RunInstance.Error != nil {
+	if stage0RunInstance.Error() != nil {
 		t.Errorf("stage0RunInstance should complete successfully. Error: %v", stage0RunInstance.Error)
 	}
-	if !strings.Contains(string(stage0RunInstance.ResponseBodyBytes), server0Body) {
-		t.Errorf("stage0RunInstance received wrong ResponseBodyBytes. ResponseBodyBytes: %v", string(stage0RunInstance.ResponseBodyBytes))
+	if !strings.Contains(stage0RunInstance.ResponseBody, server0Body) {
+		t.Errorf("stage0RunInstance received wrong ResponseBodyBytes. ResponseBodyBytes: %v", stage0RunInstance.ResponseBody)
 	}
 
 	// Assert RunInstance of stage[1]
 	stage1RunInstance := runInstance.RunInstances[1]
 
-	if stage1RunInstance.Error != nil {
+	if stage1RunInstance.Error() != nil {
 		t.Errorf("stage1RunInstance should complete successfully. Error: %v", stage1RunInstance.Error)
 	}
-	if !strings.Contains(string(stage1RunInstance.ResponseBodyBytes), server1Body) {
-		t.Errorf("stage1RunInstance received wrong ResponseBodyBytes. ResponseBodyBytes: %v", string(stage1RunInstance.ResponseBodyBytes))
+	if !strings.Contains(stage1RunInstance.ResponseBody, server1Body) {
+		t.Errorf("stage1RunInstance received wrong ResponseBodyBytes. ResponseBodyBytes: %v", stage1RunInstance.ResponseBody)
 	}
 
 	// Next stage, which is stage[1[0]], should contain params from stage[1]
@@ -167,10 +162,10 @@ func TestGoodNestedRuns(t *testing.T) {
 
 	// Assert RunInstance of stage[1[0]]
 	stage10RunInstance := runInstance.RunInstances[1].RunInstances[0]
-	if stage10RunInstance.Error != nil {
+	if stage10RunInstance.Error() != nil {
 		t.Errorf("stage10RunInstance should complete successfully. Error: %v", stage10RunInstance.Error)
 	}
-	if !strings.Contains(string(stage10RunInstance.ResponseBodyBytes), server10Body) {
-		t.Errorf("stage10RunInstance received wrong ResponseBodyBytes. ResponseBodyBytes: %v", string(stage10RunInstance.ResponseBodyBytes))
+	if !strings.Contains(stage10RunInstance.ResponseBody, server10Body) {
+		t.Errorf("stage10RunInstance received wrong ResponseBodyBytes. ResponseBodyBytes: %v", stage10RunInstance.ResponseBody)
 	}
 }

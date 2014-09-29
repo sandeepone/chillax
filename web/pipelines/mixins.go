@@ -1,8 +1,12 @@
 package pipelines
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/BurntSushi/toml"
+	chillax_storage "github.com/didip/chillax/storage"
 	"github.com/franela/goreq"
 	"io/ioutil"
 	"sync"
@@ -32,56 +36,85 @@ func (mixin *PipelineAndStageMixin) MergeBodyToChildrenBody() {
 	}
 }
 
-func (mixin *PipelineAndStageMixin) Run() *RunInstance {
+func (mixin *PipelineAndStageMixin) Run() RunInstance {
+	var err error
+
 	runInstance := mixin.NewRunInstance()
 
-	go func() {
-		if mixin.Uri != "" {
-			runInstance.Response, runInstance.Error = mixin.Do()
+	if mixin.Uri != "" {
+		response, err := mixin.Do()
 
-			if runInstance.Error == nil && runInstance.Response != nil {
-				runInstance.ResponseBodyBytes, runInstance.Error = ioutil.ReadAll(runInstance.Response.Body)
+		if err == nil && response != nil && response.Body != nil {
+			responseBytes, err := ioutil.ReadAll(response.Body)
+
+			if err == nil && len(responseBytes) > 0 {
+				runInstance.ResponseBody = string(responseBytes)
 			}
 		}
-
-		if runInstance.Error == nil && len(mixin.Stages) > 0 {
-			var wg sync.WaitGroup
-
-			for i, stage := range mixin.Stages {
-				wg.Add(1)
-
-				go func(runInstance *RunInstance, i int, stage *Stage) {
-					defer wg.Done()
-
-					// Merge the JSON body of previous stage to next stage.
-					if len(runInstance.ResponseBodyBytes) > 0 {
-						json.Unmarshal(runInstance.ResponseBodyBytes, &stage.Body)
-					}
-
-					runInstance.RunInstances[i] = stage.Run()
-				}(runInstance, i, stage)
-			}
-			wg.Wait()
+		if err != nil {
+			runInstance.ErrorMessage = err.Error()
 		}
-	}()
+	}
+
+	if err == nil && len(mixin.Stages) > 0 {
+		runInstance.RunInstances = make([]RunInstance, len(mixin.Stages))
+
+		var wg sync.WaitGroup
+
+		for i, stage := range mixin.Stages {
+			wg.Add(1)
+
+			go func(runInstance RunInstance, i int, stage *Stage) {
+				defer wg.Done()
+
+				// Merge the JSON body of previous stage to next stage.
+				if len(runInstance.ResponseBody) > 0 {
+					json.Unmarshal([]byte(runInstance.ResponseBody), &stage.Body)
+				}
+
+				runInstance.RunInstances[i] = stage.Run()
+			}(runInstance, i, stage)
+		}
+		wg.Wait()
+	}
+
+	runInstance.Save()
 
 	return runInstance
 }
 
-func (mixin *PipelineAndStageMixin) NewRunInstance() *RunInstance {
-	ri := &RunInstance{}
+func (mixin *PipelineAndStageMixin) NewRunInstance() RunInstance {
+	ri := RunInstance{}
 	ri.TimestampUnixNano = time.Now().UnixNano()
-	ri.TimestampUnixNanoString = fmt.Sprintf("%v", ri.TimestampUnixNano)
-	ri.RunInstances = make([]*RunInstance, len(mixin.Stages))
 
 	return ri
 }
 
 type RunInstance struct {
-	TimestampUnixNano       int64
-	TimestampUnixNanoString string
-	Response                *goreq.Response
-	ResponseBodyBytes       []byte
-	Error                   error
-	RunInstances            []*RunInstance
+	TimestampUnixNano int64
+	ResponseBody      string
+	ErrorMessage      string
+	RunInstances      []RunInstance
+}
+
+func (ri *RunInstance) Error() error {
+	if ri.ErrorMessage != "" {
+		return errors.New(ri.ErrorMessage)
+	}
+	return nil
+}
+
+func (ri *RunInstance) Serialize() ([]byte, error) {
+	var buffer bytes.Buffer
+	err := toml.NewEncoder(&buffer).Encode(ri)
+
+	return buffer.Bytes(), err
+}
+
+func (ri *RunInstance) Save() error {
+	inBytes, err := ri.Serialize()
+	if err != nil {
+		return err
+	}
+	return chillax_storage.NewStorage().Create(fmt.Sprintf("/pipelines/run-instances/%v", ri.TimestampUnixNano), inBytes)
 }
