@@ -10,7 +10,7 @@ import (
 	chillax_web_settings "github.com/didip/chillax/web/settings"
 )
 
-func StaticDirHandler(staticDirectory string) http.Handler {
+func AdminStaticDirHandler(staticDirectory string) http.Handler {
 	// box, _ := rice.FindBox(staticDirectory)
 	// return http.FileServer(box.HTTPBox())
 
@@ -19,7 +19,7 @@ func StaticDirHandler(staticDirectory string) http.Handler {
 	return http.FileServer(http.Dir(staticDirectory))
 }
 
-func ProxiesHandler(settings *chillax_web_settings.ServerSettings, proxyHandlers []*chillax_proxy_handler.ProxyHandler) func(http.ResponseWriter, *http.Request) {
+func AdminProxiesHandler(settings *chillax_web_settings.ServerSettings, proxyHandlers []*chillax_proxy_handler.ProxyHandler) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := struct {
 			ProxyHandlers []*chillax_proxy_handler.ProxyHandler
