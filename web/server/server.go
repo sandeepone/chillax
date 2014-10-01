@@ -20,14 +20,17 @@ func NewServer() (*Server, error) {
 	}
 
 	server := &Server{
-		AdminProxiesPath: "/chillax/proxies",
-		AdminStaticPath:  "/chillax/static/",
-		Settings:         settings,
+		Settings: settings,
 		Server: &graceful.Server{
 			Timeout: requestTimeoutOnRestart,
 			Server:  &http.Server{Addr: settings.HttpAddress()},
 		},
 	}
+
+	server.Paths = make(map[string]string)
+	server.Paths["ApiProxies"] = "/chillax/api/proxies"
+	server.Paths["AdminProxies"] = "/chillax/admin/proxies"
+	server.Paths["AdminStatic"] = "/chillax/admin/static/"
 
 	return server, err
 }
@@ -35,9 +38,8 @@ func NewServer() (*Server, error) {
 type Server struct {
 	*graceful.Server
 
-	Settings         *chillax_web_settings.ServerSettings
-	AdminProxiesPath string
-	AdminStaticPath  string
+	Settings *chillax_web_settings.ServerSettings
+	Paths    map[string]string
 }
 
 func (s *Server) NewGorillaMux() *gorilla_mux.Router {
@@ -47,15 +49,21 @@ func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 	muxProducer.StartProxyBackends()
 	mux := muxProducer.GorillaMuxWithProxyBackends()
 
+	// API Handlers
 	mux.HandleFunc(
-		s.AdminProxiesPath,
-		chillax_web_handlers.ProxiesHandler(s.Settings, muxProducer.ProxyHandlers)).Methods("GET")
+		s.Paths["ApiProxies"],
+		chillax_web_handlers.ApiProxiesHandler(s.Settings)).Methods("POST")
+
+	// Admin Handlers
+	mux.HandleFunc(
+		s.Paths["AdminProxies"],
+		chillax_web_handlers.AdminProxiesHandler(s.Settings, muxProducer.ProxyHandlers)).Methods("GET")
 
 	staticHandler := http.StripPrefix(
-		s.AdminStaticPath,
-		chillax_web_handlers.StaticDirHandler(s.Settings.DefaultAssetsPath))
+		s.Paths["AdminStatic"],
+		chillax_web_handlers.AdminStaticDirHandler(s.Settings.DefaultAssetsPath))
 
-	mux.PathPrefix(s.AdminStaticPath).Handler(staticHandler)
+	mux.PathPrefix(s.Paths["AdminStatic"]).Handler(staticHandler)
 
 	return mux
 }

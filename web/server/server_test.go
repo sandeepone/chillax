@@ -10,10 +10,10 @@ func TestNewServerWithoutConfigPath(t *testing.T) {
 	if err != nil {
 		t.Errorf("Should be able to create server without CONFIG_PATH. Error: %v", err)
 	}
-	if server.AdminProxiesPath == "" {
+	if server.Paths["AdminProxies"] == "" {
 		t.Errorf("server.AdminProxiesPath should not be empty")
 	}
-	if server.AdminStaticPath == "" {
+	if server.Paths["AdminStatic"] == "" {
 		t.Errorf("server.AdminStaticPath should not be empty")
 	}
 }
