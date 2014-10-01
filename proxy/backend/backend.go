@@ -10,6 +10,12 @@ import (
 
 const DOCKER_TIMEOUT = uint(5)
 
+func ValidateProxyBackendToml(tomlBytes []byte) error {
+	backend := &ProxyBackend{}
+	_, err := toml.Decode(string(tomlBytes), backend)
+	return err
+}
+
 func NewProxyBackend(tomlBytes []byte) *ProxyBackend {
 	backend := &ProxyBackend{}
 	backend.Numprocs = 1
