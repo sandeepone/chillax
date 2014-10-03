@@ -74,3 +74,24 @@ func TestDeserializeFromToml(t *testing.T) {
 		t.Errorf("backend.Docker.Containers[0].Env[0] should == backend.Docker.Containers[1].Env[0]")
 	}
 }
+
+func TestSaveFromToml(t *testing.T) {
+	backend := NewSerializedDockerProxyBackendForTest()
+
+	backend.Storage.Delete("/proxies/")
+
+	proxies, err := backend.Storage.List("/proxies")
+	prevProxiesLength := len(proxies)
+
+	err = backend.Save()
+	if err != nil {
+		t.Errorf("Unable to save backend. Error: %v", err)
+	}
+
+	proxies, err = backend.Storage.List("/proxies")
+	currentProxiesLength := len(proxies)
+
+	if currentProxiesLength <= prevProxiesLength {
+		t.Errorf("proxy definition was not saved correctly. currentProxiesLength: %v", currentProxiesLength)
+	}
+}
