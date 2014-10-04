@@ -2,6 +2,7 @@ package handlers
 
 import (
 	chillax_proxy_backend "github.com/didip/chillax/proxy/backend"
+	chillax_web_pipelines "github.com/didip/chillax/web/pipelines"
 	chillax_web_settings "github.com/didip/chillax/web/settings"
 	"io/ioutil"
 	"net/http"
@@ -44,13 +45,13 @@ func ApiPipelinesHandler(settings *chillax_web_settings.ServerSettings) func(htt
 				return
 			}
 
-			proxyBackend, err := chillax_proxy_backend.NewProxyBackend(requestBodyBytes)
+			pipeline, err := chillax_web_pipelines.NewPipeline(string(requestBodyBytes))
 			if err != nil {
 				http.Error(w, err.Error(), 500)
 				return
 			}
 
-			err = proxyBackend.Save()
+			err = pipeline.Save()
 			if err != nil {
 				http.Error(w, err.Error(), 500)
 				return
