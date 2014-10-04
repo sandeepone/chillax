@@ -59,6 +59,10 @@ func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 		s.Paths["ApiPipelines"],
 		chillax_web_handlers.ApiPipelinesHandler(s.Settings)).Methods("POST")
 
+	mux.HandleFunc(
+		s.Paths["ApiPipelines"]+"/{Id}/run",
+		chillax_web_handlers.ApiPipelineRunHandler(s.Settings)).Methods("POST")
+
 	// Admin Handlers
 	mux.HandleFunc(
 		s.Paths["AdminProxies"],

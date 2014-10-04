@@ -20,6 +20,15 @@ func NewPipeline(definition string) (*Pipeline, error) {
 	return p, err
 }
 
+func PipelineById(id string) (*Pipeline, error) {
+	definition, err := chillax_storage.NewStorage().Get("/pipelines/" + id)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewPipeline(string(definition))
+}
+
 type Pipeline struct {
 	PipelineAndStageMixin
 	Id int64
