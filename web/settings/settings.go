@@ -25,6 +25,8 @@ type ServerSettings struct {
 }
 
 func NewServerSettings() (*ServerSettings, error) {
+	var err error
+
 	settings := &ServerSettings{}
 
 	configPath := libenv.EnvWithDefault("CONFIG_PATH", "")
@@ -33,13 +35,16 @@ func NewServerSettings() (*ServerSettings, error) {
 		bufReader := bufio.NewReader(fileHandle)
 		definition, _ := ioutil.ReadAll(bufReader)
 
-		toml.Decode(string(definition), settings)
+		_, err = toml.Decode(string(definition), settings)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	settings.SetDefaults()
 	settings.SetEnvOverrides()
 
-	err := settings.LoadProxyHandlerTomls()
+	err = settings.LoadProxyHandlerTomls()
 
 	return settings, err
 }

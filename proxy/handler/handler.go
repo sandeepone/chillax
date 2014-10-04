@@ -25,8 +25,10 @@ func NewProxyHandlers() []*ProxyHandler {
 }
 
 func NewProxyHandler(tomlBytes []byte) *ProxyHandler {
+	backend, _ := chillax_proxy_backend.NewProxyBackend(tomlBytes)
+
 	handler := &ProxyHandler{}
-	handler.Backend = chillax_proxy_backend.NewProxyBackend(tomlBytes)
+	handler.Backend = backend
 
 	return handler
 }

@@ -10,22 +10,20 @@ import (
 
 const DOCKER_TIMEOUT = uint(5)
 
-func ValidateProxyBackendToml(tomlBytes []byte) error {
-	backend := &ProxyBackend{}
-	_, err := toml.Decode(string(tomlBytes), backend)
-	return err
-}
-
-func NewProxyBackend(tomlBytes []byte) *ProxyBackend {
+func NewProxyBackend(tomlBytes []byte) (*ProxyBackend, error) {
 	backend := &ProxyBackend{}
 	backend.Numprocs = 1
 
 	storage := chillax_storage.NewStorage()
 
-	toml.Decode(string(tomlBytes), backend)
+	_, err := toml.Decode(string(tomlBytes), backend)
+	if err != nil {
+		return nil, err
+	}
 
 	backend.Storage = storage
-	return backend
+
+	return backend, err
 }
 
 type ProxyBackend struct {

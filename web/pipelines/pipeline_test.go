@@ -15,7 +15,7 @@ func NewPipelineForTest() *Pipeline {
 	fileHandle, _ := os.Open("./example-pipeline.toml")
 	bufReader := bufio.NewReader(fileHandle)
 	definition, _ := ioutil.ReadAll(bufReader)
-	pipeline := NewPipeline(string(definition))
+	pipeline, _ := NewPipeline(string(definition))
 	return pipeline
 }
 

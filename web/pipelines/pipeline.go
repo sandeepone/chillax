@@ -4,14 +4,14 @@ import "github.com/BurntSushi/toml"
 
 // Create a new Pipeline struct.
 // It receive TOML definition as string.
-func NewPipeline(definition string) *Pipeline {
+func NewPipeline(definition string) (*Pipeline, error) {
 	p := &Pipeline{}
 
-	toml.Decode(definition, p)
+	_, err := toml.Decode(definition, p)
 
 	p.SetDefaults()
 
-	return p
+	return p, err
 }
 
 type Pipeline struct {
