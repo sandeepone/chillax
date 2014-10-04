@@ -22,6 +22,12 @@ type PipelineAndStageMixin struct {
 	Stages        []*Stage
 }
 
+type PipelineAndStageSerializableMixin struct {
+	TimeoutString string
+	Body          map[string]interface{}
+	Stages        []*StageSerializable
+}
+
 func (mixin *PipelineAndStageMixin) MergeBodyToChildrenBody() {
 	for _, stage := range mixin.Stages {
 		if stage.Body == nil {

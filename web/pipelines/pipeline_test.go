@@ -59,6 +59,15 @@ func TestNewPipeline(t *testing.T) {
 	}
 }
 
+func TestPipelineSave(t *testing.T) {
+	pipeline := NewPipelineForTest()
+	err := pipeline.Save()
+
+	if err != nil {
+		t.Errorf("Unable to save pipeline. Error: %v", err)
+	}
+}
+
 func TestNestingStages(t *testing.T) {
 	pipeline := NewPipelineForTest()
 

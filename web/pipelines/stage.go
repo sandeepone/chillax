@@ -6,6 +6,10 @@ type Stage struct {
 	PipelineAndStageMixin
 }
 
+type StageSerializable struct {
+	PipelineAndStageSerializableMixin
+}
+
 func (s *Stage) SetDefaults() {
 	var err error
 
