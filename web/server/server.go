@@ -28,10 +28,15 @@ func NewServer() (*Server, error) {
 	}
 
 	server.Paths = make(map[string]string)
-	server.Paths["ApiProxies"] = "/chillax/api/proxies"
-	server.Paths["ApiPipelines"] = "/chillax/api/pipelines"
-	server.Paths["AdminProxies"] = "/chillax/admin/proxies"
-	server.Paths["AdminStatic"] = "/chillax/admin/static/"
+
+	server.Paths["ApiPrefix"] = "/chillax/api"
+	server.Paths["ApiProxies"] = server.Paths["ApiPrefix"] + "/proxies"
+	server.Paths["ApiPipelines"] = server.Paths["ApiPrefix"] + "/pipelines"
+	server.Paths["ApiPipelineRun"] = server.Paths["ApiPrefix"] + "/pipelines/{Id}/run"
+
+	server.Paths["AdminPrefix"] = "/chillax/admin"
+	server.Paths["AdminProxies"] = server.Paths["AdminPrefix"] + "/proxies"
+	server.Paths["AdminStatic"] = server.Paths["AdminPrefix"] + "/static/"
 
 	server.Handler = server.NewGorillaMux()
 
@@ -62,7 +67,7 @@ func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 		chillax_web_handlers.ApiPipelinesHandler(s.Settings)).Methods("POST")
 
 	mux.HandleFunc(
-		s.Paths["ApiPipelines"]+"/{Id}/run",
+		s.Paths["ApiPipelineRun"],
 		chillax_web_handlers.ApiPipelineRunHandler(s.Settings)).Methods("POST")
 
 	// Admin Handlers
