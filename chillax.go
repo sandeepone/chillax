@@ -10,9 +10,5 @@ func main() {
 		panic(err)
 	}
 
-	mux := server.NewGorillaMux()
-
-	server.Handler = mux
-
-	server.ListenAndServe()
+	server.ListenAndServeGeneric()
 }

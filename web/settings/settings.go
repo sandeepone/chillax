@@ -14,6 +14,8 @@ import (
 type ServerSettings struct {
 	// HTTP port to listen to
 	HttpPort string
+	KeyFile  string
+	CertFile string
 
 	// Timeout is the duration to allow outstanding requests to survive
 	// before forcefully terminating them.

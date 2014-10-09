@@ -33,6 +33,8 @@ func NewServer() (*Server, error) {
 	server.Paths["AdminProxies"] = "/chillax/admin/proxies"
 	server.Paths["AdminStatic"] = "/chillax/admin/static/"
 
+	server.Handler = server.NewGorillaMux()
+
 	return server, err
 }
 
@@ -75,4 +77,12 @@ func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 	mux.PathPrefix(s.Paths["AdminStatic"]).Handler(staticHandler)
 
 	return mux
+}
+
+func (s *Server) ListenAndServeGeneric() {
+	if s.Settings.CertFile != "" && s.Settings.KeyFile != "" {
+		s.ListenAndServeTLS(s.Settings.CertFile, s.Settings.KeyFile)
+	} else {
+		s.ListenAndServe()
+	}
 }
