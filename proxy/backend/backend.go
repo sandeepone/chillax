@@ -27,6 +27,7 @@ func NewProxyBackend(tomlBytes []byte) (*ProxyBackend, error) {
 }
 
 type ProxyBackend struct {
+	Domain   string
 	Path     string
 	Command  string
 	Numprocs int
