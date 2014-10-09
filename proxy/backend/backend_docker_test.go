@@ -12,7 +12,7 @@ func NewDockerProxyBackendForTest() *ProxyBackend {
 	fileHandle, _ := os.Open("./example-docker-backend.toml")
 	bufReader := bufio.NewReader(fileHandle)
 	definition, _ := ioutil.ReadAll(bufReader)
-	backend := NewProxyBackend(definition)
+	backend, _ := NewProxyBackend(definition)
 	return backend
 }
 
@@ -46,7 +46,7 @@ func TestIsDocker(t *testing.T) {
 	fileHandle2, _ := os.Open("./example-process-backend.toml")
 	bufReader2 := bufio.NewReader(fileHandle2)
 	definition2, _ := ioutil.ReadAll(bufReader2)
-	backend2 := NewProxyBackend(definition2)
+	backend2, _ := NewProxyBackend(definition2)
 
 	if backend2.IsDocker() {
 		t.Errorf("Backend2 must not be docker")

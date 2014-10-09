@@ -11,7 +11,7 @@ func NewProcessProxyBackendForTest() *ProxyBackend {
 	fileHandle, _ := os.Open("./example-process-backend.toml")
 	bufReader := bufio.NewReader(fileHandle)
 	definition, _ := ioutil.ReadAll(bufReader)
-	backend := NewProxyBackend(definition)
+	backend, _ := NewProxyBackend(definition)
 	return backend
 }
 

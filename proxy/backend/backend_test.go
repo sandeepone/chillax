@@ -11,7 +11,7 @@ func NewSerializedDockerProxyBackendForTest() *ProxyBackend {
 	fileHandle, _ := os.Open("./tests-data/serialized-docker-backend.toml")
 	bufReader := bufio.NewReader(fileHandle)
 	definition, _ := ioutil.ReadAll(bufReader)
-	backend := NewProxyBackend(definition)
+	backend, _ := NewProxyBackend(definition)
 	return backend
 }
 
