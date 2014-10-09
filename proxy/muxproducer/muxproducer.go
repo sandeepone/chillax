@@ -72,7 +72,11 @@ func (mp *MuxProducer) GorillaMuxWithProxyBackends() *gorilla_mux.Router {
 	mux := gorilla_mux.NewRouter()
 
 	for _, handler := range mp.ProxyHandlers {
-		mux.HandleFunc(handler.Backend.Path, handler.Function())
+		if handler.Backend.Domain != "" {
+			mux.Host(handler.Backend.Domain).Subrouter().HandleFunc(handler.Backend.Path, handler.Function())
+		} else {
+			mux.HandleFunc(handler.Backend.Path, handler.Function())
+		}
 	}
 	return mux
 }
