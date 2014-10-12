@@ -31,7 +31,11 @@ func NewServerSettings() (*ServerSettings, error) {
 
 	settings := &ServerSettings{}
 
-	configPath := libenv.EnvWithDefault("CONFIG_PATH", "")
+	configPath, err := settings.ConfigPath()
+	if err != nil {
+		return nil, err
+	}
+
 	if configPath != "" {
 		fileHandle, _ := os.Open(configPath)
 		bufReader := bufio.NewReader(fileHandle)
@@ -49,6 +53,25 @@ func NewServerSettings() (*ServerSettings, error) {
 	err = settings.LoadProxyHandlerTomls()
 
 	return settings, err
+}
+
+func (ss *ServerSettings) ConfigPath() (string, error) {
+	var err error
+
+	configPath := libenv.EnvWithDefault("CONFIG_PATH", "")
+	if configPath != "" {
+		configPath, err = filepath.Abs(configPath)
+	}
+
+	return configPath, err
+}
+
+func (ss *ServerSettings) ConfigDir() (string, error) {
+	configPath, err := ss.ConfigPath()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Dir(configPath), nil
 }
 
 func (ss *ServerSettings) SetDefaults() {
@@ -75,7 +98,27 @@ func (ss *ServerSettings) SetEnvOverrides() {
 
 func (ss *ServerSettings) LoadProxyHandlerTomls() error {
 	if ss.ProxyHandlersPath != "" {
-		files, err := filepath.Glob(path.Join(ss.ProxyHandlersPath, "*.toml"))
+		var globPath string
+
+		if filepath.IsAbs(ss.ProxyHandlersPath) {
+			globPath = path.Join(ss.ProxyHandlersPath, "*.toml")
+		} else {
+			configDir, err := ss.ConfigDir()
+			if err != nil {
+				return err
+			}
+
+			resolvedProxyHandlersPath := filepath.Join(configDir, ss.ProxyHandlersPath)
+
+			resolvedProxyHandlersPath, err = filepath.Abs(resolvedProxyHandlersPath)
+			if err != nil {
+				return err
+			}
+
+			globPath = path.Join(resolvedProxyHandlersPath, "*.toml")
+		}
+
+		files, err := filepath.Glob(globPath)
 		if err != nil {
 			return err
 		}

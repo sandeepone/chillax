@@ -12,6 +12,9 @@ import (
 
 func NewServer() (*Server, error) {
 	settings, err := chillax_web_settings.NewServerSettings()
+	if err != nil {
+		return nil, err
+	}
 
 	requestTimeoutOnRestart, err := time.ParseDuration(settings.RequestTimeoutOnRestart)
 	if err != nil {
@@ -36,7 +39,7 @@ func NewServer() (*Server, error) {
 
 	server.Paths["AdminPrefix"] = "/chillax/admin"
 	server.Paths["AdminProxies"] = server.Paths["AdminPrefix"] + "/proxies"
-	server.Paths["AdminStatic"] = server.Paths["AdminPrefix"] + "/static/"
+	server.Paths["AdminStatic"] = server.Paths["AdminPrefix"] + "/static"
 
 	server.Handler = server.NewGorillaMux()
 
