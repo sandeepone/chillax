@@ -2,6 +2,7 @@ package libnet
 
 import (
 	"net"
+	"net/http"
 	"os"
 	"sort"
 	"strings"
@@ -44,4 +45,12 @@ func RemoteToLocalHostEquality(remoteHostOrIp string) bool {
 		}
 	}
 	return false
+}
+
+func GetHttpHeader(r *http.Request, name string) string {
+	headers := r.Header[name]
+	if len(headers) > 0 {
+		return headers[0]
+	}
+	return ""
 }
