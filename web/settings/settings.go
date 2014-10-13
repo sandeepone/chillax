@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 )
 
 type ServerSettings struct {
@@ -22,7 +21,6 @@ type ServerSettings struct {
 	RequestTimeoutOnRestart string
 
 	ProxyHandlersPath string
-	DefaultAssetsPath string
 	ProxyHandlerTomls [][]byte
 }
 
@@ -81,19 +79,12 @@ func (ss *ServerSettings) SetDefaults() {
 	if ss.RequestTimeoutOnRestart == "" {
 		ss.RequestTimeoutOnRestart = "3s"
 	}
-	if ss.DefaultAssetsPath == "" {
-		_, currentFilePath, _, _ := runtime.Caller(1)
-		currentFileFullPath, _ := filepath.Abs(currentFilePath)
-
-		ss.DefaultAssetsPath = path.Join(path.Dir(currentFileFullPath), "..", "default-assets")
-	}
 }
 
 func (ss *ServerSettings) SetEnvOverrides() {
 	ss.HttpPort = libenv.EnvWithDefault("HTTP_PORT", ss.HttpPort)
 	ss.RequestTimeoutOnRestart = libenv.EnvWithDefault("REQUEST_TIMEOUT_ON_RESTART", ss.RequestTimeoutOnRestart)
 	ss.ProxyHandlersPath = libenv.EnvWithDefault("PROXY_HANDLERS_PATH", ss.ProxyHandlersPath)
-	ss.DefaultAssetsPath = libenv.EnvWithDefault("DEFAULT_ASSETS_PATH", ss.DefaultAssetsPath)
 }
 
 func (ss *ServerSettings) LoadProxyHandlerTomls() error {

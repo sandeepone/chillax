@@ -39,7 +39,6 @@ func NewServer() (*Server, error) {
 
 	server.Paths["AdminPrefix"] = "/chillax/admin"
 	server.Paths["AdminProxies"] = server.Paths["AdminPrefix"] + "/proxies"
-	server.Paths["AdminStatic"] = server.Paths["AdminPrefix"] + "/static"
 
 	server.Handler = server.NewGorillaMux()
 
@@ -77,12 +76,6 @@ func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 	mux.HandleFunc(
 		s.Paths["AdminProxies"],
 		chillax_web_handlers.AdminProxiesHandler(s.Settings, muxProducer.ProxyHandlers)).Methods("GET")
-
-	staticHandler := http.StripPrefix(
-		s.Paths["AdminStatic"],
-		chillax_web_handlers.AdminStaticDirHandler(s.Settings.DefaultAssetsPath))
-
-	mux.PathPrefix(s.Paths["AdminStatic"]).Handler(staticHandler)
 
 	return mux
 }
