@@ -3,10 +3,10 @@ package admin
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	chillax_proxy_handler "github.com/didip/chillax/proxy/handler"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -21,8 +21,8 @@ func NewProxyHandlerForTest() *chillax_proxy_handler.ProxyHandler {
 func TestProxies(t *testing.T) {
 	p := NewProxies()
 
-	if p.Src() == "" {
-		t.Errorf("Template source should not be empty. p.Src(): %v", p.Src())
+	if p.String() == "" {
+		t.Errorf("Template string should not be empty. p.String(): %v", p.String())
 	}
 }
 
@@ -42,14 +42,20 @@ func TestProxiesExecute(t *testing.T) {
 		t.Errorf("Unable to parse template. Error: %v", err)
 	}
 
-	var html bytes.Buffer
+	var buffer bytes.Buffer
 
-	err = template.Execute(&html, data)
+	err = template.Execute(&buffer, data)
 	if err != nil {
 		t.Errorf("Unable to execute template. Error: %v", err)
 	}
 
-	if html.String() == "" {
-		t.Errorf("Generated HTML should not be empty. HTML: %v", html.String())
+	html := buffer.String()
+
+	if html == "" {
+		t.Errorf("Generated HTML should not be empty. HTML: %v", html)
+	}
+
+	if !strings.Contains(html, "/for-testing-only") {
+		t.Errorf("Generated HTML did not contain /for-testing-only. HTML: %v", html)
 	}
 }

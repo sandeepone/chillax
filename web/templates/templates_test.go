@@ -9,7 +9,7 @@ type GoTemplateTestStruct struct {
 	GoTemplate
 }
 
-func (gt *GoTemplateTestStruct) Src() string {
+func (gt *GoTemplateTestStruct) String() string {
 	return "hello {{.Name}}!"
 }
 
@@ -22,14 +22,15 @@ func TestTemplateSrc(t *testing.T) {
 	gt := &GoTemplateTestStruct{}
 	gt.Name = "GoTemplateTestStruct"
 
-	if gt.Src() != "hello {{.Name}}!" {
-		t.Errorf("Template source string is incorrect. gt.Src(): ", gt.Src())
+	if gt.String() != "hello {{.Name}}!" {
+		t.Errorf("Template source string is incorrect. gt.Src(): ", gt.String())
 	}
 }
 
 func TestTemplateExecute(t *testing.T) {
 	gt := &GoTemplateTestStruct{}
 	gt.Name = "GoTemplateTestStruct"
+	gt.Src = gt.String()
 
 	templ, err := gt.Parse()
 
