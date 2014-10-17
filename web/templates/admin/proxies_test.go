@@ -19,7 +19,7 @@ func NewProxyHandlerForTest() *chillax_proxy_handler.ProxyHandler {
 }
 
 func TestProxies(t *testing.T) {
-	p := NewProxies()
+	p := NewAdminProxies()
 
 	if p.String() == "" {
 		t.Errorf("Template string should not be empty. p.String(): %v", p.String())
@@ -36,7 +36,7 @@ func TestProxiesExecute(t *testing.T) {
 		proxyHandlers,
 	}
 
-	template, err := NewProxies().Parse()
+	template, err := NewAdminProxies().Parse()
 
 	if err != nil {
 		t.Errorf("Unable to parse template. Error: %v", err)

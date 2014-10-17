@@ -4,18 +4,18 @@ import (
 	chillax_web_templates "github.com/didip/chillax/web/templates"
 )
 
-func NewProxies() *Proxies {
-	gt := &Proxies{}
+func NewAdminProxies() *AdminProxies {
+	gt := &AdminProxies{}
 	gt.Name = "/proxies"
 	gt.Src = gt.String()
 	return gt
 }
 
-type Proxies struct {
+type AdminProxies struct {
 	chillax_web_templates.GoTemplate
 }
 
-func (p *Proxies) String() string {
+func (p *AdminProxies) String() string {
 	return `
 {{ range $element := .ProxyHandlers }}
     {{ $element.Backend.Path }}

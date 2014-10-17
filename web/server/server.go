@@ -74,6 +74,10 @@ func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 
 	// Admin Handlers
 	mux.HandleFunc(
+		s.Paths["AdminPrefix"],
+		chillax_web_handlers.AdminBaseHandler(s.Settings)).Methods("GET")
+
+	mux.HandleFunc(
 		s.Paths["AdminProxies"],
 		chillax_web_handlers.AdminProxiesHandler(s.Settings, muxProducer.ProxyHandlers)).Methods("GET")
 
