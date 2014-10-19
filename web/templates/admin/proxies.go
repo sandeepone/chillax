@@ -24,9 +24,38 @@ func (p *AdminProxies) BaseString() string {
 
 func (p *AdminProxies) String() string {
 	return `
-{{ range $element := .ProxyHandlers }}
-    {{ $element.Backend.Path }}
-{{ end }}`
+<div class="row">
+	<div class="large-12 columns">
+		<h2>Proxies</h2>
+	</div>
+</div>
+
+<div class="row">
+	<div class="large-12 columns">
+		<table class="full-width">
+			<thead>
+				<tr>
+					<th>Path</th>
+					<th>Table Header</th>
+					<th width="150">Table Header</th>
+					<th width="150">Table Header</th>
+				</tr>
+			</thead>
+
+			<tbody>
+				{{ range $element := .ProxyHandlers }}
+				<tr>
+					<td>{{ $element.Backend.Path }}</td>
+					<td>This is longer content Donec id elit non mi porta gravida at eget metus.</td>
+					<td>Content Goes Here</td>
+					<td>Content Goes Here</td>
+				</tr>
+				{{ end }}
+			</tbody>
+		</table>
+	</div>
+</div>
+`
 }
 
 func (p *AdminProxies) StringWithInheritance() string {
