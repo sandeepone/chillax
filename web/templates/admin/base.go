@@ -29,6 +29,9 @@ func (p *AdminBase) String() string {
 		margin-right: auto;
 		max-width: initial;
 	}
+	.no-margin {
+		margin: 0;
+	}
 	</style>
 </head>
 

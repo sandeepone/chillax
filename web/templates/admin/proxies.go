@@ -36,19 +36,17 @@ func (p *AdminProxies) String() string {
 			<thead>
 				<tr>
 					<th>Path</th>
-					<th>Table Header</th>
-					<th width="150">Table Header</th>
-					<th width="150">Table Header</th>
+					<th width="50">Procs</th>
+					<th width="100">Actions</th>
 				</tr>
 			</thead>
 
 			<tbody>
 				{{ range $element := .ProxyHandlers }}
 				<tr>
-					<td>{{ $element.Backend.Path }}</td>
-					<td>This is longer content Donec id elit non mi porta gravida at eget metus.</td>
-					<td>Content Goes Here</td>
-					<td>Content Goes Here</td>
+					<td>{{ $element.Backend.Domain }}{{ $element.Backend.Path }}</td>
+					<td>1/{{ $element.Backend.Numprocs }}</td>
+					<td><a href="#" class="button tiny radius round expand no-margin">Details</a></td>
 				</tr>
 				{{ end }}
 			</tbody>
