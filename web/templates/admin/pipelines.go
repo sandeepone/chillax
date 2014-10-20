@@ -25,33 +25,24 @@ func (p *AdminPipelines) BaseString() string {
 func (p *AdminPipelines) String() string {
 	return `
 <div class="row">
-    <div class="large-12 columns">
-        <h2>Proxies</h2>
-    </div>
+	<div class="large-12 columns">
+		<h2>Pipelines</h2>
+	</div>
 </div>
 
 <div class="row">
-    <div class="large-12 columns">
-        <table class="full-width">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th width="50">Timeout</th>
-                    <th width="100">Actions</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {{ range $element := .Pipelines }}
-                <tr>
-                    <td>{{ $element.Id }}</td>
-                    <td>{{ $element.TimeoutString }}</td>
-                    <td><a href="#" class="button tiny radius round expand no-margin">Details</a></td>
-                </tr>
-                {{ end }}
-            </tbody>
-        </table>
-    </div>
+	<div class="large-12 columns">
+		<div class="large-12 columns">
+			<ul class="small-block-grid-2 medium-block-grid-4 large-block-grid-8">
+				{{ range $element := .Pipelines }}
+				<li style="border: 1px solid #dddddd; text-align: center">
+					<h6>ID: {{ $element.Id }}</h6>
+					<a href="#" class="button tiny radius round expand no-margin">Details</a>
+				</li>
+				{{ end }}
+			</ul>
+		</div>
+	</div>
 </div>
 `
 }
