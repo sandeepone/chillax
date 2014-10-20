@@ -59,3 +59,12 @@ func (pb *ProxyBackend) Save() error {
 	}
 	return err
 }
+
+func (pb *ProxyBackend) UpNumprocs() int {
+	if pb.IsDocker() {
+		return len(pb.Docker.Containers)
+	} else {
+		return len(pb.Process.Instances)
+	}
+	return 0
+}

@@ -45,7 +45,7 @@ func (p *AdminProxies) String() string {
 				{{ range $element := .ProxyHandlers }}
 				<tr>
 					<td>{{ $element.Backend.Domain }}{{ $element.Backend.Path }}</td>
-					<td>1/{{ $element.Backend.Numprocs }}</td>
+					<td>{{ $element.Backend.UpNumprocs }}/{{ $element.Backend.Numprocs }}</td>
 					<td><a href="#" class="button tiny radius round expand no-margin">Details</a></td>
 				</tr>
 				{{ end }}
