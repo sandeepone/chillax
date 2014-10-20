@@ -20,6 +20,7 @@ func (p *AdminBase) String() string {
 <html>
 <head>
 	<link href="http://cdn.foundation5.zurb.com/foundation.css" rel="stylesheet" type="text/css" media="all">
+	<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
 	<script src="http://cdn.foundation5.zurb.com/foundation.js"></script>
 
 	<style>
@@ -48,13 +49,13 @@ func (p *AdminBase) String() string {
 			<section class="top-bar-section">
 				<!-- Right Nav Section -->
 				<ul class="right">
-					<li>
+					<li class="chillax-tab">
 						<a href="/chillax/admin/handlers">Handlers</a>
 					</li>
-					<li>
+					<li class="chillax-tab">
 						<a href="/chillax/admin/proxies">Proxies</a>
 					</li>
-					<li>
+					<li class="chillax-tab">
 						<a href="/chillax/admin/pipelines">Pipelines</a>
 					</li>
 					<li class="has-dropdown">
@@ -65,6 +66,12 @@ func (p *AdminBase) String() string {
 						</ul>
 					</li>
 				</ul>
+
+				<!-- chillax-tab highlighter -->
+				<script>
+				$('.chillax-tab').removeClass('active');
+				$('.chillax-tab a[href="' + location.pathname + '"]').parent().addClass('active');
+				</script>
 			</section>
 		</nav>
 	</div>
