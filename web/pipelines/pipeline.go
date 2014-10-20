@@ -29,6 +29,25 @@ func PipelineById(id string) (*Pipeline, error) {
 	return NewPipeline(string(definition))
 }
 
+func AllPipelines() ([]*Pipeline, error) {
+	pipelineIds, err := chillax_storage.NewStorage().List("/pipelines")
+	if err != nil {
+		return make([]*Pipeline, 0), err
+	}
+
+	pipelines := make([]*Pipeline, len(pipelineIds))
+
+	for index, pipelineId := range pipelineIds {
+		pipeline, err := PipelineById(pipelineId)
+		if err != nil {
+			return make([]*Pipeline, 0), err
+		}
+		pipelines[index] = pipeline
+	}
+
+	return pipelines, nil
+}
+
 type Pipeline struct {
 	PipelineAndStageMixin
 	Id int64
