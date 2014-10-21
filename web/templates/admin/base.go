@@ -19,9 +19,9 @@ func (p *AdminBase) String() string {
 	return `
 <html>
 <head>
-	<link href="http://cdn.foundation5.zurb.com/foundation.css" rel="stylesheet" type="text/css" media="all">
-	<script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
-	<script src="http://cdn.foundation5.zurb.com/foundation.js"></script>
+	<link href="//cdnjs.cloudflare.com/ajax/libs/foundation/5.4.6/css/foundation.min.css" rel="stylesheet" type="text/css" media="all">
+	<script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/foundation/5.4.6/js/foundation.min.js"></script>
 
 	<style>
 	.full-width {
