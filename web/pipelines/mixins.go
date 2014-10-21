@@ -122,5 +122,12 @@ func (ri *RunInstance) Save() error {
 	if err != nil {
 		return err
 	}
-	return chillax_storage.NewStorage().Create(fmt.Sprintf("/pipelines/run-instances/%v", ri.TimestampUnixNano), inBytes)
+
+	datetime := time.Unix(0, ri.TimestampUnixNano)
+
+	dataPath := fmt.Sprintf(
+		"/logs/pipelines/run-instances/%v/%d/%v/%v/%v/%v",
+		datetime.Year(), datetime.Month(), datetime.Day(), datetime.Hour(), datetime.Minute(), ri.TimestampUnixNano)
+
+	return chillax_storage.NewStorage().Create(dataPath, inBytes)
 }
