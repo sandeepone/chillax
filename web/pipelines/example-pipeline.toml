@@ -1,3 +1,5 @@
+Description = "Example pipeline"
+
 [Body]
 AwsAccessKey = "abc"
 AwsSecretKey = "xyz"

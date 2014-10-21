@@ -50,12 +50,14 @@ func AllPipelines() ([]*Pipeline, error) {
 
 type Pipeline struct {
 	PipelineAndStageMixin
-	Id int64
+	Id          int64
+	Description string
 }
 
 type PipelineSerializable struct {
 	PipelineAndStageSerializableMixin
-	Id int64
+	Id          int64
+	Description string
 }
 
 func (p *Pipeline) SetDefaults() {
@@ -76,6 +78,7 @@ func (p *Pipeline) SetStagesDefaults() {
 func (p *Pipeline) Serialize() ([]byte, error) {
 	serializable := &PipelineSerializable{}
 	serializable.Id = p.Id
+	serializable.Description = p.Description
 	serializable.TimeoutString = p.TimeoutString
 	serializable.Body = p.Body
 	serializable.Stages = make([]*StageSerializable, len(p.Stages))
