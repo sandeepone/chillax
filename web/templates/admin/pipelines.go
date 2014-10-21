@@ -32,16 +32,25 @@ func (p *AdminPipelines) String() string {
 
 <div class="row">
 	<div class="large-12 columns">
-		<div class="large-12 columns">
-			<ul class="small-block-grid-2 medium-block-grid-4 large-block-grid-8">
+		<table class="full-width">
+			<thead>
+				<tr>
+					<th width="50">ID</th>
+					<th>Description</th>
+					<th width="100">Actions</th>
+				</tr>
+			</thead>
+
+			<tbody>
 				{{ range $element := .Pipelines }}
-				<li style="border: 1px solid #dddddd; text-align: center">
-					<h6>ID: {{ $element.Id }}</h6>
-					<a href="#" class="button tiny radius round expand no-margin">Details</a>
-				</li>
+				<tr>
+					<td>{{ $element.Id }}</td>
+					<td>{{ $element.Description }}</td>
+					<td><a href="#" class="button tiny radius round expand no-margin">Details</a></td>
+				</tr>
 				{{ end }}
-			</ul>
-		</div>
+			</tbody>
+		</table>
 	</div>
 </div>
 `
