@@ -2,9 +2,11 @@ package pipelines
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/didip/chillax/libtime"
 	"github.com/franela/goreq"
 	"io/ioutil"
+	"math"
 	"sync"
 	"time"
 )
@@ -17,22 +19,18 @@ type PipelineAndStageMixin struct {
 
 	// Default is "1s"
 	TimeoutString string
-
-	// Default is "5s"
-	RetryWaitString string
-	FailCount       int
+	FailCount     int
 
 	// Default is 10
 	FailMax int
 }
 
 type PipelineAndStageSerializableMixin struct {
-	Body            map[string]interface{}
-	Stages          []*StageSerializable
-	TimeoutString   string
-	RetryWaitString string
-	FailCount       int
-	FailMax         int
+	Body          map[string]interface{}
+	Stages        []*StageSerializable
+	TimeoutString string
+	FailCount     int
+	FailMax       int
 }
 
 func (mixin *PipelineAndStageMixin) MergeBodyToChildrenBody() {
@@ -59,17 +57,8 @@ func (mixin *PipelineAndStageMixin) SetCommonDefaults() {
 		mixin.TimeoutString = "1s"
 	}
 
-	if mixin.RetryWaitString == "" {
-		mixin.RetryWaitString = "5s"
-	}
-
-	_, err = time.ParseDuration(mixin.RetryWaitString)
-	if err != nil {
-		mixin.RetryWaitString = "5s"
-	}
-
 	if mixin.FailMax <= 0 {
-		mixin.FailMax = 10
+		mixin.FailMax = 3
 	}
 
 	if mixin.Method == "" {
@@ -103,15 +92,14 @@ func (mixin *PipelineAndStageMixin) Run() RunInstance {
 
 			runInstance.ErrorMessage = err.Error()
 
-			// Retry after sleeping as long as mixin.RetryWaitString
+			// Retry after sleeping as long as 2^(mixin.FailCount/2)
 			// only if mixin.FailMax is not exceeded.
 			if mixin.FailCount < mixin.FailMax {
-				go func(mixin *PipelineAndStageMixin, runInstance RunInstance) {
-					libtime.SleepString(mixin.RetryWaitString)
+				sleepSeconds := int(math.Pow(2, float64(mixin.FailCount)/2))
+				sleepSecondsString := fmt.Sprintf("%vs", sleepSeconds)
 
-					runInstance = mixin.Run()
-
-				}(mixin, runInstance)
+				libtime.SleepString(sleepSecondsString)
+				runInstance = mixin.Run()
 			}
 
 		}

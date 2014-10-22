@@ -78,7 +78,6 @@ func (p *Pipeline) Serialize() ([]byte, error) {
 	serializable.Id = p.Id
 	serializable.Description = p.Description
 	serializable.TimeoutString = p.TimeoutString
-	serializable.RetryWaitString = p.RetryWaitString
 	serializable.FailCount = p.FailCount
 	serializable.FailMax = p.FailMax
 	serializable.Body = p.Body
@@ -87,7 +86,6 @@ func (p *Pipeline) Serialize() ([]byte, error) {
 	for i, stage := range p.Stages {
 		stageSerializable := &StageSerializable{}
 		stageSerializable.TimeoutString = stage.TimeoutString
-		stageSerializable.RetryWaitString = stage.RetryWaitString
 		stageSerializable.FailCount = stage.FailCount
 		stageSerializable.FailMax = stage.FailMax
 		stageSerializable.Body = stage.Body

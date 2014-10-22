@@ -24,11 +24,8 @@ func TestNewStage(t *testing.T) {
 	if stage.TimeoutString != "1s" {
 		t.Error("Default TimeoutString should be 1 second.")
 	}
-	if stage.RetryWaitString != "5s" {
-		t.Error("Default RetryWaitString should be 1 second.")
-	}
-	if stage.FailMax != 10 {
-		t.Error("Default FailMax should be 10.")
+	if stage.FailMax != 3 {
+		t.Error("Default FailMax should be 3.")
 	}
 	if stage.Accept != "application/json" {
 		t.Error("Default Accept should be application/json.")
