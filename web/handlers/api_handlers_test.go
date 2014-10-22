@@ -44,6 +44,10 @@ func NewGorillaMuxForTest(settings *chillax_web_settings.ServerSettings) *gorill
 		ApiPipelinesHandler(settings)).Methods("POST")
 
 	mux.HandleFunc(
+		"/chillax/api/pipelines/run",
+		ApiPipelinesRunHandler(settings)).Methods("POST")
+
+	mux.HandleFunc(
 		"/chillax/api/pipelines/{Id}/run",
 		ApiPipelineRunHandler(settings)).Methods("POST")
 
@@ -158,4 +162,57 @@ func TestApiPipelinesAndRun(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
+}
+
+func TestApiPipelinesRun(t *testing.T) {
+	// ---- Setup ----
+	settings := NewServerSettingsForTest()
+
+	mux := NewGorillaMuxForTest(settings)
+
+	go http.ListenAndServe(":18002", mux)
+
+	definition := NewPipelineDefinitionForTest()
+
+	storage := chillax_storage.NewStorage()
+
+	storage.Delete("/pipelines/")
+
+	// ---- Setup ----
+
+	// Get existing number of pipelines
+	pipelines, err := storage.List("/pipelines")
+	prevPipelinesLength := len(pipelines)
+
+	req, err := http.NewRequest("POST", "http://localhost:18002/chillax/api/pipelines/run", bytes.NewBuffer(definition))
+	if err != nil {
+		t.Errorf("Fail to create POST request. Error: %v", err)
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Errorf("Fail to perform POST request. Error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// Get new number of pipelines
+	pipelines, err = storage.List("/pipelines")
+	currentPipelinesLength := len(pipelines)
+
+	if currentPipelinesLength <= prevPipelinesLength {
+		t.Errorf("pipeline definition was not saved correctly. prevPipelinesLength: %v, currentPipelinesLength: %v", prevPipelinesLength, currentPipelinesLength)
+	}
+
+	//
+	// Read JSON payload after saving a pipeline and check its Id.
+	//
+	jsonBytes, _ := ioutil.ReadAll(resp.Body)
+
+	data := make(map[string]string)
+	json.Unmarshal(jsonBytes, &data)
+
+	if data["Id"] == "" {
+		t.Errorf("POST /pipelines/run did not return Id. jsonBytes: %v", string(jsonBytes))
+	}
 }
