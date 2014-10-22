@@ -61,17 +61,15 @@ type PipelineSerializable struct {
 }
 
 func (p *Pipeline) SetDefaults() {
-	if p.TimeoutString == "" {
-		p.TimeoutString = "1s"
-	}
 	p.Id = time.Now().UnixNano()
+
 	p.SetStagesDefaults()
-	p.MergeBodyToChildrenBody()
+	p.SetCommonDefaults()
 }
 
 func (p *Pipeline) SetStagesDefaults() {
 	for _, stage := range p.Stages {
-		stage.SetDefaults()
+		stage.SetCommonDefaults()
 	}
 }
 
@@ -80,12 +78,18 @@ func (p *Pipeline) Serialize() ([]byte, error) {
 	serializable.Id = p.Id
 	serializable.Description = p.Description
 	serializable.TimeoutString = p.TimeoutString
+	serializable.RetryWaitString = p.RetryWaitString
+	serializable.FailCount = p.FailCount
+	serializable.FailMax = p.FailMax
 	serializable.Body = p.Body
 	serializable.Stages = make([]*StageSerializable, len(p.Stages))
 
 	for i, stage := range p.Stages {
 		stageSerializable := &StageSerializable{}
 		stageSerializable.TimeoutString = stage.TimeoutString
+		stageSerializable.RetryWaitString = stage.RetryWaitString
+		stageSerializable.FailCount = stage.FailCount
+		stageSerializable.FailMax = stage.FailMax
 		stageSerializable.Body = stage.Body
 
 		serializable.Stages[i] = stageSerializable

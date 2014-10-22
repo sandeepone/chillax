@@ -2,6 +2,7 @@ package pipelines
 
 import (
 	"encoding/json"
+	"github.com/didip/chillax/libtime"
 	"github.com/franela/goreq"
 	"io/ioutil"
 	"sync"
@@ -11,16 +12,27 @@ import (
 type PipelineAndStageMixin struct {
 	goreq.Request
 
+	Body   map[string]interface{}
+	Stages []*Stage
+
 	// Default is "1s"
 	TimeoutString string
-	Body          map[string]interface{}
-	Stages        []*Stage
+
+	// Default is "5s"
+	RetryWaitString string
+	FailCount       int
+
+	// Default is 10
+	FailMax int
 }
 
 type PipelineAndStageSerializableMixin struct {
-	TimeoutString string
-	Body          map[string]interface{}
-	Stages        []*StageSerializable
+	Body            map[string]interface{}
+	Stages          []*StageSerializable
+	TimeoutString   string
+	RetryWaitString string
+	FailCount       int
+	FailMax         int
 }
 
 func (mixin *PipelineAndStageMixin) MergeBodyToChildrenBody() {
@@ -35,6 +47,39 @@ func (mixin *PipelineAndStageMixin) MergeBodyToChildrenBody() {
 			}
 		}
 	}
+}
+
+func (mixin *PipelineAndStageMixin) SetCommonDefaults() {
+	if mixin.TimeoutString == "" {
+		mixin.TimeoutString = "1s"
+	}
+
+	_, err := time.ParseDuration(mixin.TimeoutString)
+	if err != nil {
+		mixin.TimeoutString = "1s"
+	}
+
+	if mixin.RetryWaitString == "" {
+		mixin.RetryWaitString = "5s"
+	}
+
+	_, err = time.ParseDuration(mixin.RetryWaitString)
+	if err != nil {
+		mixin.RetryWaitString = "5s"
+	}
+
+	if mixin.FailMax <= 0 {
+		mixin.FailMax = 10
+	}
+
+	if mixin.Method == "" {
+		mixin.Method = "POST"
+	}
+
+	mixin.Accept = "application/json"
+	mixin.ContentType = "application/json"
+
+	mixin.MergeBodyToChildrenBody()
 }
 
 func (mixin *PipelineAndStageMixin) Run() RunInstance {
@@ -52,8 +97,23 @@ func (mixin *PipelineAndStageMixin) Run() RunInstance {
 				runInstance.ResponseBody = string(responseBytes)
 			}
 		}
+
 		if err != nil {
+			mixin.FailCount += 1
+
 			runInstance.ErrorMessage = err.Error()
+
+			// Retry after sleeping as long as mixin.RetryWaitString
+			// only if mixin.FailMax is not exceeded.
+			if mixin.FailCount < mixin.FailMax {
+				go func(mixin *PipelineAndStageMixin, runInstance RunInstance) {
+					libtime.SleepString(mixin.RetryWaitString)
+
+					runInstance = mixin.Run()
+
+				}(mixin, runInstance)
+			}
+
 		}
 	}
 

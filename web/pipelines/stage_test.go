@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
-	"time"
 )
 
 func NewStageForTest() *Stage {
@@ -22,7 +21,19 @@ func TestNewStage(t *testing.T) {
 	if stage.Method != "POST" {
 		t.Error("Default method should be POST.")
 	}
-	if stage.Timeout != 1*time.Second {
-		t.Error("Default timeout should be 1 second.")
+	if stage.TimeoutString != "1s" {
+		t.Error("Default TimeoutString should be 1 second.")
+	}
+	if stage.RetryWaitString != "5s" {
+		t.Error("Default RetryWaitString should be 1 second.")
+	}
+	if stage.FailMax != 10 {
+		t.Error("Default FailMax should be 10.")
+	}
+	if stage.Accept != "application/json" {
+		t.Error("Default Accept should be application/json.")
+	}
+	if stage.ContentType != "application/json" {
+		t.Error("Default ContentType should be application/json.")
 	}
 }

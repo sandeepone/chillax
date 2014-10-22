@@ -22,6 +22,25 @@ func NewPipelineForTest() *Pipeline {
 func TestNewPipeline(t *testing.T) {
 	pipeline := NewPipelineForTest()
 
+	if pipeline.Method != "POST" {
+		t.Error("Default method should be POST.")
+	}
+	if pipeline.TimeoutString != "1s" {
+		t.Error("Default TimeoutString should be 1 second.")
+	}
+	if pipeline.RetryWaitString != "5s" {
+		t.Error("Default RetryWaitString should be 1 second.")
+	}
+	if pipeline.FailMax != 10 {
+		t.Error("Default FailMax should be 10.")
+	}
+	if pipeline.Accept != "application/json" {
+		t.Error("Default Accept should be application/json.")
+	}
+	if pipeline.ContentType != "application/json" {
+		t.Error("Default ContentType should be application/json.")
+	}
+
 	if pipeline.Body == nil {
 		t.Errorf("Failed to parse pipeline TOML definition. pipeline.Body: %v", pipeline.Body)
 	}
