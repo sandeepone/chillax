@@ -41,19 +41,7 @@ func ApiPipelinesHandler(settings *chillax_web_settings.ServerSettings) func(htt
 		if r.Method == "GET" {
 
 		} else if r.Method == "POST" {
-			requestBodyBytes, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				http.Error(w, err.Error(), 500)
-				return
-			}
-
-			pipeline, err := chillax_web_pipelines.NewPipeline(string(requestBodyBytes))
-			if err != nil {
-				http.Error(w, err.Error(), 500)
-				return
-			}
-
-			err = pipeline.Save()
+			pipeline, err := savePipeline(w, r)
 			if err != nil {
 				http.Error(w, err.Error(), 500)
 				return
@@ -70,19 +58,7 @@ func ApiPipelinesRunHandler(settings *chillax_web_settings.ServerSettings) func(
 		if r.Method == "GET" {
 
 		} else if r.Method == "POST" {
-			requestBodyBytes, err := ioutil.ReadAll(r.Body)
-			if err != nil {
-				http.Error(w, err.Error(), 500)
-				return
-			}
-
-			pipeline, err := chillax_web_pipelines.NewPipeline(string(requestBodyBytes))
-			if err != nil {
-				http.Error(w, err.Error(), 500)
-				return
-			}
-
-			err = pipeline.Save()
+			pipeline, err := savePipeline(w, r)
 			if err != nil {
 				http.Error(w, err.Error(), 500)
 				return
@@ -122,4 +98,26 @@ func ApiPipelineRunHandler(settings *chillax_web_settings.ServerSettings) func(h
 			}
 		}
 	}
+}
+
+//
+// Private functions
+//
+func savePipeline(w http.ResponseWriter, r *http.Request) (*chillax_web_pipelines.Pipeline, error) {
+	requestBodyBytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	pipeline, err := chillax_web_pipelines.NewPipeline(string(requestBodyBytes))
+	if err != nil {
+		return nil, err
+	}
+
+	err = pipeline.Save()
+	if err != nil {
+		return nil, err
+	}
+
+	return pipeline, nil
 }
