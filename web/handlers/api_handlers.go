@@ -109,7 +109,7 @@ func savePipeline(w http.ResponseWriter, r *http.Request) (*chillax_web_pipeline
 		return nil, err
 	}
 
-	pipeline, err := chillax_web_pipelines.NewPipeline(string(requestBodyBytes))
+	pipeline, err := chillax_web_pipelines.NewPipelineGivenJsonBytes(requestBodyBytes)
 	if err != nil {
 		return nil, err
 	}

@@ -20,8 +20,8 @@ func NewProxyBackendDefinitionForTest() []byte {
 	return definition
 }
 
-func NewPipelineDefinitionForTest() []byte {
-	fileHandle, _ := os.Open("./tests-data/serialized-pipeline.toml")
+func NewPipelineJsonDefinitionForTest() []byte {
+	fileHandle, _ := os.Open("./tests-data/serialized-pipeline.json")
 	bufReader := bufio.NewReader(fileHandle)
 	definition, _ := ioutil.ReadAll(bufReader)
 	return definition
@@ -103,7 +103,7 @@ func TestApiPipelinesAndRun(t *testing.T) {
 
 	go http.ListenAndServe(":18001", mux)
 
-	definition := NewPipelineDefinitionForTest()
+	definition := NewPipelineJsonDefinitionForTest()
 
 	storage := chillax_storage.NewStorage()
 
@@ -172,7 +172,7 @@ func TestApiPipelinesRun(t *testing.T) {
 
 	go http.ListenAndServe(":18002", mux)
 
-	definition := NewPipelineDefinitionForTest()
+	definition := NewPipelineJsonDefinitionForTest()
 
 	storage := chillax_storage.NewStorage()
 

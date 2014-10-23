@@ -2,6 +2,7 @@ package pipelines
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	chillax_storage "github.com/didip/chillax/storage"
@@ -16,6 +17,16 @@ func NewPipeline(definition string) (*Pipeline, error) {
 	p := &Pipeline{}
 
 	_, err := toml.Decode(definition, p)
+
+	p.SetDefaults()
+
+	return p, err
+}
+
+func NewPipelineGivenJsonBytes(definition []byte) (*Pipeline, error) {
+	p := &Pipeline{}
+
+	err := json.Unmarshal(definition, p)
 
 	p.SetDefaults()
 
