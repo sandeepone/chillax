@@ -122,6 +122,8 @@ func (mixin *PipelineAndStageMixin) Run() RunInstance {
 				}
 
 				runInstance.RunInstances[i] = stage.Run()
+				runInstance.RunInstances[i].ParentId = runInstance.Id
+
 			}(runInstance, i, stage)
 		}
 		wg.Wait()
@@ -134,7 +136,7 @@ func (mixin *PipelineAndStageMixin) Run() RunInstance {
 
 func (mixin *PipelineAndStageMixin) NewRunInstance() RunInstance {
 	ri := RunInstance{}
-	ri.TimestampUnixNano = time.Now().UnixNano()
+	ri.Id = time.Now().UnixNano()
 
 	return ri
 }

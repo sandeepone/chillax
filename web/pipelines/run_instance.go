@@ -10,10 +10,11 @@ import (
 )
 
 type RunInstance struct {
-	TimestampUnixNano int64
-	ResponseBody      string
-	ErrorMessage      string
-	RunInstances      []RunInstance
+	Id           int64
+	ParentId     int64
+	ResponseBody string
+	ErrorMessage string
+	RunInstances []RunInstance
 }
 
 func (ri *RunInstance) Error() error {
@@ -21,6 +22,19 @@ func (ri *RunInstance) Error() error {
 		return errors.New(ri.ErrorMessage)
 	}
 	return nil
+}
+
+func (ri *RunInstance) HasErrorsRecursively() bool {
+	if ri.ErrorMessage != "" {
+		return true
+	} else {
+		for _, child := range ri.RunInstances {
+			if child.HasErrorsRecursively() {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (ri *RunInstance) Serialize() ([]byte, error) {
@@ -36,11 +50,11 @@ func (ri *RunInstance) Save() error {
 		return err
 	}
 
-	datetime := time.Unix(0, ri.TimestampUnixNano)
+	datetime := time.Unix(0, ri.Id)
 
 	dataPath := fmt.Sprintf(
 		"/logs/pipelines/run-instances/%v/%d/%v/%v/%v/%v",
-		datetime.Year(), datetime.Month(), datetime.Day(), datetime.Hour(), datetime.Minute(), ri.TimestampUnixNano)
+		datetime.Year(), datetime.Month(), datetime.Day(), datetime.Hour(), datetime.Minute(), ri.Id)
 
 	return chillax_storage.NewStorage().Create(dataPath, inBytes)
 }
