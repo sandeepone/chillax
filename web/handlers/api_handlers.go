@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	chillax_proxy_backend "github.com/didip/chillax/proxy/backend"
 	chillax_web_pipelines "github.com/didip/chillax/web/pipelines"
 	chillax_web_settings "github.com/didip/chillax/web/settings"
+	"github.com/peterbourgon/mergemap"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -91,6 +93,12 @@ func ApiPipelineRunHandler(settings *chillax_web_settings.ServerSettings) func(h
 				return
 			}
 
+			pipeline, err = mergePipelineBody(r, pipeline)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+
 			runInstance := pipeline.RunWithCrashRequeue()
 			if runInstance.ErrorMessage != "" {
 				http.Error(w, runInstance.ErrorMessage, 500)
@@ -120,4 +128,17 @@ func savePipeline(w http.ResponseWriter, r *http.Request) (*chillax_web_pipeline
 	}
 
 	return pipeline, nil
+}
+
+func mergePipelineBody(r *http.Request, pipeline *chillax_web_pipelines.Pipeline) (*chillax_web_pipelines.Pipeline, error) {
+	requestBodyBytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var body map[string]interface{}
+	json.Unmarshal(requestBodyBytes, &body)
+
+	pipeline.Body = mergemap.Merge(pipeline.Body, body)
+	return pipeline, err
 }

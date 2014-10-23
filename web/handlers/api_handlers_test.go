@@ -115,6 +115,7 @@ func TestApiPipelinesAndRun(t *testing.T) {
 	pipelines, err := storage.List("/pipelines")
 	prevPipelinesLength := len(pipelines)
 
+	// Create a pipeline
 	req, err := http.NewRequest("POST", "http://localhost:18001/chillax/api/pipelines", bytes.NewBuffer(definition))
 	if err != nil {
 		t.Errorf("Fail to create POST request. Error: %v", err)
@@ -150,7 +151,10 @@ func TestApiPipelinesAndRun(t *testing.T) {
 	//
 	// Run pipeline
 	//
-	req, err = http.NewRequest("POST", "http://localhost:18001/chillax/api/pipelines/"+data["Id"]+"/run", bytes.NewBuffer([]byte("")))
+	req, err = http.NewRequest(
+		"POST",
+		"http://localhost:18001/chillax/api/pipelines/"+data["Id"]+"/run",
+		bytes.NewBuffer([]byte(`{"Brotato": true}`)))
 	if err != nil {
 		t.Errorf("Fail to create POST request. Error: %v", err)
 	}
