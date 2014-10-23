@@ -12,6 +12,7 @@ import (
 type RunInstance struct {
 	Id           int64
 	ParentId     int64
+	Uri          string
 	ResponseBody string
 	ErrorMessage string
 	RunInstances []RunInstance
@@ -35,6 +36,28 @@ func (ri *RunInstance) HasErrorsRecursively() bool {
 		}
 	}
 	return false
+}
+
+func (ri *RunInstance) HasPerformed() bool {
+	if ri.Uri == "" {
+		return true
+	}
+	if ri.ErrorMessage != "" || ri.ResponseBody != "" {
+		return true
+	}
+	return false
+}
+
+func (ri *RunInstance) HasPerformedRecursively() bool {
+	if !ri.HasPerformed() {
+		return false
+	}
+	for _, child := range ri.RunInstances {
+		if !child.HasPerformedRecursively() {
+			return false
+		}
+	}
+	return true
 }
 
 func (ri *RunInstance) Serialize() ([]byte, error) {

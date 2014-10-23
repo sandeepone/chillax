@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	chillax_storage "github.com/didip/chillax/storage"
+	"os"
+	"sync"
 	"time"
 )
 
@@ -29,12 +31,7 @@ func PipelineById(id string) (*Pipeline, error) {
 	return NewPipeline(string(definition))
 }
 
-func AllPipelines() ([]*Pipeline, error) {
-	pipelineIds, err := chillax_storage.NewStorage().List("/pipelines")
-	if err != nil {
-		return make([]*Pipeline, 0), err
-	}
-
+func AllPipelinesByIds(pipelineIds []string) ([]*Pipeline, error) {
 	pipelines := make([]*Pipeline, len(pipelineIds))
 
 	for index, pipelineId := range pipelineIds {
@@ -46,6 +43,53 @@ func AllPipelines() ([]*Pipeline, error) {
 	}
 
 	return pipelines, nil
+}
+
+func AllPipelines() ([]*Pipeline, error) {
+	pipelineIds, err := chillax_storage.NewStorage().List("/pipelines")
+	if err != nil {
+		return make([]*Pipeline, 0), err
+	}
+
+	return AllPipelinesByIds(pipelineIds)
+}
+
+func AllInProgressPipelines() ([]*Pipeline, error) {
+	hostname, _ := os.Hostname()
+
+	pipelineIds, err := chillax_storage.NewStorage().List(fmt.Sprintf("/pipelines-inprogress/%v", hostname))
+	if err != nil {
+		return make([]*Pipeline, 0), err
+	}
+
+	return AllPipelinesByIds(pipelineIds)
+}
+
+func RunAllInProgressPipelinesAsync(numGoroutines int) {
+	go func() {
+		pipelines, err := AllInProgressPipelines()
+
+		if err == nil && len(pipelines) > 0 {
+			pipelinesChan := make(chan *Pipeline, len(pipelines))
+			wg := new(sync.WaitGroup)
+
+			for i := 0; i < numGoroutines; i++ {
+				wg.Add(1)
+
+				go func(pipelinesChan chan *Pipeline, wg *sync.WaitGroup) {
+					defer wg.Done()
+
+					for pipeline := range pipelinesChan {
+						pipeline.RunWithCrashRequeue()
+					}
+				}(pipelinesChan, wg)
+			}
+
+			for _, pipeline := range pipelines {
+				pipelinesChan <- pipeline
+			}
+		}
+	}()
 }
 
 type Pipeline struct {
@@ -105,4 +149,35 @@ func (p *Pipeline) Save() error {
 		return err
 	}
 	return chillax_storage.NewStorage().Update(fmt.Sprintf("/pipelines/%v", p.Id), inBytes)
+}
+
+func (p *Pipeline) SaveInProgress() error {
+	inBytes, err := p.Serialize()
+	if err != nil {
+		return err
+	}
+
+	hostname, _ := os.Hostname()
+
+	return chillax_storage.NewStorage().Update(fmt.Sprintf("/pipelines-inprogress/%v/%v", hostname, p.Id), inBytes)
+}
+
+func (p *Pipeline) DeleteInProgress() error {
+	hostname, _ := os.Hostname()
+
+	return chillax_storage.NewStorage().Delete(fmt.Sprintf("/pipelines-inprogress/%v/%v", hostname, p.Id))
+}
+
+func (p *Pipeline) RunWithCrashRequeue() RunInstance {
+	go func(p *Pipeline) {
+		p.SaveInProgress()
+	}(p)
+
+	runInstance := p.Run()
+
+	if runInstance.HasPerformedRecursively() {
+		p.DeleteInProgress()
+	}
+
+	return runInstance
 }

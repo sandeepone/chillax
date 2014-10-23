@@ -64,7 +64,7 @@ func ApiPipelinesRunHandler(settings *chillax_web_settings.ServerSettings) func(
 				return
 			}
 
-			runInstance := pipeline.Run()
+			runInstance := pipeline.RunWithCrashRequeue()
 			if runInstance.ErrorMessage != "" {
 				http.Error(w, runInstance.ErrorMessage, 500)
 				return
@@ -91,7 +91,7 @@ func ApiPipelineRunHandler(settings *chillax_web_settings.ServerSettings) func(h
 				return
 			}
 
-			runInstance := pipeline.Run()
+			runInstance := pipeline.RunWithCrashRequeue()
 			if runInstance.ErrorMessage != "" {
 				http.Error(w, runInstance.ErrorMessage, 500)
 				return

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -93,5 +94,17 @@ func TestNestingStages(t *testing.T) {
 
 	if substage.Uri != "http://localhost:3000/work/step-02-01" {
 		t.Errorf("substage.Uri must be correct. substage.Uri: %v", substage.Uri)
+	}
+}
+
+func TestEmptyInProgressPipelines(t *testing.T) {
+	pipelines, err := AllInProgressPipelines()
+
+	if err != nil && !strings.Contains(err.Error(), "no such file or directory") {
+		t.Errorf("Unable to load in progress pipelines. Error: %v", err)
+	}
+
+	if len(pipelines) > 0 {
+		t.Errorf("In progress pipelines should be 0 length.")
 	}
 }

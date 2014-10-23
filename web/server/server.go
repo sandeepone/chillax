@@ -3,6 +3,7 @@ package server
 import (
 	chillax_proxy_muxproducer "github.com/didip/chillax/proxy/muxproducer"
 	chillax_web_handlers "github.com/didip/chillax/web/handlers"
+	chillax_web_pipelines "github.com/didip/chillax/web/pipelines"
 	chillax_web_settings "github.com/didip/chillax/web/settings"
 	gorilla_mux "github.com/gorilla/mux"
 	"github.com/stretchr/graceful"
@@ -100,4 +101,9 @@ func (s *Server) ListenAndServeGeneric() {
 	} else {
 		s.ListenAndServe()
 	}
+}
+
+func (s *Server) RunAllInProgressPipelinesAsync() {
+	numGoroutinesForCrashedInProgressPipelines := 50 // Hard-coded for now
+	chillax_web_pipelines.RunAllInProgressPipelinesAsync(numGoroutinesForCrashedInProgressPipelines)
 }

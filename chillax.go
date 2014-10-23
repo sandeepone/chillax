@@ -10,5 +10,6 @@ func main() {
 		panic(err)
 	}
 
+	server.RunAllInProgressPipelinesAsync()
 	server.ListenAndServeGeneric()
 }

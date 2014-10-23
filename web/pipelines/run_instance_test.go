@@ -27,6 +27,22 @@ func TestRunInstanceParentId(t *testing.T) {
 	}
 }
 
+func TestRunInstanceHasPerformed(t *testing.T) {
+	pipeline := NewPipelineForTest()
+
+	runInstance := pipeline.Run()
+
+	if !runInstance.HasPerformed() {
+		t.Errorf(
+			"Top most RunInstance must already performed. runInstance.HasPerformed(): %v, runInstance.ErrorMessage: %v, runInstance.ResponseBody: %v",
+			runInstance.HasPerformed(), runInstance.ErrorMessage, runInstance.ResponseBody)
+	}
+
+	if !runInstance.HasPerformedRecursively() {
+		t.Errorf("Top most RunInstance must already performed until the end. runInstance.HasPerformedRecursively(): %v", runInstance.HasPerformedRecursively())
+	}
+}
+
 func TestBadRunShouldRecordErrorOnRunInstances(t *testing.T) {
 	pipeline := NewPipelineForTest()
 

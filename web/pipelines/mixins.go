@@ -77,6 +77,8 @@ func (mixin *PipelineAndStageMixin) Run() RunInstance {
 	runInstance := mixin.NewRunInstance()
 
 	if mixin.Uri != "" {
+		runInstance.Uri = mixin.Uri
+
 		response, err := mixin.Do()
 
 		if err == nil && response != nil && response.Body != nil {
