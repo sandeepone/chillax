@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/BurntSushi/toml"
-	chillax_storage "github.com/didip/chillax/storage"
+	chillax_storage "github.com/chillaxio/chillax/storage"
 	"time"
 )
 

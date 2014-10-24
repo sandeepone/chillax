@@ -3,9 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	chillax_proxy_backend "github.com/didip/chillax/proxy/backend"
-	chillax_web_pipelines "github.com/didip/chillax/web/pipelines"
-	chillax_web_settings "github.com/didip/chillax/web/settings"
+	chillax_proxy_backend "github.com/chillaxio/chillax/proxy/backend"
+	chillax_web_pipelines "github.com/chillaxio/chillax/web/pipelines"
+	chillax_web_settings "github.com/chillaxio/chillax/web/settings"
 	"github.com/peterbourgon/mergemap"
 	"io/ioutil"
 	"net/http"

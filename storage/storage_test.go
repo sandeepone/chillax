@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/didip/chillax/libenv"
+	"github.com/chillaxio/chillax/libenv"
 	"os/user"
 	"testing"
 )

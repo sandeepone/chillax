@@ -3,7 +3,7 @@ package settings
 import (
 	"bufio"
 	"github.com/BurntSushi/toml"
-	"github.com/didip/chillax/libenv"
+	"github.com/chillaxio/chillax/libenv"
 	"io/ioutil"
 	"os"
 	"path"

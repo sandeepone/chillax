@@ -3,7 +3,7 @@ package pipelines
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/didip/chillax/libtime"
+	"github.com/chillaxio/chillax/libtime"
 	"github.com/franela/goreq"
 	"io/ioutil"
 	"math"

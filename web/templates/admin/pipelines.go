@@ -1,7 +1,7 @@
 package admin
 
 import (
-	chillax_web_templates "github.com/didip/chillax/web/templates"
+	chillax_web_templates "github.com/chillaxio/chillax/web/templates"
 	"strings"
 )
 

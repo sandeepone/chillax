@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"fmt"
-	chillax_proxy_handler "github.com/didip/chillax/proxy/handler"
-	chillax_web_pipelines "github.com/didip/chillax/web/pipelines"
-	chillax_web_settings "github.com/didip/chillax/web/settings"
-	chillax_web_templates_admin "github.com/didip/chillax/web/templates/admin"
+	chillax_proxy_handler "github.com/chillaxio/chillax/proxy/handler"
+	chillax_web_pipelines "github.com/chillaxio/chillax/web/pipelines"
+	chillax_web_settings "github.com/chillaxio/chillax/web/settings"
+	chillax_web_templates_admin "github.com/chillaxio/chillax/web/templates/admin"
 	"net/http"
 )
 

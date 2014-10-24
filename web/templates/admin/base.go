@@ -1,7 +1,7 @@
 package admin
 
 import (
-	chillax_web_templates "github.com/didip/chillax/web/templates"
+	chillax_web_templates "github.com/chillaxio/chillax/web/templates"
 )
 
 func NewAdminBase() *AdminBase {
@@ -91,7 +91,7 @@ func (p *AdminBase) String() string {
 
 				<div class="large-6 columns">
 					<ul class="inline-list right">
-						<li><a href="https://github.com/didip/chillax">GitHub</a></li>
+						<li><a href="https://github.com/chillaxio/chillax">GitHub</a></li>
 						<li><a href="#">GoDoc</a></li>
 					</ul>
 				</div>

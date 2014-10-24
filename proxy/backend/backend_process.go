@@ -3,9 +3,9 @@ package backend
 import (
 	"errors"
 	"fmt"
-	"github.com/didip/chillax/libnet"
-	"github.com/didip/chillax/libprocess"
-	chillax_portkeeper "github.com/didip/chillax/portkeeper"
+	"github.com/chillaxio/chillax/libnet"
+	"github.com/chillaxio/chillax/libprocess"
+	chillax_portkeeper "github.com/chillaxio/chillax/portkeeper"
 	"os"
 	"strconv"
 	"strings"

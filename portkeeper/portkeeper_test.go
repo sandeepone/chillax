@@ -2,9 +2,9 @@ package portkeeper
 
 import (
 	"fmt"
-	"github.com/didip/chillax/libstring"
-	"github.com/didip/chillax/libtime"
-	chillax_storage "github.com/didip/chillax/storage"
+	"github.com/chillaxio/chillax/libstring"
+	"github.com/chillaxio/chillax/libtime"
+	chillax_storage "github.com/chillaxio/chillax/storage"
 	"os/exec"
 	"strings"
 	"testing"

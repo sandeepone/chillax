@@ -3,7 +3,7 @@ package handler
 import (
 	"bufio"
 	"fmt"
-	"github.com/didip/chillax/libtime"
+	"github.com/chillaxio/chillax/libtime"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"

@@ -1,7 +1,7 @@
 package muxproducer
 
 import (
-	chillax_proxy_handler "github.com/didip/chillax/proxy/handler"
+	chillax_proxy_handler "github.com/chillaxio/chillax/proxy/handler"
 	gorilla_mux "github.com/gorilla/mux"
 )
 

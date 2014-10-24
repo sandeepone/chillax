@@ -2,8 +2,8 @@ package backend
 
 import (
 	"fmt"
-	"github.com/didip/chillax/libstring"
-	chillax_portkeeper "github.com/didip/chillax/portkeeper"
+	"github.com/chillaxio/chillax/libstring"
+	chillax_portkeeper "github.com/chillaxio/chillax/portkeeper"
 	dockerclient "github.com/fsouza/go-dockerclient"
 	"strings"
 	"time"

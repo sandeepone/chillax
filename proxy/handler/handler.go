@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"github.com/didip/chillax/libstring"
-	chillax_proxy_backend "github.com/didip/chillax/proxy/backend"
-	chillax_proxy_selectors "github.com/didip/chillax/proxy/selectors"
-	chillax_storage "github.com/didip/chillax/storage"
+	"github.com/chillaxio/chillax/libstring"
+	chillax_proxy_backend "github.com/chillaxio/chillax/proxy/backend"
+	chillax_proxy_selectors "github.com/chillaxio/chillax/proxy/selectors"
+	chillax_storage "github.com/chillaxio/chillax/storage"
 	"net"
 	"net/http"
 	"net/http/httputil"

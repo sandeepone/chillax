@@ -1,7 +1,7 @@
 package main
 
 import (
-	chillax_web_server "github.com/didip/chillax/web/server"
+	chillax_web_server "github.com/chillaxio/chillax/web/server"
 )
 
 func main() {

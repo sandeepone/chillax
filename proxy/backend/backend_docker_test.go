@@ -2,7 +2,7 @@ package backend
 
 import (
 	"bufio"
-	"github.com/didip/chillax/libtime"
+	"github.com/chillaxio/chillax/libtime"
 	"io/ioutil"
 	"os"
 	"testing"

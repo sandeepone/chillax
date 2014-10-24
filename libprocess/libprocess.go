@@ -2,7 +2,7 @@ package libprocess
 
 import (
 	"encoding/json"
-	"github.com/didip/chillax/libtime"
+	"github.com/chillaxio/chillax/libtime"
 	"os"
 	"os/exec"
 	"os/signal"

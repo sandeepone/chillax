@@ -1,8 +1,8 @@
 package muxproducer
 
 import (
-	"github.com/didip/chillax/libtime"
-	chillax_web_settings "github.com/didip/chillax/web/settings"
+	"github.com/chillaxio/chillax/libtime"
+	chillax_web_settings "github.com/chillaxio/chillax/web/settings"
 	"os"
 	"path/filepath"
 	"testing"

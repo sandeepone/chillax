@@ -3,7 +3,7 @@ package admin
 import (
 	"bufio"
 	"bytes"
-	chillax_proxy_handler "github.com/didip/chillax/proxy/handler"
+	chillax_proxy_handler "github.com/chillaxio/chillax/proxy/handler"
 	"io/ioutil"
 	"os"
 	"strings"
