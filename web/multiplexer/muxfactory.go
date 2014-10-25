@@ -1,23 +1,26 @@
-package muxproducer
+package multiplexer
 
 import (
 	chillax_proxy_handler "github.com/chillaxio/chillax/proxy/handler"
 	gorilla_mux "github.com/gorilla/mux"
 )
 
-func NewMuxProducer(proxyHandlerTomls [][]byte) *MuxProducer {
-	mp := &MuxProducer{}
+// Constructor for MuxFactory.
+func NewMuxFactory(proxyHandlerTomls [][]byte) *MuxFactory {
+	mp := &MuxFactory{}
 
 	mp.LoadProxyHandlersFromConfig(proxyHandlerTomls)
 
 	return mp
 }
 
-type MuxProducer struct {
+// MuxFactory is responsible for creating new mux.
+type MuxFactory struct {
+	// Complete list of all proxy paths.
 	ProxyHandlers []*chillax_proxy_handler.ProxyHandler
 }
 
-func (mp *MuxProducer) LoadProxyHandlersFromConfig(proxyHandlerTomls [][]byte) {
+func (mp *MuxFactory) LoadProxyHandlersFromConfig(proxyHandlerTomls [][]byte) {
 	mp.ProxyHandlers = make([]*chillax_proxy_handler.ProxyHandler, len(proxyHandlerTomls))
 
 	for i, definition := range proxyHandlerTomls {
@@ -25,11 +28,11 @@ func (mp *MuxProducer) LoadProxyHandlersFromConfig(proxyHandlerTomls [][]byte) {
 	}
 }
 
-func (mp *MuxProducer) ReloadProxyHandlers() {
+func (mp *MuxFactory) ReloadProxyHandlers() {
 	mp.ProxyHandlers = chillax_proxy_handler.NewProxyHandlers()
 }
 
-func (mp *MuxProducer) CreateProxyBackends() []error {
+func (mp *MuxFactory) CreateProxyBackends() []error {
 	errors := make([]error, 0)
 
 	for _, handler := range mp.ProxyHandlers {
@@ -42,7 +45,7 @@ func (mp *MuxProducer) CreateProxyBackends() []error {
 	return errors
 }
 
-func (mp *MuxProducer) StartProxyBackends() []error {
+func (mp *MuxFactory) StartProxyBackends() []error {
 	errors := make([]error, 0)
 
 	for _, handler := range mp.ProxyHandlers {
@@ -55,7 +58,7 @@ func (mp *MuxProducer) StartProxyBackends() []error {
 	return errors
 }
 
-func (mp *MuxProducer) StopProxyBackends() []error {
+func (mp *MuxFactory) StopProxyBackends() []error {
 	errors := make([]error, 0)
 
 	for _, handler := range mp.ProxyHandlers {
@@ -68,7 +71,7 @@ func (mp *MuxProducer) StopProxyBackends() []error {
 	return errors
 }
 
-func (mp *MuxProducer) GorillaMuxWithProxyBackends() *gorilla_mux.Router {
+func (mp *MuxFactory) GorillaMuxWithProxyBackends() *gorilla_mux.Router {
 	mux := gorilla_mux.NewRouter()
 
 	for _, handler := range mp.ProxyHandlers {

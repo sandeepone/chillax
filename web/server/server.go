@@ -1,7 +1,7 @@
 package server
 
 import (
-	chillax_proxy_muxproducer "github.com/chillaxio/chillax/proxy/muxproducer"
+	chillax_web_multiplexer "github.com/chillaxio/chillax/proxy/multiplexer"
 	chillax_web_handlers "github.com/chillaxio/chillax/web/handlers"
 	chillax_web_pipelines "github.com/chillaxio/chillax/web/pipelines"
 	chillax_web_settings "github.com/chillaxio/chillax/web/settings"
@@ -56,11 +56,11 @@ type Server struct {
 }
 
 func (s *Server) NewGorillaMux() *gorilla_mux.Router {
-	muxProducer := chillax_proxy_muxproducer.NewMuxProducer(s.Settings.ProxyHandlerTomls)
+	muxFactory := chillax_web_multiplexer.NewMuxFactory(s.Settings.ProxyHandlerTomls)
 
-	muxProducer.CreateProxyBackends()
-	muxProducer.StartProxyBackends()
-	mux := muxProducer.GorillaMuxWithProxyBackends()
+	muxFactory.CreateProxyBackends()
+	muxFactory.StartProxyBackends()
+	mux := muxFactory.GorillaMuxWithProxyBackends()
 
 	// API Handlers
 	mux.HandleFunc(
@@ -86,7 +86,7 @@ func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 
 	mux.HandleFunc(
 		s.Paths["AdminProxies"],
-		chillax_web_handlers.AdminProxiesHandler(s.Settings, muxProducer.ProxyHandlers)).Methods("GET")
+		chillax_web_handlers.AdminProxiesHandler(s.Settings, muxFactory.ProxyHandlers)).Methods("GET")
 
 	mux.HandleFunc(
 		s.Paths["AdminPipelines"],

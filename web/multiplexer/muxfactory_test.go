@@ -1,4 +1,4 @@
-package muxproducer
+package multiplexer
 
 import (
 	"github.com/chillaxio/chillax/libtime"
@@ -8,18 +8,18 @@ import (
 	"testing"
 )
 
-func NewMuxProducerForTest(t *testing.T) *MuxProducer {
+func NewMuxFactoryForTest(t *testing.T) *MuxFactory {
 	fullpath, _ := filepath.Abs("../../examples/configs/proxy-handlers")
 	os.Setenv("PROXY_HANDLERS_PATH", fullpath)
 
 	settings, _ := chillax_web_settings.NewServerSettings()
-	mp := NewMuxProducer(settings.ProxyHandlerTomls)
+	mp := NewMuxFactory(settings.ProxyHandlerTomls)
 
 	return mp
 }
 
-func TestMuxProducerStartStopBackends(t *testing.T) {
-	mp := NewMuxProducerForTest(t)
+func TestMuxFactoryStartStopBackends(t *testing.T) {
+	mp := NewMuxFactoryForTest(t)
 
 	errors := mp.CreateProxyBackends()
 	for _, err := range errors {
