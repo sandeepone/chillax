@@ -85,6 +85,15 @@ type PingerGroup struct {
 	PingersCheck map[string]bool
 }
 
+// IsOnePingerUp checks 1 endpoint and stores the result in memory.
+func (pg *PingerGroup) IsOnePingerUp(uri string, pinger *Pinger) (bool, error) {
+	isUp, err := pinger.IsUp()
+
+	pg.PingersCheck[uri] = isUp
+
+	return isUp, err
+}
+
 // IsUpAsync checks all endpoints in their own goroutines.
 func (pg *PingerGroup) IsUpAsync() {
 	for uri, pinger := range pg.Pingers {
@@ -94,9 +103,7 @@ func (pg *PingerGroup) IsUpAsync() {
 			for {
 				time.Sleep(sleepTime)
 
-				isUp, _ := pinger.IsUp()
-
-				pg.PingersCheck[uri] = isUp
+				isUp, _ := pg.IsOnePingerUp(uri, pinger)
 
 				// Sleeps longer if pinger exceeds FailMax
 				if !pinger.BelowsFailMax() {

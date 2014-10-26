@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	chillax_storage "github.com/chillaxio/chillax/storage"
 )
 
 func TestNewPinger(t *testing.T) {
@@ -38,6 +40,8 @@ func TestPingerIsUp(t *testing.T) {
 }
 
 func TestPingerFailCount(t *testing.T) {
+	chillax_storage.NewStorage().Delete("/pingers")
+
 	pinger := NewPinger("http://localhost:8080/chillax/admin")
 
 	pinger.IsUp()
@@ -62,8 +66,7 @@ func TestPingerGroupSave(t *testing.T) {
 	pg := NewPingerGroup([]string{"http://localhost:8080/chillax/admin"})
 
 	for uri, pinger := range pg.Pingers {
-		isUp, _ := pinger.IsUp()
-		pg.PingersCheck[uri] = isUp
+		pg.IsOnePingerUp(uri, pinger)
 	}
 
 	err := pg.Save()
