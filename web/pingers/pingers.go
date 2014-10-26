@@ -92,6 +92,8 @@ func (pg *PingerGroup) IsUpAsync() {
 			sleepTime := pg.SleepTime
 
 			for {
+				time.Sleep(sleepTime)
+
 				isUp, _ := pinger.IsUp()
 
 				pg.PingersCheck[uri] = isUp
@@ -107,7 +109,10 @@ func (pg *PingerGroup) IsUpAsync() {
 					sleepTime = pg.SleepTime
 				}
 
-				time.Sleep(sleepTime)
+				// Serialize and save checks data to storage.
+				go func(pg *PingerGroup) {
+					pg.Save()
+				}(pg)
 			}
 		}(uri, pinger)
 	}
