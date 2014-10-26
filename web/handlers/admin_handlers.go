@@ -3,7 +3,9 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
+	chillax_proxy_backend "github.com/chillaxio/chillax/proxy/backend"
 	chillax_proxy_handler "github.com/chillaxio/chillax/proxy/handler"
 	chillax_web_pipelines "github.com/chillaxio/chillax/web/pipelines"
 	chillax_web_settings "github.com/chillaxio/chillax/web/settings"
@@ -26,6 +28,37 @@ func AdminProxiesHandler(settings *chillax_web_settings.ServerSettings, proxyHan
 			proxyHandlers,
 		}
 		t, err := chillax_web_templates_admin.NewAdminProxies().Parse()
+
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		t.Execute(w, data)
+	}
+}
+
+// AdminProxyHandler renders HTML for /admin/proxies/{Name}
+func AdminProxyHandler(settings *chillax_web_settings.ServerSettings) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		pathChunk := strings.Split(r.URL.Path, "/")
+		proxyName := pathChunk[len(pathChunk)-1]
+
+		proxyBackend, err := chillax_proxy_backend.LoadProxyBackendByName(proxyName)
+
+		fmt.Printf("proxyBackend: %v\n", proxyBackend)
+
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		data := struct {
+			ProxyBackend *chillax_proxy_backend.ProxyBackend
+		}{
+			proxyBackend,
+		}
+		t, err := chillax_web_templates_admin.NewAdminProxy().Parse()
 
 		if err != nil {
 			http.Error(w, err.Error(), 500)

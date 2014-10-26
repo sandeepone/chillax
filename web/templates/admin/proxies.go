@@ -58,7 +58,7 @@ func (p *AdminProxies) String() string {
 					{{ end }}
 					</td>
 					<td>{{ $element.Backend.UpNumprocs }}/{{ $element.Backend.Numprocs }}</td>
-					<td><a href="#" class="button tiny radius round expand no-margin">Details</a></td>
+					<td><a href="/chillax/admin/proxies/{{ $element.Backend.ProxyName }}" class="button tiny radius round expand no-margin">Details</a></td>
 				</tr>
 				{{ end }}
 			</tbody>

@@ -48,6 +48,7 @@ func NewServer() (*Server, error) {
 
 	server.Paths["AdminPrefix"] = "/chillax/admin"
 	server.Paths["AdminProxies"] = server.Paths["AdminPrefix"] + "/proxies"
+	server.Paths["AdminProxy"] = server.Paths["AdminPrefix"] + "/proxies/{Name}"
 	server.Paths["AdminPipelines"] = server.Paths["AdminPrefix"] + "/pipelines"
 
 	server.Handler = server.NewGorillaMux()
@@ -96,6 +97,10 @@ func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 	mux.HandleFunc(
 		s.Paths["AdminProxies"],
 		chillax_web_handlers.AdminProxiesHandler(s.Settings, muxFactory.ProxyHandlers)).Methods("GET")
+
+	mux.HandleFunc(
+		s.Paths["AdminProxy"],
+		chillax_web_handlers.AdminProxyHandler(s.Settings)).Methods("GET")
 
 	mux.HandleFunc(
 		s.Paths["AdminPipelines"],
