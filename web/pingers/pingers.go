@@ -2,6 +2,7 @@ package pingers
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -62,18 +63,48 @@ func (p *Pinger) BelowsFailMax() bool {
 	return p.FailCount < p.FailMax
 }
 
-// NewPingerGroup is the constructor for PingerGroup
-func NewPingerGroup(uris []string) *PingerGroup {
+// LoadPingerGroupFromStorage creates PingerGroup struct from pinger checks data.
+func LoadPingerGroupFromStorage(host string) (*PingerGroup, error) {
+	data, err := chillax_storage.NewStorage().Get("/pingers/" + host)
+	if err != nil {
+		return nil, err
+	}
+
+	if string(data) == "" {
+		return nil, errors.New("Check data does not exist.")
+	}
+
+	pg := NewEmptyPingerGroup()
+
+	_, err = toml.Decode(string(data), pg.PingersCheck)
+
+	for uri := range pg.PingersCheck {
+		pg.Pingers[uri] = NewPinger(uri)
+	}
+
+	return pg, err
+}
+
+// NewEmptyPingerGroup is the constructor for an empty PingerGroup
+func NewEmptyPingerGroup() *PingerGroup {
 	pg := &PingerGroup{}
 
 	pg.SleepTime = 1 * time.Minute
 
 	pg.Pingers = make(map[string]*Pinger)
+
+	pg.PingersCheck = make(map[string]bool)
+
+	return pg
+}
+
+// NewPingerGroup is the constructor for PingerGroup
+func NewPingerGroup(uris []string) *PingerGroup {
+	pg := NewEmptyPingerGroup()
+
 	for _, uri := range uris {
 		pg.Pingers[uri] = NewPinger(uri)
 	}
-
-	pg.PingersCheck = make(map[string]bool)
 
 	return pg
 }

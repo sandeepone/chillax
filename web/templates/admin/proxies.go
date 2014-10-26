@@ -1,8 +1,9 @@
 package admin
 
 import (
-	chillax_web_templates "github.com/chillaxio/chillax/web/templates"
 	"strings"
+
+	chillax_web_templates "github.com/chillaxio/chillax/web/templates"
 )
 
 func NewAdminProxies() *AdminProxies {
@@ -36,6 +37,7 @@ func (p *AdminProxies) String() string {
 			<thead>
 				<tr>
 					<th>Path</th>
+					<th>Pings</th>
 					<th width="50">Procs</th>
 					<th width="100">Actions</th>
 				</tr>
@@ -45,6 +47,11 @@ func (p *AdminProxies) String() string {
 				{{ range $element := .ProxyHandlers }}
 				<tr>
 					<td>{{ $element.Backend.Domain }}{{ $element.Backend.Path }}</td>
+					<td>
+					{{ range $host, $isUp := $element.PingData }}
+							<span class="{{ if $isUp }}success{{ else }}alert{{ end }} label">{{ $host }}</span>
+					{{ end }}
+					</td>
 					<td>{{ $element.Backend.UpNumprocs }}/{{ $element.Backend.Numprocs }}</td>
 					<td><a href="#" class="button tiny radius round expand no-margin">Details</a></td>
 				</tr>

@@ -1,20 +1,25 @@
 package handler
 
 import (
-	"github.com/chillaxio/chillax/libstring"
-	chillax_proxy_backend "github.com/chillaxio/chillax/proxy/backend"
-	chillax_proxy_selectors "github.com/chillaxio/chillax/proxy/selectors"
-	chillax_storage "github.com/chillaxio/chillax/storage"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"strconv"
+	"strings"
+
+	"github.com/chillaxio/chillax/libstring"
+	chillax_proxy_backend "github.com/chillaxio/chillax/proxy/backend"
+	chillax_proxy_selectors "github.com/chillaxio/chillax/proxy/selectors"
+	chillax_storage "github.com/chillaxio/chillax/storage"
+	chillax_web_pingers "github.com/chillaxio/chillax/web/pingers"
 )
 
+// NewProxyHandlers is constructor for all ProxyHandler.
 func NewProxyHandlers() []*ProxyHandler {
+	var handlers []*ProxyHandler
+
 	storage := chillax_storage.NewStorage()
-	handlers := make([]*ProxyHandler, 0)
 	allProxies, _ := storage.List("/proxies")
 
 	for index, proxyName := range allProxies {
@@ -24,6 +29,7 @@ func NewProxyHandlers() []*ProxyHandler {
 	return handlers
 }
 
+// NewProxyHandler is constructor for one ProxyHandler.
 func NewProxyHandler(tomlBytes []byte) *ProxyHandler {
 	backend, _ := chillax_proxy_backend.NewProxyBackend(tomlBytes)
 
@@ -33,10 +39,39 @@ func NewProxyHandler(tomlBytes []byte) *ProxyHandler {
 	return handler
 }
 
+// ProxyHandler is a struct that represents 1 proxy endpoint.
 type ProxyHandler struct {
 	Backend *chillax_proxy_backend.ProxyBackend
 }
 
+// PingData returns ping data per host.
+func (ph *ProxyHandler) PingData() map[string]bool {
+	storage := chillax_storage.NewStorage()
+	pingData := make(map[string]bool)
+
+	hosts, err := storage.List("/pingers")
+	if err != nil {
+		return pingData
+	}
+
+	for _, host := range hosts {
+		// Set defaults
+		pingData[host] = false
+
+		pg, err := chillax_web_pingers.LoadPingerGroupFromStorage(host)
+		if err == nil {
+			for uri := range pg.Pingers {
+				if strings.Contains(uri, ph.Backend.Path) {
+					pingData[host] = pg.PingersCheck[uri]
+					continue
+				}
+			}
+		}
+	}
+	return pingData
+}
+
+// CreateBackends instantiate all backends.
 func (ph *ProxyHandler) CreateBackends() error {
 	var err error
 
@@ -48,6 +83,7 @@ func (ph *ProxyHandler) CreateBackends() error {
 	return err
 }
 
+// StartBackends start all backends.
 func (ph *ProxyHandler) StartBackends() []error {
 	var errors []error
 
@@ -59,6 +95,7 @@ func (ph *ProxyHandler) StartBackends() []error {
 	return errors
 }
 
+// StopBackends start all backends.
 func (ph *ProxyHandler) StopBackends() []error {
 	var errors []error
 
@@ -70,6 +107,7 @@ func (ph *ProxyHandler) StopBackends() []error {
 	return errors
 }
 
+// RealIP extracts actual client IP address.
 func (ph *ProxyHandler) RealIP(r *http.Request) string {
 	host, _, _ := net.SplitHostPort(r.RemoteAddr)
 	return host
