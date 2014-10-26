@@ -34,6 +34,9 @@ func (p *AdminBase) String() string {
 		margin: 0;
 	}
 	</style>
+
+	<!-- Refresh admin data every 90 seconds -->
+	<meta http-equiv="refresh" content="90">
 </head>
 
 <body>
