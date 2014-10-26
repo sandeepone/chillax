@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/chillaxio/chillax/libtime"
 	chillax_web_handlers "github.com/chillaxio/chillax/web/handlers"
 	chillax_web_multiplexer "github.com/chillaxio/chillax/web/multiplexer"
 	chillax_web_pingers "github.com/chillaxio/chillax/web/pingers"
@@ -101,8 +102,20 @@ func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 	return mux
 }
 
+// BeforeListenAndServeGeneric runs background responsibilities.
+func (s *Server) BeforeListenAndServeGeneric() {
+	s.RunAllInProgressPipelinesAsync()
+	s.CheckProxiesAsync()
+
+	// Clean reserved ports every 5 minutes.
+	// This value is hard-coded for now.
+	s.CleanReservedPortsAsync("5m")
+}
+
 // ListenAndServeGeneric runs the server.
 func (s *Server) ListenAndServeGeneric() {
+	s.BeforeListenAndServeGeneric()
+
 	if s.Settings.CertFile != "" && s.Settings.KeyFile != "" {
 		s.ListenAndServeTLS(s.Settings.CertFile, s.Settings.KeyFile)
 	} else {
@@ -132,4 +145,13 @@ func (s *Server) CheckProxiesAsync() {
 
 	pingerGroup := chillax_web_pingers.NewPingerGroup(proxyUris)
 	pingerGroup.IsUpAsync()
+}
+
+func (s *Server) CleanReservedPortsAsync(sleepString string) {
+	hostname, _ := os.Hostname()
+
+	go func(hostname string) {
+		CleanReservedPorts(hostname)
+		libtime.SleepString(sleepString)
+	}(hostname)
 }

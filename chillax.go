@@ -10,7 +10,5 @@ func main() {
 		panic(err)
 	}
 
-	server.RunAllInProgressPipelinesAsync()
-	server.CheckProxiesAsync()
 	server.ListenAndServeGeneric()
 }
