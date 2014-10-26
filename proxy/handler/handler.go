@@ -1,18 +1,16 @@
 package handler
 
 import (
-	"net"
-	"net/http"
-	"net/http/httputil"
-	"net/url"
-	"strconv"
-	"strings"
-
 	"github.com/chillaxio/chillax/libstring"
 	chillax_proxy_backend "github.com/chillaxio/chillax/proxy/backend"
 	chillax_proxy_selectors "github.com/chillaxio/chillax/proxy/selectors"
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	chillax_web_pingers "github.com/chillaxio/chillax/web/pingers"
+	"net"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
+	"strconv"
 )
 
 // NewProxyHandlers is constructor for all ProxyHandler.
@@ -44,31 +42,14 @@ type ProxyHandler struct {
 	Backend *chillax_proxy_backend.ProxyBackend
 }
 
-// PingData returns ping data per host.
-func (ph *ProxyHandler) PingData() map[string]bool {
-	storage := chillax_storage.NewStorage()
-	pingData := make(map[string]bool)
+// PingBool returns ping data per proxy.BackendPath for all hosts.
+func (ph *ProxyHandler) PingBool() map[string]bool {
+	return chillax_web_pingers.PingBoolGivenProxyPath(ph.Backend.Path)
+}
 
-	hosts, err := storage.List("/pingers")
-	if err != nil {
-		return pingData
-	}
-
-	for _, host := range hosts {
-		// Set defaults
-		pingData[host] = false
-
-		pg, err := chillax_web_pingers.LoadPingerGroupFromStorage(host)
-		if err == nil {
-			for uri := range pg.Pingers {
-				if strings.Contains(uri, ph.Backend.Path) {
-					pingData[host] = pg.PingersCheck[uri]
-					continue
-				}
-			}
-		}
-	}
-	return pingData
+// PingLastCheck returns ping last check Unix Nano per host.
+func (ph *ProxyHandler) PingLastCheck(host string) int64 {
+	return chillax_web_pingers.PingLastCheckGivenProxyPathAndHost(ph.Backend.Path, host)
 }
 
 // CreateBackends instantiate all backends.

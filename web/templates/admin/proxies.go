@@ -48,8 +48,13 @@ func (p *AdminProxies) String() string {
 				<tr>
 					<td>{{ $element.Backend.Domain }}{{ $element.Backend.Path }}</td>
 					<td>
-					{{ range $host, $isUp := $element.PingData }}
-							<span class="{{ if $isUp }}success{{ else }}alert{{ end }} label">{{ $host }}</span>
+					{{ range $host, $isUp := $element.PingBool }}
+						<span class="{{ if $isUp }}success{{ else }}alert{{ end }} label" title="{{ $element.PingLastCheck $host }}">{{ $host }}</span>
+						<script>
+							var unixNanoLastCheck = $('span:last').attr('title');
+							var date = new Date(unixNanoLastCheck/1000/1000);
+							$('span:last').attr('title', 'Checked at: ' + date.toString());
+						</script>
 					{{ end }}
 					</td>
 					<td>{{ $element.Backend.UpNumprocs }}/{{ $element.Backend.Numprocs }}</td>

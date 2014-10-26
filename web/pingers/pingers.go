@@ -4,14 +4,61 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"os"
-	"time"
-
 	"github.com/BurntSushi/toml"
 	chillax_storage "github.com/chillaxio/chillax/storage"
-
 	"github.com/franela/goreq"
+	"os"
+	"strings"
+	"time"
 )
+
+// PingBoolGivenProxyPath returns ping boolean data per proxyPath from all hosts.
+func PingBoolGivenProxyPath(proxyPath string) map[string]bool {
+	storage := chillax_storage.NewStorage()
+	pingData := make(map[string]bool)
+
+	hosts, err := storage.List("/pingers")
+	if err != nil {
+		return pingData
+	}
+
+	for _, host := range hosts {
+		// Set defaults
+		pingData[host] = false
+
+		pg, err := LoadPingerGroupFromStorage(host)
+		if err == nil {
+			for uri := range pg.Pingers {
+				if strings.Contains(uri, proxyPath) {
+					pingData[host] = pg.PingersCheck[uri]
+					continue
+				}
+			}
+		}
+	}
+	return pingData
+}
+
+func PingLastCheckGivenProxyPathAndHost(proxyPath string, host string) int64 {
+	storage := chillax_storage.NewStorage()
+
+	hosts, err := storage.List("/pingers")
+	if err != nil {
+		return -1
+	}
+
+	for _, host := range hosts {
+		pg, err := LoadPingerGroupFromStorage(host)
+		if err == nil {
+			for uri := range pg.Pingers {
+				if strings.Contains(uri, proxyPath) {
+					return pg.PingersCheckUnixNano[uri]
+				}
+			}
+		}
+	}
+	return -1
+}
 
 // NewPinger is the constructor for Pinger
 func NewPinger(uri string) *Pinger {
@@ -76,11 +123,7 @@ func LoadPingerGroupFromStorage(host string) (*PingerGroup, error) {
 
 	pg := NewEmptyPingerGroup()
 
-	_, err = toml.Decode(string(data), pg.PingersCheck)
-
-	for uri := range pg.PingersCheck {
-		pg.Pingers[uri] = NewPinger(uri)
-	}
+	_, err = toml.Decode(string(data), pg)
 
 	return pg, err
 }
@@ -94,6 +137,8 @@ func NewEmptyPingerGroup() *PingerGroup {
 	pg.Pingers = make(map[string]*Pinger)
 
 	pg.PingersCheck = make(map[string]bool)
+
+	pg.PingersCheckUnixNano = make(map[string]int64)
 
 	return pg
 }
@@ -111,9 +156,10 @@ func NewPingerGroup(uris []string) *PingerGroup {
 
 // PingerGroup is a collection of Pingers.
 type PingerGroup struct {
-	SleepTime    time.Duration
-	Pingers      map[string]*Pinger
-	PingersCheck map[string]bool
+	SleepTime            time.Duration
+	Pingers              map[string]*Pinger
+	PingersCheck         map[string]bool
+	PingersCheckUnixNano map[string]int64
 }
 
 // IsOnePingerUp checks 1 endpoint and stores the result in memory.
@@ -121,6 +167,7 @@ func (pg *PingerGroup) IsOnePingerUp(uri string, pinger *Pinger) (bool, error) {
 	isUp, err := pinger.IsUp()
 
 	pg.PingersCheck[uri] = isUp
+	pg.PingersCheckUnixNano[uri] = time.Now().UnixNano()
 
 	return isUp, err
 }
@@ -159,7 +206,7 @@ func (pg *PingerGroup) IsUpAsync() {
 // Serialize current checks data.
 func (pg *PingerGroup) Serialize() ([]byte, error) {
 	var buffer bytes.Buffer
-	err := toml.NewEncoder(&buffer).Encode(pg.PingersCheck)
+	err := toml.NewEncoder(&buffer).Encode(pg)
 
 	return buffer.Bytes(), err
 }
