@@ -10,6 +10,19 @@ import (
 
 const DOCKER_TIMEOUT = uint(5)
 
+func LoadProxyBackendByName(proxyName string) (*ProxyBackend, error) {
+	storage := chillax_storage.NewStorage()
+
+	definition, err := storage.Get(fmt.Sprintf("/proxies/%v", proxyName))
+	fmt.Printf("definition: %v", string(definition))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return NewProxyBackend(definition)
+}
+
 func NewProxyBackend(tomlBytes []byte) (*ProxyBackend, error) {
 	backend := &ProxyBackend{}
 	backend.Numprocs = 1
