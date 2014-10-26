@@ -11,5 +11,6 @@ func main() {
 	}
 
 	server.RunAllInProgressPipelinesAsync()
+	server.CheckProxiesAsync()
 	server.ListenAndServeGeneric()
 }
