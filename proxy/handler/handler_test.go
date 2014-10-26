@@ -3,12 +3,13 @@ package handler
 import (
 	"bufio"
 	"fmt"
-	"github.com/chillaxio/chillax/libtime"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/chillaxio/chillax/libtime"
 )
 
 func NewProxyHandlerForTest() *ProxyHandler {
@@ -31,8 +32,8 @@ func TestBackendHosts(t *testing.T) {
 		t.Errorf("handler.Backend.Process should exists. handler.Backend.Process: %v", handler.Backend.Process)
 	}
 
-	if len(handler.BackendHosts()) != 1 {
-		t.Errorf("handler.BackendHosts should exists. handler.BackendHosts: %v", handler.BackendHosts)
+	if len(handler.BackendHosts()) != 2 {
+		t.Errorf("handler.BackendHosts should exists. handler.BackendHosts: %v", handler.BackendHosts())
 	}
 
 	instance1 := handler.Backend.Process.Instances[0]
