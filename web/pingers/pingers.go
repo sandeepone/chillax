@@ -1,7 +1,13 @@
 package pingers
 
 import (
+	"bytes"
+	"fmt"
+	"os"
 	"time"
+
+	"github.com/BurntSushi/toml"
+	chillax_storage "github.com/chillaxio/chillax/storage"
 
 	"github.com/franela/goreq"
 )
@@ -14,22 +20,6 @@ func NewPinger(uri string) *Pinger {
 	p.TimeoutString = "1s"
 	p.FailMax = 10
 	return p
-}
-
-// NewPingerGroup is the constructor for PingerGroup
-func NewPingerGroup(uris []string) *PingerGroup {
-	pg := &PingerGroup{}
-
-	pg.SleepTime = 1 * time.Minute
-
-	pg.Pingers = make(map[string]*Pinger)
-	for _, uri := range uris {
-		pg.Pingers[uri] = NewPinger(uri)
-	}
-
-	pg.PingersCheck = make(map[string]bool)
-
-	return pg
 }
 
 // Pinger checks endpoint using GET request.
@@ -72,6 +62,22 @@ func (p *Pinger) BelowsFailMax() bool {
 	return p.FailCount < p.FailMax
 }
 
+// NewPingerGroup is the constructor for PingerGroup
+func NewPingerGroup(uris []string) *PingerGroup {
+	pg := &PingerGroup{}
+
+	pg.SleepTime = 1 * time.Minute
+
+	pg.Pingers = make(map[string]*Pinger)
+	for _, uri := range uris {
+		pg.Pingers[uri] = NewPinger(uri)
+	}
+
+	pg.PingersCheck = make(map[string]bool)
+
+	return pg
+}
+
 // PingerGroup is a collection of Pingers.
 type PingerGroup struct {
 	SleepTime    time.Duration
@@ -95,8 +101,9 @@ func (pg *PingerGroup) IsUpAsync() {
 					sleepTime = sleepTime * 2
 				}
 
-				// Return sleepTime back to original if endpoint is finally up.
-				if isUp {
+				// Return sleepTime back to original if endpoint is finally up
+				// or sleepTime is greater than 2 hours
+				if isUp || sleepTime > (2*time.Hour) {
 					sleepTime = pg.SleepTime
 				}
 
@@ -104,4 +111,24 @@ func (pg *PingerGroup) IsUpAsync() {
 			}
 		}(uri, pinger)
 	}
+}
+
+// Serialize current checks data.
+func (pg *PingerGroup) Serialize() ([]byte, error) {
+	var buffer bytes.Buffer
+	err := toml.NewEncoder(&buffer).Encode(pg.PingersCheck)
+
+	return buffer.Bytes(), err
+}
+
+// Save current checks data to storage.
+func (pg *PingerGroup) Save() error {
+	hostname, _ := os.Hostname()
+
+	inBytes, err := pg.Serialize()
+	if err != nil {
+		return err
+	}
+
+	return chillax_storage.NewStorage().Update(fmt.Sprintf("/pingers/%v", hostname), inBytes)
 }

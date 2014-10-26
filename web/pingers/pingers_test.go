@@ -3,6 +3,7 @@ package pingers
 import (
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestNewPinger(t *testing.T) {
@@ -43,5 +44,30 @@ func TestPingerFailCount(t *testing.T) {
 
 	if pinger.FailCount != 1 {
 		t.Errorf("Pinger.FailCount should increase by 1. pinger.FailCount: %v", pinger.FailCount)
+	}
+}
+
+func TestNewPingerGroup(t *testing.T) {
+	pg := NewPingerGroup([]string{"http://localhost:8080/chillax/admin"})
+
+	if pg.SleepTime != 1*time.Minute {
+		t.Error("Default SleepTime should be 1 minute.")
+	}
+	if len(pg.Pingers) != 1 {
+		t.Error("There should be 1 URL in list of Pingers.")
+	}
+}
+
+func TestPingerGroupSave(t *testing.T) {
+	pg := NewPingerGroup([]string{"http://localhost:8080/chillax/admin"})
+
+	for uri, pinger := range pg.Pingers {
+		isUp, _ := pinger.IsUp()
+		pg.PingersCheck[uri] = isUp
+	}
+
+	err := pg.Save()
+	if err != nil {
+		t.Errorf("Unable to serialize and save PingerGroup. Error: %v", err)
 	}
 }
