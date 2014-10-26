@@ -3,9 +3,11 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/chillaxio/chillax/libtime"
+	"github.com/chillaxio/chillax/portkeeper"
 	chillax_web_handlers "github.com/chillaxio/chillax/web/handlers"
 	chillax_web_multiplexer "github.com/chillaxio/chillax/web/multiplexer"
 	chillax_web_pingers "github.com/chillaxio/chillax/web/pingers"
@@ -151,7 +153,7 @@ func (s *Server) CleanReservedPortsAsync(sleepString string) {
 	hostname, _ := os.Hostname()
 
 	go func(hostname string) {
-		CleanReservedPorts(hostname)
+		portkeeper.CleanReservedPorts(hostname)
 		libtime.SleepString(sleepString)
 	}(hostname)
 }
