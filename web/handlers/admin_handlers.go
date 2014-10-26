@@ -2,19 +2,22 @@ package handlers
 
 import (
 	"fmt"
+	"net/http"
+
 	chillax_proxy_handler "github.com/chillaxio/chillax/proxy/handler"
 	chillax_web_pipelines "github.com/chillaxio/chillax/web/pipelines"
 	chillax_web_settings "github.com/chillaxio/chillax/web/settings"
 	chillax_web_templates_admin "github.com/chillaxio/chillax/web/templates/admin"
-	"net/http"
 )
 
+// AdminBaseHandler renders HTML for /admin/base
 func AdminBaseHandler(settings *chillax_web_settings.ServerSettings) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, chillax_web_templates_admin.NewAdminBase().String())
 	}
 }
 
+// AdminProxiesHandler renders HTML for /admin/proxies
 func AdminProxiesHandler(settings *chillax_web_settings.ServerSettings, proxyHandlers []*chillax_proxy_handler.ProxyHandler) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := struct {
@@ -33,6 +36,7 @@ func AdminProxiesHandler(settings *chillax_web_settings.ServerSettings, proxyHan
 	}
 }
 
+// AdminPipelinesHandler renders HTML for /admin/pipelines
 func AdminPipelinesHandler(settings *chillax_web_settings.ServerSettings) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pipelines, err := chillax_web_pipelines.AllPipelines()
