@@ -1,16 +1,20 @@
 package server
 
 import (
-	chillax_web_multiplexer "github.com/chillaxio/chillax/proxy/multiplexer"
+	"fmt"
+	"net/http"
+	"time"
+
 	chillax_web_handlers "github.com/chillaxio/chillax/web/handlers"
+	chillax_web_multiplexer "github.com/chillaxio/chillax/web/multiplexer"
+	chillax_web_pingers "github.com/chillaxio/chillax/web/pingers"
 	chillax_web_pipelines "github.com/chillaxio/chillax/web/pipelines"
 	chillax_web_settings "github.com/chillaxio/chillax/web/settings"
 	gorilla_mux "github.com/gorilla/mux"
 	"github.com/stretchr/graceful"
-	"net/http"
-	"time"
 )
 
+// NewServer is the constructor for creating Chillax server.
 func NewServer() (*Server, error) {
 	settings, err := chillax_web_settings.NewServerSettings()
 	if err != nil {
@@ -48,6 +52,7 @@ func NewServer() (*Server, error) {
 	return server, err
 }
 
+// Server struct
 type Server struct {
 	*graceful.Server
 
@@ -55,6 +60,7 @@ type Server struct {
 	Paths    map[string]string
 }
 
+// NewGorillaMux creates a multiplexer will all the correct endpoints as well as admin pages.
 func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 	muxFactory := chillax_web_multiplexer.NewMuxFactory(s.Settings.ProxyHandlerTomls)
 
@@ -95,6 +101,7 @@ func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 	return mux
 }
 
+// ListenAndServeGeneric runs the server.
 func (s *Server) ListenAndServeGeneric() {
 	if s.Settings.CertFile != "" && s.Settings.KeyFile != "" {
 		s.ListenAndServeTLS(s.Settings.CertFile, s.Settings.KeyFile)
@@ -103,7 +110,26 @@ func (s *Server) ListenAndServeGeneric() {
 	}
 }
 
+// RunAllInProgressPipelinesAsync loads all in-progress pipelines.
+// This method is used in the event of server crash.
 func (s *Server) RunAllInProgressPipelinesAsync() {
 	numGoroutinesForCrashedInProgressPipelines := 50 // Hard-coded for now
 	chillax_web_pipelines.RunAllInProgressPipelinesAsync(numGoroutinesForCrashedInProgressPipelines)
+}
+
+// CheckProxiesAsync hits every proxy endpoints.
+func (s *Server) CheckProxiesAsync() {
+	muxFactory := chillax_web_multiplexer.NewMuxFactory(s.Settings.ProxyHandlerTomls)
+
+	proxyUris := make([]string, len(muxFactory.ProxyHandlers))
+	for i, proxyHandler := range muxFactory.ProxyHandlers {
+		if proxyHandler.Backend.Domain != "" {
+			proxyUris[i] = fmt.Sprintf("http://%v%v", proxyHandler.Backend.Domain, proxyHandler.Backend.Path)
+		} else {
+			proxyUris[i] = fmt.Sprintf("http://localhost:%v%v", s.Settings.HttpPort, proxyHandler.Backend.Path)
+		}
+	}
+
+	pingerGroup := chillax_web_pingers.NewPingerGroup(proxyUris)
+	pingerGroup.IsUpAsync()
 }
