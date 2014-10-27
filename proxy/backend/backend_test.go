@@ -40,8 +40,8 @@ func TestDeserializeFromToml(t *testing.T) {
 	if backend.Env[0] != "HTTP_PORT=8080" {
 		t.Errorf("backend.Docker.Env[0] should == HTTP_PORT=8080. Backend.Env: %s", backend.Env)
 	}
-	if backend.Docker.Hosts[0] != "tcp://192.168.59.103:2376" {
-		t.Errorf("backend.Docker.Hosts[0] should == tcp://192.168.59.103:2376. Backend.Docker.Hosts: %s", backend.Docker.Hosts)
+	if backend.Docker.Hosts[0] != "https://192.168.59.103:2376" {
+		t.Errorf("backend.Docker.Hosts[0] should == https://192.168.59.103:2376. Backend.Docker.Hosts: %s", backend.Docker.Hosts)
 	}
 	if backend.Docker.Ports[0] != "8080/tcp" {
 		t.Errorf("backend.Docker.Ports[0] should == 8080/tcp. Backend.Docker.Ports: %s", backend.Docker.Ports)

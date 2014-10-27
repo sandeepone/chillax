@@ -1,10 +1,17 @@
 package backend
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"github.com/chillaxio/chillax/libstring"
 	chillax_portkeeper "github.com/chillaxio/chillax/portkeeper"
 	dockerclient "github.com/fsouza/go-dockerclient"
+	"io/ioutil"
+	"net/http"
+	"os"
+	"os/user"
+	"path"
 	"strings"
 	"time"
 )
@@ -33,18 +40,87 @@ func (pb *ProxyBackend) IsDocker() bool {
 	return false
 }
 
+// HttpTransport looks for specific locations for CAs.
+func (pb *ProxyBackend) HttpTransport() *http.Transport {
+	currentUser, _ := user.Current()
+
+	tlsConfig := &tls.Config{}
+
+	if os.Getenv("DOCKER_TLS_VERIFY") == "0" {
+		tlsConfig.InsecureSkipVerify = true
+	}
+
+	certFiles := []string{
+		"/etc/ssl/certs/ca-certificates.crt",                                          // Debian/Ubuntu/Gentoo etc.
+		"/etc/pki/tls/certs/ca-bundle.crt",                                            // Fedora/RHEL
+		"/etc/ssl/ca-bundle.pem",                                                      // OpenSUSE
+		"/etc/ssl/cert.pem",                                                           // OpenBSD
+		"/usr/local/share/certs/ca-root-nss.crt",                                      // FreeBSD/DragonFly
+		path.Join(currentUser.HomeDir, "/.boot2docker/certs/boot2docker-vm/cert.pem"), // Boot2Docker
+	}
+
+	if os.Getenv("DOCKER_CERT_PATH") != "" {
+		certFiles = append(certFiles, path.Join(os.Getenv("DOCKER_CERT_PATH"), "cert.pem"))
+	}
+
+	roots := x509.NewCertPool()
+
+	for _, file := range certFiles {
+		data, err := ioutil.ReadFile(file)
+		if err == nil {
+			roots.AppendCertsFromPEM(data)
+		}
+	}
+
+	tlsConfig.RootCAs = roots
+
+	if os.Getenv("DOCKER_CERT_PATH") != "" {
+		cert, err := tls.LoadX509KeyPair(
+			path.Join(os.Getenv("DOCKER_CERT_PATH"), "cert.pem"),
+			path.Join(os.Getenv("DOCKER_CERT_PATH"), "key.pem"))
+
+		if err == nil {
+			tlsConfig.Certificates = []tls.Certificate{cert}
+		}
+	} else {
+		cert, err := tls.LoadX509KeyPair(
+			path.Join(currentUser.HomeDir, "/.boot2docker/certs/boot2docker-vm/cert.pem"),
+			path.Join(currentUser.HomeDir, "/.boot2docker/certs/boot2docker-vm/key.pem"))
+
+		if err == nil {
+			tlsConfig.Certificates = []tls.Certificate{cert}
+		}
+	}
+
+	return &http.Transport{
+		TLSClientConfig: tlsConfig,
+	}
+}
+
 func (pb *ProxyBackend) NewDockerClients() map[string]*dockerclient.Client {
 	dockers := make(map[string]*dockerclient.Client)
 
 	for _, dockerUri := range pb.Docker.Hosts {
-		client, err := dockerclient.NewClient(dockerUri)
-
+		client, err := pb.NewDockerClient(dockerUri)
 		if err == nil {
 			dockers[dockerUri] = client
 		}
 	}
 
 	return dockers
+}
+
+func (pb *ProxyBackend) NewDockerClient(dockerUri string) (*dockerclient.Client, error) {
+	client, err := dockerclient.NewClient(dockerUri)
+	if err != nil {
+		return nil, err
+	}
+
+	if os.Getenv("DOCKER_CERT_PATH") != "" {
+		client.HTTPClient = &http.Client{Transport: pb.HttpTransport()}
+	}
+
+	return client, err
 }
 
 func (pb *ProxyBackend) CreateDockerContainerOptions(publiclyAvailablePort int) *dockerclient.CreateContainerOptions {
@@ -67,7 +143,7 @@ func (pb *ProxyBackend) CreateDockerContainerOptions(publiclyAvailablePort int) 
 
 func (pb *ProxyBackend) StartDockerContainerOptions(containerPorts []string) *dockerclient.HostConfig {
 	config := &dockerclient.HostConfig{}
-	config.ContainerIDFile = "/etc/cidfile"
+	// config.ContainerIDFile = "/etc/cidfile"
 	config.PortBindings = make(map[dockerclient.Port][]dockerclient.PortBinding)
 
 	for _, ports := range containerPorts {
@@ -87,7 +163,7 @@ func (pb *ProxyBackend) StartDockerContainerOptions(containerPorts []string) *do
 }
 
 func (pb *ProxyBackend) PullDockerImage(dockerHost string) error {
-	client, err := dockerclient.NewClient(dockerHost)
+	client, err := pb.NewDockerClient(dockerHost)
 	if err != nil {
 		return err
 	}
@@ -179,7 +255,7 @@ func (pb *ProxyBackend) CreateDockerContainer(dockerHost string) (ProxyBackendDo
 		containerConfig.Ports[index] = fmt.Sprintf("%v:%v", publiclyAvailablePort, backendPort)
 	}
 
-	client, err := dockerclient.NewClient(containerConfig.Host)
+	client, err := pb.NewDockerClient(containerConfig.Host)
 	if err != nil {
 		return containerConfig, err
 	}
@@ -216,7 +292,7 @@ func (pb *ProxyBackend) StartDockerContainers() []error {
 }
 
 func (pb *ProxyBackend) InspectDockerContainer(containerConfig ProxyBackendDockerContainerConfig) (*dockerclient.Container, error) {
-	client, err := dockerclient.NewClient(containerConfig.Host)
+	client, err := pb.NewDockerClient(containerConfig.Host)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +301,7 @@ func (pb *ProxyBackend) InspectDockerContainer(containerConfig ProxyBackendDocke
 }
 
 func (pb *ProxyBackend) StartDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
-	client, err := dockerclient.NewClient(containerConfig.Host)
+	client, err := pb.NewDockerClient(containerConfig.Host)
 	if err != nil {
 		return err
 	}
@@ -236,7 +312,7 @@ func (pb *ProxyBackend) StartDockerContainer(containerConfig ProxyBackendDockerC
 
 func (pb *ProxyBackend) StopAndRemoveDockerContainers() error {
 	for _, containerConfig := range pb.Docker.Containers {
-		client, err := dockerclient.NewClient(containerConfig.Host)
+		client, err := pb.NewDockerClient(containerConfig.Host)
 		if err != nil {
 			return err
 		}
@@ -249,7 +325,7 @@ func (pb *ProxyBackend) StopAndRemoveDockerContainers() error {
 }
 
 func (pb *ProxyBackend) StopAndRemoveDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
-	client, err := dockerclient.NewClient(containerConfig.Host)
+	client, err := pb.NewDockerClient(containerConfig.Host)
 	if err != nil {
 		return err
 	}
@@ -267,7 +343,7 @@ func (pb *ProxyBackend) StopDockerContainers() []error {
 	var errors []error
 
 	for i, containerConfig := range pb.Docker.Containers {
-		client, err := dockerclient.NewClient(containerConfig.Host)
+		client, err := pb.NewDockerClient(containerConfig.Host)
 		if err != nil {
 			errors[i] = err
 		} else {
@@ -278,7 +354,7 @@ func (pb *ProxyBackend) StopDockerContainers() []error {
 }
 
 func (pb *ProxyBackend) StopDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
-	client, err := dockerclient.NewClient(containerConfig.Host)
+	client, err := pb.NewDockerClient(containerConfig.Host)
 	if err != nil {
 		return err
 	}
@@ -288,7 +364,7 @@ func (pb *ProxyBackend) StopDockerContainer(containerConfig ProxyBackendDockerCo
 
 func (pb *ProxyBackend) RestartDockerContainers() error {
 	for _, containerConfig := range pb.Docker.Containers {
-		client, err := dockerclient.NewClient(containerConfig.Host)
+		client, err := pb.NewDockerClient(containerConfig.Host)
 		if err != nil {
 			return err
 		}
@@ -299,7 +375,7 @@ func (pb *ProxyBackend) RestartDockerContainers() error {
 }
 
 func (pb *ProxyBackend) RestartDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
-	client, err := dockerclient.NewClient(containerConfig.Host)
+	client, err := pb.NewDockerClient(containerConfig.Host)
 	if err != nil {
 		return err
 	}

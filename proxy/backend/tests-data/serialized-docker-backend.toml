@@ -12,7 +12,7 @@ env = [
 [docker]
 tag = "didip/go-urldownloader:latest"
 hosts = [
-    "tcp://192.168.59.103:2376"
+    "https://192.168.59.103:2376"
 ]
 ports = [
     "8080/tcp"
@@ -28,7 +28,7 @@ httpportenv="HTTP_PORT"
         "AWS_ACCESS_KEY_ID=111",
         "AWS_SECRET_ACCESS_KEY=abc"
     ]
-    host = "tcp://192.168.59.103:2376"
+    host = "https://192.168.59.103:2376"
     ports = [
         "65000:8080/tcp"
     ]
@@ -42,7 +42,7 @@ httpportenv="HTTP_PORT"
         "AWS_ACCESS_KEY_ID=111",
         "AWS_SECRET_ACCESS_KEY=abc"
     ]
-    host = "tcp://192.168.59.103:2376"
+    host = "https://192.168.59.103:2376"
     ports = [
         "64999:8080/tcp"
     ]
