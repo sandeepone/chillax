@@ -24,10 +24,10 @@ func CheckBasicStartForTest(t *testing.T, p *ProcessWrapper) {
 	if p.Status != "started" {
 		t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
 	}
-	if p.Pid <= 0 || p.CmdStruct.Process.Pid <= 0 {
-		t.Errorf("Process should start with PID > 0. p.Pid: %v, p.CmdStruct.Process.Pid: %v", p.Pid, p.CmdStruct.Process.Pid)
+	if p.Pid <= 0 || p.cmdStruct.Process.Pid <= 0 {
+		t.Errorf("Process should start with PID > 0. p.Pid: %v, p.cmdStruct.Process.Pid: %v", p.Pid, p.cmdStruct.Process.Pid)
 	}
-	if p.Pid != p.CmdStruct.Process.Pid {
+	if p.Pid != p.cmdStruct.Process.Pid {
 		t.Errorf("ProcessWrapper PID should == Process PID")
 	}
 }
@@ -40,10 +40,10 @@ func CheckStartAndWatchForTest(t *testing.T, p *ProcessWrapper) {
 	if p.Status != "started" {
 		t.Errorf("process status is set incorrectly. Process status: %v", p.Status)
 	}
-	if p.Pid <= 0 || p.CmdStruct.Process.Pid <= 0 {
-		t.Errorf("Process should start with PID > 0. p.Pid: %v, p.CmdStruct.Process.Pid: %v", p.Pid, p.CmdStruct.Process.Pid)
+	if p.Pid <= 0 || p.cmdStruct.Process.Pid <= 0 {
+		t.Errorf("Process should start with PID > 0. p.Pid: %v, p.cmdStruct.Process.Pid: %v", p.Pid, p.cmdStruct.Process.Pid)
 	}
-	if p.Pid != p.CmdStruct.Process.Pid {
+	if p.Pid != p.cmdStruct.Process.Pid {
 		t.Errorf("ProcessWrapper PID should == Process PID")
 	}
 }
@@ -108,8 +108,8 @@ func TestProcessStartAndWatch(t *testing.T) {
 
 	firstPid := p.Pid
 
-	if p.CmdStruct.Process.Pid > 0 {
-		err := p.CmdStruct.Process.Kill()
+	if p.cmdStruct.Process.Pid > 0 {
+		err := p.cmdStruct.Process.Kill()
 		if err != nil {
 			t.Errorf("Unable to kill process manually.")
 		}

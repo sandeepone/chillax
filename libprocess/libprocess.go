@@ -19,9 +19,9 @@ type ProcessWrapper struct {
 	Ping           string
 	Pid            int
 	Status         string
-	CmdStruct      *exec.Cmd
 	Respawn        int
 	RespawnCounter int
+	cmdStruct      *exec.Cmd
 }
 
 func (p *ProcessWrapper) ToJson() ([]byte, error) {
@@ -54,7 +54,7 @@ func (p *ProcessWrapper) NewCmd(command string) *exec.Cmd {
 }
 
 func (p *ProcessWrapper) IsProcessStarted() bool {
-	return p.CmdStruct.Process != nil
+	return p.cmdStruct.Process != nil
 }
 
 func (p *ProcessWrapper) StartAndWatch() error {
@@ -82,14 +82,14 @@ func (p *ProcessWrapper) Start() error {
 		return err
 	}
 
-	p.CmdStruct = p.NewCmd(p.Command)
+	p.cmdStruct = p.NewCmd(p.Command)
 
-	err = p.CmdStruct.Start()
+	err = p.cmdStruct.Start()
 	if err != nil {
 		return err
 	}
 
-	p.Pid = p.CmdStruct.Process.Pid
+	p.Pid = p.cmdStruct.Process.Pid
 	p.Status = "started"
 
 	p.ListenStopSignals()
@@ -101,14 +101,14 @@ func (p *ProcessWrapper) Start() error {
 func (p *ProcessWrapper) Stop() error {
 	var err error
 
-	if p.CmdStruct != nil && p.CmdStruct.Process != nil {
+	if p.cmdStruct != nil && p.cmdStruct.Process != nil {
 		err := libtime.SleepString(p.StopDelay)
 		if err != nil {
 			return err
 		}
 
 		if p.Pid > 0 {
-			err = p.CmdStruct.Process.Kill()
+			err = p.cmdStruct.Process.Kill()
 		}
 
 		if err == nil {
@@ -121,8 +121,8 @@ func (p *ProcessWrapper) Stop() error {
 
 // Release and remove process pidfile
 func (p *ProcessWrapper) Release(status string) {
-	if p.CmdStruct != nil && p.CmdStruct.Process != nil {
-		p.CmdStruct.Process.Release()
+	if p.cmdStruct != nil && p.cmdStruct.Process != nil {
+		p.cmdStruct.Process.Release()
 	}
 	p.Pid = -1
 	p.Status = status
@@ -176,7 +176,7 @@ func (p *ProcessWrapper) DoPing(callback func()) {
 
 // Watch the process changes and restart if necessary
 func (p *ProcessWrapper) Watch() {
-	if p.CmdStruct.Process == nil {
+	if p.cmdStruct.Process == nil {
 		p.Release("stopped")
 		return
 	}
@@ -185,7 +185,7 @@ func (p *ProcessWrapper) Watch() {
 	diedChan := make(chan error)
 
 	go func() {
-		state, err := p.CmdStruct.Process.Wait()
+		state, err := p.cmdStruct.Process.Wait()
 		if err != nil {
 			diedChan <- err
 			return
