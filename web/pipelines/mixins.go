@@ -71,6 +71,14 @@ func (mixin *PipelineAndStageMixin) SetCommonDefaults() {
 	mixin.MergeBodyToChildrenBody()
 }
 
+func (mixin *PipelineAndStageMixin) BodyJsonWithoutStages() string {
+	inBytes, err := json.Marshal(mixin.Body)
+	if err != nil {
+		return ""
+	}
+	return string(inBytes)
+}
+
 func (mixin *PipelineAndStageMixin) Run() RunInstance {
 	var err error
 

@@ -37,6 +37,7 @@ func (p *AdminPipeline) String() string {
 			<thead>
 				<tr>
 					<th>Description</th>
+					<th>Default Payload</th>
 					<th width="50">Timeout</th>
 					<th width="50">Failures</th>
 				</tr>
@@ -45,6 +46,7 @@ func (p *AdminPipeline) String() string {
 			<tbody>
 				<tr>
 					<td>{{ .Pipeline.Description }}</td>
+					<td>{{ .Pipeline.BodyJsonWithoutStages }}</td>
 					<td>{{ .Pipeline.TimeoutString }}</td>
 					<td>{{ .Pipeline.FailCount }}/{{ .Pipeline.FailMax }}</td>
 				</tr>
