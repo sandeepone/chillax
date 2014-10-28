@@ -72,7 +72,15 @@ func (mixin *PipelineAndStageMixin) SetCommonDefaults() {
 }
 
 func (mixin *PipelineAndStageMixin) BodyJsonWithoutStages() string {
-	inBytes, err := json.Marshal(mixin.Body)
+	justBody := make(map[string]interface{})
+
+	for key, value := range mixin.Body {
+		if key != "Stages" {
+			justBody[key] = value
+		}
+	}
+
+	inBytes, err := json.Marshal(justBody)
 	if err != nil {
 		return ""
 	}
