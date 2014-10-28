@@ -46,8 +46,6 @@ func AdminProxyHandler(settings *chillax_web_settings.ServerSettings) func(http.
 
 		proxyBackend, err := chillax_proxy_backend.LoadProxyBackendByName(proxyName)
 
-		fmt.Printf("proxyBackend: %v\n", proxyBackend)
-
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return

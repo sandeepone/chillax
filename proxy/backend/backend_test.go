@@ -78,9 +78,9 @@ func TestDeserializeFromToml(t *testing.T) {
 func TestSaveFromToml(t *testing.T) {
 	backend := NewSerializedDockerProxyBackendForTest()
 
-	backend.Storage.Delete("/proxies/")
+	backend.storage.Delete("/proxies/")
 
-	proxies, err := backend.Storage.List("/proxies")
+	proxies, err := backend.storage.List("/proxies")
 	prevProxiesLength := len(proxies)
 
 	err = backend.Save()
@@ -88,7 +88,7 @@ func TestSaveFromToml(t *testing.T) {
 		t.Errorf("Unable to save backend. Error: %v", err)
 	}
 
-	proxies, err = backend.Storage.List("/proxies")
+	proxies, err = backend.storage.List("/proxies")
 	currentProxiesLength := len(proxies)
 
 	if currentProxiesLength <= prevProxiesLength {

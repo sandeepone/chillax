@@ -34,7 +34,7 @@ func NewProxyBackend(tomlBytes []byte) (*ProxyBackend, error) {
 		return nil, err
 	}
 
-	backend.Storage = storage
+	backend.storage = storage
 
 	return backend, err
 }
@@ -47,9 +47,9 @@ type ProxyBackend struct {
 	Delay    string
 	Ping     string
 	Env      []string
-	Storage  chillax_storage.Storer
 	Process  *ProxyBackendProcessConfig
 	Docker   *ProxyBackendDockerConfig
+	storage  chillax_storage.Storer
 }
 
 func (pb *ProxyBackend) ProxyName() string {
@@ -68,7 +68,7 @@ func (pb *ProxyBackend) Save() error {
 	inBytes, err := pb.Serialize()
 
 	if err == nil {
-		err = pb.Storage.Create(fmt.Sprintf("/proxies/%v", pb.ProxyName()), inBytes)
+		err = pb.storage.Create(fmt.Sprintf("/proxies/%v", pb.ProxyName()), inBytes)
 	}
 	return err
 }
