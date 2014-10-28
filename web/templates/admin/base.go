@@ -55,10 +55,10 @@ func (p *AdminBase) String() string {
 					<li class="chillax-tab">
 						<a href="/chillax/admin/handlers">Handlers</a>
 					</li>
-					<li class="chillax-tab">
+					<li class="chillax-tab proxies">
 						<a href="/chillax/admin/proxies">Proxies</a>
 					</li>
-					<li class="chillax-tab">
+					<li class="chillax-tab pipelines">
 						<a href="/chillax/admin/pipelines">Pipelines</a>
 					</li>
 					<li class="has-dropdown">
@@ -73,7 +73,11 @@ func (p *AdminBase) String() string {
 				<!-- chillax-tab highlighter -->
 				<script>
 				$('.chillax-tab').removeClass('active');
-				$('.chillax-tab a[href="' + location.pathname + '"]').parent().addClass('active');
+				if(location.pathname.indexOf("proxies") > -1) {
+					$('.chillax-tab.proxies').addClass('active');
+				} else if(location.pathname.indexOf("pipelines") > -1) {
+					$('.chillax-tab.pipelines').addClass('active');
+				}
 				</script>
 			</section>
 		</nav>

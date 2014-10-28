@@ -92,3 +92,32 @@ func AdminPipelinesHandler(settings *chillax_web_settings.ServerSettings) func(h
 		t.Execute(w, data)
 	}
 }
+
+// AdminPipelineHandler renders HTML for /admin/pipeline/{Id}
+func AdminPipelineHandler(settings *chillax_web_settings.ServerSettings) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		pathChunk := strings.Split(r.URL.Path, "/")
+		pipelineId := pathChunk[len(pathChunk)-1]
+
+		pipeline, err := chillax_web_pipelines.PipelineById(pipelineId)
+
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		data := struct {
+			Pipeline *chillax_web_pipelines.Pipeline
+		}{
+			pipeline,
+		}
+		t, err := chillax_web_templates_admin.NewAdminPipeline().Parse()
+
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		t.Execute(w, data)
+	}
+}

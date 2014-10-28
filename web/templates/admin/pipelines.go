@@ -46,7 +46,7 @@ func (p *AdminPipelines) String() string {
 				<tr>
 					<td>{{ $element.Id }}</td>
 					<td>{{ $element.Description }}</td>
-					<td><a href="#" class="button tiny radius round expand no-margin">Details</a></td>
+					<td><a href="/chillax/admin/pipelines/{{ $element.Id }}" class="button tiny radius round expand no-margin">Details</a></td>
 				</tr>
 				{{ end }}
 			</tbody>

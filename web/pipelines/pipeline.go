@@ -11,14 +11,22 @@ import (
 	"time"
 )
 
-// Create a new Pipeline struct.
+// NewPipeline creates a new Pipeline struct.
 // It receive TOML definition as string.
 func NewPipeline(definition string) (*Pipeline, error) {
+	p, err := LoadPipeline(definition)
+
+	p.SetDefaults()
+
+	return p, err
+}
+
+// LoadPipeline creates a new Pipeline struct without setting defaults.
+// It receive TOML definition as string.
+func LoadPipeline(definition string) (*Pipeline, error) {
 	p := &Pipeline{}
 
 	_, err := toml.Decode(definition, p)
-
-	p.SetDefaults()
 
 	return p, err
 }
@@ -39,7 +47,7 @@ func PipelineById(id string) (*Pipeline, error) {
 		return nil, err
 	}
 
-	return NewPipeline(string(definition))
+	return LoadPipeline(string(definition))
 }
 
 func AllPipelinesByIds(pipelineIds []string) ([]*Pipeline, error) {
