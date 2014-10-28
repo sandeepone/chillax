@@ -14,7 +14,6 @@ func LoadProxyBackendByName(proxyName string) (*ProxyBackend, error) {
 	storage := chillax_storage.NewStorage()
 
 	definition, err := storage.Get(fmt.Sprintf("/proxies/%v", proxyName))
-	fmt.Printf("definition: %v", string(definition))
 
 	if err != nil {
 		return nil, err

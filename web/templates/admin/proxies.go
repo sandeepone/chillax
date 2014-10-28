@@ -38,7 +38,7 @@ func (p *AdminProxies) String() string {
 				<tr>
 					<th>Path</th>
 					<th>Pings</th>
-					<th width="50">Procs</th>
+					<th width="50">Processes</th>
 					<th width="100">Actions</th>
 				</tr>
 			</thead>

@@ -39,7 +39,10 @@ func (p *AdminProxy) String() string {
                     <th>Domain</th>
                     <th>Path</th>
                     <th>Command</th>
-                    <th width="50">Numprocs</th>
+                    <th>Environment Variables</th>
+                    <th width="50">Processes</th>
+                    <th width="50">Process Ping Interval</th>
+                    <th width="50">Process Ping Delay</th>
                 </tr>
             </thead>
 
@@ -47,8 +50,11 @@ func (p *AdminProxy) String() string {
                 <tr>
                     <td>{{ .ProxyBackend.Domain }}</td>
                     <td>{{ .ProxyBackend.Path }}</td>
-                    <td>{{ .ProxyBackend.Command }}</td>
-                    <td>{{ .ProxyBackend.Numprocs }}</td>
+                    <td><code>{{ .ProxyBackend.Command }}</code></td>
+                    <td><code>{{ .ProxyBackend.Env }}</code></td>
+                    <td>{{ .ProxyBackend.UpNumprocs }}/{{ .ProxyBackend.Numprocs }}</td>
+                    <td>{{ .ProxyBackend.Ping }}</td>
+                    <td>{{ .ProxyBackend.Delay }}</td>
                 </tr>
             </tbody>
         </table>
