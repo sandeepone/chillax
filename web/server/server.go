@@ -75,12 +75,12 @@ func (s *Server) NewInterposeMiddleware() *interpose.Middleware {
 }
 
 func (s *Server) SetDefaultMiddlewaresAfterInitialize() {
-	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.ServerNameMiddleware(s.Settings)))
-	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.BeginRequestTimerMiddleware(s.Settings)))
+	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.ServerNameMiddleware()))
+	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.BeginRequestTimerMiddleware()))
 }
 
 func (s *Server) SetDefaultMiddlewaresBeforeHttpServe() {
-	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.RecordRequestTimerMiddleware(s.Settings)))
+	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.RecordRequestTimerMiddleware()))
 }
 
 // NewGorillaMux creates a multiplexer will all the correct endpoints as well as admin pages.

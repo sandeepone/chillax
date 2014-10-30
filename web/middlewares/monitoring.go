@@ -5,17 +5,15 @@ import (
 	gorilla_context "github.com/gorilla/context"
 	"net/http"
 	"time"
-
-	chillax_web_settings "github.com/chillaxio/chillax/web/settings"
 )
 
-func BeginRequestTimerMiddleware(settings *chillax_web_settings.ServerSettings) func(http.ResponseWriter, *http.Request) {
+func BeginRequestTimerMiddleware() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		gorilla_context.Set(r, "BeginRequestTime", time.Now())
 	}
 }
 
-func RecordRequestTimerMiddleware(settings *chillax_web_settings.ServerSettings) func(http.ResponseWriter, *http.Request) {
+func RecordRequestTimerMiddleware() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, ok := gorilla_context.GetOk(r, "BeginRequestTime")
 		if ok {
