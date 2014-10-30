@@ -3,18 +3,19 @@ package server
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
-	"github.com/chillaxio/chillax/libtime"
+	"github.com/carbocation/interpose"
+	gorilla_mux "github.com/gorilla/mux"
+	"github.com/stretchr/graceful"
+
 	"github.com/chillaxio/chillax/portkeeper"
 	chillax_web_handlers "github.com/chillaxio/chillax/web/handlers"
+	chillax_web_middlewares "github.com/chillaxio/chillax/web/middlewares"
 	chillax_web_multiplexer "github.com/chillaxio/chillax/web/multiplexer"
 	chillax_web_pingers "github.com/chillaxio/chillax/web/pingers"
 	chillax_web_pipelines "github.com/chillaxio/chillax/web/pipelines"
 	chillax_web_settings "github.com/chillaxio/chillax/web/settings"
-	gorilla_mux "github.com/gorilla/mux"
-	"github.com/stretchr/graceful"
 )
 
 // NewServer is the constructor for creating Chillax server.
@@ -53,6 +54,9 @@ func NewServer() (*Server, error) {
 	server.Paths["AdminPipeline"] = server.Paths["AdminPipelines"] + "/{Id}"
 
 	server.Handler = server.NewGorillaMux()
+	server.Middleware = server.NewInterposeMiddleware()
+
+	server.SetDefaultMiddlewaresAfterInitialize()
 
 	return server, err
 }
@@ -61,8 +65,22 @@ func NewServer() (*Server, error) {
 type Server struct {
 	*graceful.Server
 
-	Settings *chillax_web_settings.ServerSettings
-	Paths    map[string]string
+	Settings   *chillax_web_settings.ServerSettings
+	Middleware *interpose.Middleware
+	Paths      map[string]string
+}
+
+func (s *Server) NewInterposeMiddleware() *interpose.Middleware {
+	return interpose.New()
+}
+
+func (s *Server) SetDefaultMiddlewaresAfterInitialize() {
+	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.ServerNameMiddleware(s.Settings)))
+	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.BeginRequestTimerMiddleware(s.Settings)))
+}
+
+func (s *Server) SetDefaultMiddlewaresBeforeHttpServe() {
+	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.RecordRequestTimerMiddleware(s.Settings)))
 }
 
 // NewGorillaMux creates a multiplexer will all the correct endpoints as well as admin pages.
@@ -122,6 +140,11 @@ func (s *Server) BeforeListenAndServeGeneric() {
 	// Clean reserved ports every 5 minutes.
 	// This value is hard-coded for now.
 	s.CleanReservedPortsAsync("5m")
+
+	// Wrap mux inside middleware before launching server.
+	s.SetDefaultMiddlewaresBeforeHttpServe()
+	s.Middleware.UseHandler(s.Handler)
+	s.Handler = s.Middleware
 }
 
 // ListenAndServeGeneric runs the server.
@@ -160,10 +183,5 @@ func (s *Server) CheckProxiesAsync() {
 }
 
 func (s *Server) CleanReservedPortsAsync(sleepString string) {
-	hostname, _ := os.Hostname()
-
-	go func(hostname string) {
-		portkeeper.CleanReservedPorts(hostname)
-		libtime.SleepString(sleepString)
-	}(hostname)
+	portkeeper.CleanReservedPortsAsync(sleepString)
 }
