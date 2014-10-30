@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/chillaxio/chillax/libnumber"
 	"github.com/chillaxio/chillax/libstring"
+	"github.com/chillaxio/chillax/libtime"
 	chillax_storage "github.com/chillaxio/chillax/storage"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -81,4 +83,13 @@ func CleanReservedPorts(host string) error {
 		}
 	}
 	return err
+}
+
+func CleanReservedPortsAsync(sleepString string) {
+	hostname, _ := os.Hostname()
+
+	go func(hostname string) {
+		CleanReservedPorts(hostname)
+		libtime.SleepString(sleepString)
+	}(hostname)
 }
