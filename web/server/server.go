@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/carbocation/interpose"
 	gorilla_mux "github.com/gorilla/mux"
 	"github.com/stretchr/graceful"
@@ -53,6 +54,7 @@ func NewServer() (*Server, error) {
 	server.Paths["AdminPipelines"] = server.Paths["AdminPrefix"] + "/pipelines"
 	server.Paths["AdminPipeline"] = server.Paths["AdminPipelines"] + "/{Id}"
 
+	server.Logger = server.NewLogrusLogger()
 	server.Handler = server.NewGorillaMux()
 	server.Middleware = server.NewInterposeMiddleware()
 
@@ -67,6 +69,7 @@ type Server struct {
 
 	Settings   *chillax_web_settings.ServerSettings
 	Middleware *interpose.Middleware
+	Logger     *logrus.Logger
 	Paths      map[string]string
 }
 
@@ -75,12 +78,18 @@ func (s *Server) NewInterposeMiddleware() *interpose.Middleware {
 }
 
 func (s *Server) SetDefaultMiddlewaresAfterInitialize() {
-	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.ServerNameMiddleware()))
+	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.SetLoggerMiddleware(s.Logger)))
+	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.SetServerNameMiddleware()))
 	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.BeginRequestTimerMiddleware()))
 }
 
 func (s *Server) SetDefaultMiddlewaresBeforeHttpServe() {
 	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.RecordRequestTimerMiddleware()))
+}
+
+func (s *Server) NewLogrusLogger() *logrus.Logger {
+	log := logrus.New()
+	return log
 }
 
 // NewGorillaMux creates a multiplexer will all the correct endpoints as well as admin pages.
