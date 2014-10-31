@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/graceful"
 
 	"github.com/chillaxio/chillax/portkeeper"
+	chillax_storage "github.com/chillaxio/chillax/storage"
 	chillax_web_handlers "github.com/chillaxio/chillax/web/handlers"
 	chillax_web_middlewares "github.com/chillaxio/chillax/web/middlewares"
 	chillax_web_multiplexer "github.com/chillaxio/chillax/web/multiplexer"
@@ -55,6 +56,7 @@ func NewServer() (*Server, error) {
 	server.Paths["AdminPipeline"] = server.Paths["AdminPipelines"] + "/{Id}"
 
 	server.Logger = server.NewLogrusLogger()
+	server.Storage = chillax_storage.NewStorage()
 	server.Handler = server.NewGorillaMux()
 	server.Middleware = server.NewInterposeMiddleware()
 
@@ -70,6 +72,7 @@ type Server struct {
 	Settings   *chillax_web_settings.ServerSettings
 	Middleware *interpose.Middleware
 	Logger     *logrus.Logger
+	Storage    chillax_storage.Storer
 	Paths      map[string]string
 }
 
@@ -84,7 +87,7 @@ func (s *Server) SetDefaultMiddlewaresAfterInitialize() {
 }
 
 func (s *Server) SetDefaultMiddlewaresBeforeHttpServe() {
-	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.RecordRequestTimerMiddleware()))
+	s.Middleware.UseHandler(http.HandlerFunc(chillax_web_middlewares.RecordRequestTimerMiddleware(s.Storage)))
 }
 
 func (s *Server) NewLogrusLogger() *logrus.Logger {
