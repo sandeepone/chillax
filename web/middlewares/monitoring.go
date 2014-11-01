@@ -1,9 +1,9 @@
 package middlewares
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/Sirupsen/logrus"
+	chillax_statskeeper "github.com/chillaxio/chillax/statskeeper"
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	gorilla_context "github.com/gorilla/context"
 	"net/http"
@@ -31,27 +31,21 @@ func RecordRequestTimerMiddleware(storage chillax_storage.Storer) func(http.Resp
 					currentTime := time.Now()
 
 					fields := logrus.Fields{
-						"CurrentTime":     fmt.Sprintf(`"%v"`, currentTime.String()),
+						"CurrentTime":     currentTime.String(),
 						"CurrentUnixNano": currentTime.UnixNano(),
 						"Method":          r.Method,
 						"URI":             r.RequestURI,
 						"RemoteAddr":      r.RemoteAddr,
-						"UserAgent":       fmt.Sprintf(`"%v"`, r.UserAgent()),
+						"UserAgent":       r.UserAgent(),
 						"Latency":         latency,
 					}
+
+					chillax_statskeeper.SaveRequest(currentTime, fields)
+
+					fields["CurrentTime"] = fmt.Sprintf(`"%v"`, currentTime.String())
+					fields["UserAgent"] = fmt.Sprintf(`"%v"`, r.UserAgent())
+
 					logger.(*logrus.Logger).WithFields(fields).Info(fmt.Sprintf(`"%v %v took %v"`, r.Method, r.RequestURI, latency))
-
-					datetime := time.Unix(0, currentTime.UnixNano())
-					dataPath := fmt.Sprintf(
-						"/logs/requests/%v/%d/%v/%v/%v/%v-%v",
-						datetime.Year(), datetime.Month(), datetime.Day(), datetime.Hour(), datetime.Minute(),
-						currentTime.UnixNano(), r.Method)
-
-					fields["CurrentTime"] = currentTime.String()
-					fields["UserAgent"] = r.UserAgent()
-
-					inBytes, _ := json.Marshal(fields)
-					storage.Create(dataPath, inBytes)
 				}
 			}()
 		}
