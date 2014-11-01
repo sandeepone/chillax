@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/user"
 	"path"
+	"path/filepath"
+	"strings"
 	"sync"
 )
 
@@ -27,6 +29,7 @@ type Storer interface {
 	Update(string, []byte) error
 	Get(string) ([]byte, error)
 	List(string) ([]string, error)
+	ListRecursive(string) ([]string, error)
 	Delete(string) error
 }
 
@@ -80,12 +83,16 @@ func (fs *FileSystem) Update(fullpath string, data []byte) error {
 }
 
 func (fs *FileSystem) Get(fullpath string) ([]byte, error) {
-	fullpath = path.Join(fs.Root, fullpath)
+	if !strings.HasPrefix(fullpath, fs.Root) {
+		fullpath = path.Join(fs.Root, fullpath)
+	}
 	return ioutil.ReadFile(fullpath)
 }
 
 func (fs *FileSystem) List(fullpath string) ([]string, error) {
-	fullpath = path.Join(fs.Root, fullpath)
+	if !strings.HasPrefix(fullpath, fs.Root) {
+		fullpath = path.Join(fs.Root, fullpath)
+	}
 	files, err := ioutil.ReadDir(fullpath)
 	names := make([]string, len(files))
 
@@ -96,7 +103,16 @@ func (fs *FileSystem) List(fullpath string) ([]string, error) {
 	return names, err
 }
 
+func (fs *FileSystem) ListRecursive(pattern string) ([]string, error) {
+	if !strings.HasPrefix(pattern, fs.Root) {
+		pattern = path.Join(fs.Root, pattern)
+	}
+	return filepath.Glob(pattern)
+}
+
 func (fs *FileSystem) Delete(fullpath string) error {
-	fullpath = path.Join(fs.Root, fullpath)
+	if !strings.HasPrefix(fullpath, fs.Root) {
+		fullpath = path.Join(fs.Root, fullpath)
+	}
 	return os.RemoveAll(fullpath)
 }
