@@ -50,6 +50,7 @@ func NewServer() (*Server, error) {
 	server.Paths["ApiPipelineRun"] = server.Paths["ApiPrefix"] + "/pipelines/{Id}/run"
 
 	server.Paths["AdminPrefix"] = "/chillax/admin"
+	server.Paths["AdminStats"] = server.Paths["AdminPrefix"] + "/stats"
 	server.Paths["AdminProxies"] = server.Paths["AdminPrefix"] + "/proxies"
 	server.Paths["AdminProxy"] = server.Paths["AdminProxies"] + "/{Name}"
 	server.Paths["AdminPipelines"] = server.Paths["AdminPrefix"] + "/pipelines"
@@ -123,23 +124,27 @@ func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 	// Admin Handlers
 	mux.HandleFunc(
 		s.Paths["AdminPrefix"],
-		chillax_web_handlers.AdminBaseHandler(s.Settings)).Methods("GET")
+		chillax_web_handlers.AdminBaseHandler()).Methods("GET")
+
+	mux.HandleFunc(
+		s.Paths["AdminStats"],
+		chillax_web_handlers.AdminStatsHandler()).Methods("GET")
 
 	mux.HandleFunc(
 		s.Paths["AdminProxies"],
-		chillax_web_handlers.AdminProxiesHandler(s.Settings, muxFactory.ProxyHandlers)).Methods("GET")
+		chillax_web_handlers.AdminProxiesHandler(muxFactory.ProxyHandlers)).Methods("GET")
 
 	mux.HandleFunc(
 		s.Paths["AdminProxy"],
-		chillax_web_handlers.AdminProxyHandler(s.Settings)).Methods("GET")
+		chillax_web_handlers.AdminProxyHandler()).Methods("GET")
 
 	mux.HandleFunc(
 		s.Paths["AdminPipelines"],
-		chillax_web_handlers.AdminPipelinesHandler(s.Settings)).Methods("GET")
+		chillax_web_handlers.AdminPipelinesHandler()).Methods("GET")
 
 	mux.HandleFunc(
 		s.Paths["AdminPipeline"],
-		chillax_web_handlers.AdminPipelineHandler(s.Settings)).Methods("GET")
+		chillax_web_handlers.AdminPipelineHandler()).Methods("GET")
 
 	return mux
 }

@@ -8,19 +8,25 @@ import (
 	chillax_proxy_backend "github.com/chillaxio/chillax/proxy/backend"
 	chillax_proxy_handler "github.com/chillaxio/chillax/proxy/handler"
 	chillax_web_pipelines "github.com/chillaxio/chillax/web/pipelines"
-	chillax_web_settings "github.com/chillaxio/chillax/web/settings"
 	chillax_web_templates_admin "github.com/chillaxio/chillax/web/templates/admin"
 )
 
 // AdminBaseHandler renders HTML for /admin/base
-func AdminBaseHandler(settings *chillax_web_settings.ServerSettings) func(http.ResponseWriter, *http.Request) {
+func AdminBaseHandler() func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, chillax_web_templates_admin.NewAdminBase().String())
+	}
+}
+
+// AdminStatsHandler renders HTML for /admin/stats
+func AdminStatsHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, chillax_web_templates_admin.NewAdminBase().String())
 	}
 }
 
 // AdminProxiesHandler renders HTML for /admin/proxies
-func AdminProxiesHandler(settings *chillax_web_settings.ServerSettings, proxyHandlers []*chillax_proxy_handler.ProxyHandler) func(http.ResponseWriter, *http.Request) {
+func AdminProxiesHandler(proxyHandlers []*chillax_proxy_handler.ProxyHandler) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data := struct {
 			ProxyHandlers []*chillax_proxy_handler.ProxyHandler
@@ -39,7 +45,7 @@ func AdminProxiesHandler(settings *chillax_web_settings.ServerSettings, proxyHan
 }
 
 // AdminProxyHandler renders HTML for /admin/proxies/{Name}
-func AdminProxyHandler(settings *chillax_web_settings.ServerSettings) func(http.ResponseWriter, *http.Request) {
+func AdminProxyHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pathChunk := strings.Split(r.URL.Path, "/")
 		proxyName := pathChunk[len(pathChunk)-1]
@@ -68,7 +74,7 @@ func AdminProxyHandler(settings *chillax_web_settings.ServerSettings) func(http.
 }
 
 // AdminPipelinesHandler renders HTML for /admin/pipelines
-func AdminPipelinesHandler(settings *chillax_web_settings.ServerSettings) func(http.ResponseWriter, *http.Request) {
+func AdminPipelinesHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pipelines, err := chillax_web_pipelines.AllPipelines()
 
@@ -94,7 +100,7 @@ func AdminPipelinesHandler(settings *chillax_web_settings.ServerSettings) func(h
 }
 
 // AdminPipelineHandler renders HTML for /admin/pipeline/{Id}
-func AdminPipelineHandler(settings *chillax_web_settings.ServerSettings) func(http.ResponseWriter, *http.Request) {
+func AdminPipelineHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pathChunk := strings.Split(r.URL.Path, "/")
 		pipelineId := pathChunk[len(pathChunk)-1]
