@@ -4,15 +4,40 @@ import (
 	"encoding/json"
 	"fmt"
 	chillax_proxy_backend "github.com/chillaxio/chillax/proxy/backend"
+	chillax_statskeeper "github.com/chillaxio/chillax/statskeeper"
+	chillax_storage "github.com/chillaxio/chillax/storage"
 	chillax_web_pipelines "github.com/chillaxio/chillax/web/pipelines"
-	chillax_web_settings "github.com/chillaxio/chillax/web/settings"
 	"github.com/peterbourgon/mergemap"
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 )
 
-func ApiProxiesHandler(settings *chillax_web_settings.ServerSettings) func(http.ResponseWriter, *http.Request) {
+func ApiStatsRequestsHandler(storage chillax_storage.Storer) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			params := r.URL.Query()
+			duration := params["duration"][0]
+			latencyDataPoints, err := chillax_statskeeper.GetRequestLatencyDataPointsDurationsAgo(time.Now(), duration)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+
+			latencyDataPointsJsonBytes, err := json.Marshal(latencyDataPoints)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(latencyDataPointsJsonBytes)
+		}
+	}
+}
+
+func ApiProxiesHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 
@@ -38,7 +63,7 @@ func ApiProxiesHandler(settings *chillax_web_settings.ServerSettings) func(http.
 	}
 }
 
-func ApiPipelinesHandler(settings *chillax_web_settings.ServerSettings) func(http.ResponseWriter, *http.Request) {
+func ApiPipelinesHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 
@@ -55,7 +80,7 @@ func ApiPipelinesHandler(settings *chillax_web_settings.ServerSettings) func(htt
 	}
 }
 
-func ApiPipelinesRunHandler(settings *chillax_web_settings.ServerSettings) func(http.ResponseWriter, *http.Request) {
+func ApiPipelinesRunHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 
@@ -78,7 +103,7 @@ func ApiPipelinesRunHandler(settings *chillax_web_settings.ServerSettings) func(
 	}
 }
 
-func ApiPipelineRunHandler(settings *chillax_web_settings.ServerSettings) func(http.ResponseWriter, *http.Request) {
+func ApiPipelineRunHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 
