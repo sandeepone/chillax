@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// SaveRequest saves requests data to storage.
 func SaveRequest(currentTime time.Time, fields logrus.Fields) {
 	datetime := time.Unix(0, currentTime.UnixNano())
 	dataPath := fmt.Sprintf(
@@ -23,8 +24,9 @@ func SaveRequest(currentTime time.Time, fields logrus.Fields) {
 	}
 }
 
+// GetRequestDataPathsDurationsAgo fetches data paths from endDatetime-durationString to endDatetime.
 // Assumptions:
-// - Never get data older than this year.
+// - It never gets data older than this year.
 func GetRequestDataPathsDurationsAgo(endDatetime time.Time, durationString string) ([]string, error) {
 	duration, err := time.ParseDuration(durationString)
 	if err != nil {
@@ -86,6 +88,9 @@ func GetRequestDataPathsDurationsAgo(endDatetime time.Time, durationString strin
 	return dataPaths, nil
 }
 
+// GetRequestDataDurationsAgo fetches data from endDatetime-durationString to endDatetime.
+// Assumptions:
+// - It never gets data older than this year.
 func GetRequestDataDurationsAgo(endDatetime time.Time, durationString string) ([][]byte, error) {
 	dataPaths, err := GetRequestDataPathsDurationsAgo(endDatetime, durationString)
 	if err != nil {
@@ -103,4 +108,29 @@ func GetRequestDataDurationsAgo(endDatetime time.Time, durationString string) ([
 		dataSlice[i] = data
 	}
 	return dataSlice, nil
+}
+
+func GetRequestLatencyDataPointsDurationsAgo(endDatetime time.Time, durationString string) ([][]int64, error) {
+	dataSlice, err := GetRequestDataDurationsAgo(endDatetime, durationString)
+	if err != nil {
+		return nil, err
+	}
+
+	dataPoints := make([][]int64, 0)
+
+	for _, rawJson := range dataSlice {
+		//
+		// Skip any errors found here and move on to the next JSON data.
+		//
+		var jsonData map[string]interface{}
+
+		json.Unmarshal(rawJson, &jsonData)
+
+		dataPoint := make([]int64, 2)
+		dataPoint[0] = int64(jsonData["CurrentUnixNano"].(float64))
+		dataPoint[1] = int64(jsonData["Latency"].(float64))
+
+		dataPoints = append(dataPoints, dataPoint)
+	}
+	return dataPoints, nil
 }
