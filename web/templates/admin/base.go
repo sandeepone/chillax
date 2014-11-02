@@ -20,8 +20,12 @@ func (p *AdminBase) String() string {
 <html>
 <head>
 	<link href="//cdnjs.cloudflare.com/ajax/libs/foundation/5.4.6/css/foundation.min.css" rel="stylesheet" type="text/css" media="all">
+	<link href="//cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.min.css" rel="stylesheet" type="text/css" media="all">
+
 	<script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/foundation/5.4.6/js/foundation.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.min.js"></script>
 
 	<style>
 	.full-width {
@@ -53,7 +57,7 @@ func (p *AdminBase) String() string {
 				<!-- Right Nav Section -->
 				<ul class="right">
 					<li class="chillax-tab">
-						<a href="/chillax/admin/handlers">Handlers</a>
+						<a href="/chillax/admin/stats">Stats</a>
 					</li>
 					<li class="chillax-tab proxies">
 						<a href="/chillax/admin/proxies">Proxies</a>
