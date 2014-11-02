@@ -4,6 +4,8 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"github.com/chillaxio/chillax/libstring"
+	"github.com/chillaxio/chillax/libtime"
 	chillax_proxy_backend "github.com/chillaxio/chillax/proxy/backend"
 	chillax_statskeeper "github.com/chillaxio/chillax/statskeeper"
 	chillax_storage "github.com/chillaxio/chillax/storage"
@@ -12,8 +14,34 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
-	"time"
 )
+
+func ApiStatsRequestsJsonHandler(storage chillax_storage.Storer) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			params := r.URL.Query()
+			endDateString := params["end"][0]
+			durationString := params["duration"][0]
+
+			endDate, err := libtime.ParseIsoString(endDateString)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+
+			requestDataBytes, err := chillax_statskeeper.GetRequestDataDurationsAgo(endDate, durationString)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+
+			requestDataBytesJsonBytes := libstring.SliceOfJsonBytesToJsonArrayBytes(requestDataBytes)
+
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(requestDataBytesJsonBytes)
+		}
+	}
+}
 
 func ApiStatsRequestsCsvHandler(storage chillax_storage.Storer) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +50,7 @@ func ApiStatsRequestsCsvHandler(storage chillax_storage.Storer) func(http.Respon
 			endDateString := params["end"][0]
 			durationString := params["duration"][0]
 
-			endDate, err := time.Parse("2006-01-02T15:04:05.999Z", endDateString)
+			endDate, err := libtime.ParseIsoString(endDateString)
 			if err != nil {
 				http.Error(w, err.Error(), 500)
 				return
@@ -37,6 +65,18 @@ func ApiStatsRequestsCsvHandler(storage chillax_storage.Storer) func(http.Respon
 			w.Header().Set("Content-Type", "text/csv")
 
 			csvWriter := csv.NewWriter(w)
+
+			// Header
+			recordHeader := []string{
+				"CurrentUnixNano",
+				"Latency",
+				"Method",
+				"RemoteAddr",
+				"URI",
+				"UserAgent",
+			}
+			csvWriter.Write(recordHeader)
+
 			for _, dataBytes := range requestData {
 				data := make(map[string]interface{})
 				json.Unmarshal(dataBytes, &data)
