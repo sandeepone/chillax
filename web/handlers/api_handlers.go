@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func ApiStatsRequestsHandler(storage chillax_storage.Storer) func(http.ResponseWriter, *http.Request) {
+func ApiStatsRequestsLatencyHandler(storage chillax_storage.Storer) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			params := r.URL.Query()
@@ -25,14 +25,18 @@ func ApiStatsRequestsHandler(storage chillax_storage.Storer) func(http.ResponseW
 				return
 			}
 
-			latencyDataPointsJsonBytes, err := json.Marshal(latencyDataPoints)
+			data := make(map[string]interface{})
+			data["key"] = "Latency"
+			data["values"] = latencyDataPoints
+
+			latencyDataJsonBytes, err := json.Marshal(data)
 			if err != nil {
 				http.Error(w, err.Error(), 500)
 				return
 			}
 
 			w.Header().Set("Content-Type", "application/json")
-			w.Write(latencyDataPointsJsonBytes)
+			w.Write(latencyDataJsonBytes)
 		}
 	}
 }

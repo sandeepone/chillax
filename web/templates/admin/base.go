@@ -15,6 +15,10 @@ type AdminBase struct {
 	chillax_web_templates.GoTemplate
 }
 
+func (p *AdminBase) Bytes() []byte {
+	return []byte(p.String())
+}
+
 func (p *AdminBase) String() string {
 	return `
 <html>
@@ -24,8 +28,8 @@ func (p *AdminBase) String() string {
 
 	<script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/foundation/5.4.6/js/foundation.min.js"></script>
-	<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js"></script>
-	<script src="//cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.js"></script>
 
 	<style>
 	.full-width {

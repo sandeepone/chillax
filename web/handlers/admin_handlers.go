@@ -21,7 +21,19 @@ func AdminBaseHandler() func(http.ResponseWriter, *http.Request) {
 // AdminStatsHandler renders HTML for /admin/stats
 func AdminStatsHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, chillax_web_templates_admin.NewAdminBase().String())
+		data := struct {
+			DurationString string
+		}{
+			"-336h",
+		}
+		t, err := chillax_web_templates_admin.NewAdminStats().Parse()
+
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		t.Execute(w, data)
 	}
 }
 

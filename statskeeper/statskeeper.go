@@ -50,7 +50,7 @@ func GetRequestDataPathsDurationsAgo(endDatetime time.Time, durationString strin
 			for _, day := range days {
 				dayInt, err := strconv.Atoi(day)
 				if err == nil && dayInt >= startDatetime.Day() && dayInt <= endDatetime.Day() {
-					dataGlobPaths = append(dataGlobPaths, fmt.Sprintf("/logs/requests/%v/%d/%v/**/**/*", startDatetime.Year(), startDatetime.Month(), dayInt))
+					dataGlobPaths = append(dataGlobPaths, fmt.Sprintf("/logs/requests/%v/%d/%v/**/**/**/*", startDatetime.Year(), startDatetime.Month(), dayInt))
 				}
 			}
 		}
@@ -66,7 +66,7 @@ func GetRequestDataPathsDurationsAgo(endDatetime time.Time, durationString strin
 		for _, month := range months {
 			monthInt, err := strconv.Atoi(month)
 			if err == nil && monthInt >= int(startDatetime.Month()) && monthInt < int(endDatetime.Month()) {
-				dataGlobPaths = append(dataGlobPaths, fmt.Sprintf("/logs/requests/%v/%d/**/**/*", startDatetime.Year(), monthInt))
+				dataGlobPaths = append(dataGlobPaths, fmt.Sprintf("/logs/requests/%v/%d/**/**/**/*", startDatetime.Year(), monthInt))
 			}
 			sameMonthDataGlobPathsFetch(startDatetime, endDatetime, days)
 		}
