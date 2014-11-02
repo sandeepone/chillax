@@ -2,6 +2,7 @@ package libstring
 
 import (
 	"code.google.com/p/go-uuid/uuid"
+	"fmt"
 	"net/url"
 	"os"
 	"strconv"
@@ -111,4 +112,14 @@ func EnvSubCurly(input string) string {
 	}
 
 	return output
+}
+
+// SliceOfJsonBytesToJsonArrayBytes converts a slice of JSON bytes to 1 JSON array.
+func SliceOfJsonBytesToJsonArrayBytes(data [][]byte) []byte {
+	dataStrings := make([]string, len(data))
+	for i, dataBytes := range data {
+		dataStrings[i] = string(dataBytes)
+	}
+
+	return []byte(fmt.Sprintf(`[%v]`, strings.Join(dataStrings, ",")))
 }
