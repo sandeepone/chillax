@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	chillax_proxy_backend "github.com/chillaxio/chillax/proxy/backend"
@@ -14,29 +15,42 @@ import (
 	"time"
 )
 
-func ApiStatsRequestsLatencyHandler(storage chillax_storage.Storer) func(http.ResponseWriter, *http.Request) {
+func ApiStatsRequestsCsvHandler(storage chillax_storage.Storer) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 			params := r.URL.Query()
-			duration := params["duration"][0]
-			latencyDataPoints, err := chillax_statskeeper.GetRequestLatencyDataPointsDurationsAgo(time.Now(), duration)
+			endDateString := params["end"][0]
+			durationString := params["duration"][0]
+
+			endDate, err := time.Parse("2006-01-02T15:04:05.999Z", endDateString)
 			if err != nil {
 				http.Error(w, err.Error(), 500)
 				return
 			}
 
-			data := make(map[string]interface{})
-			data["key"] = "Latency"
-			data["values"] = latencyDataPoints
-
-			latencyDataJsonBytes, err := json.Marshal(data)
+			requestData, err := chillax_statskeeper.GetRequestDataDurationsAgo(endDate, durationString)
 			if err != nil {
 				http.Error(w, err.Error(), 500)
 				return
 			}
 
-			w.Header().Set("Content-Type", "application/json")
-			w.Write(latencyDataJsonBytes)
+			w.Header().Set("Content-Type", "text/csv")
+
+			csvWriter := csv.NewWriter(w)
+			for _, dataBytes := range requestData {
+				data := make(map[string]interface{})
+				json.Unmarshal(dataBytes, &data)
+
+				var record []string
+				record = append(record, fmt.Sprintf("%v", int64(data["CurrentUnixNano"].(float64))))
+				record = append(record, fmt.Sprintf("%v", int64(data["Latency"].(float64))))
+				record = append(record, data["Method"].(string))
+				record = append(record, data["RemoteAddr"].(string))
+				record = append(record, data["URI"].(string))
+				record = append(record, data["UserAgent"].(string))
+				csvWriter.Write(record)
+			}
+			csvWriter.Flush()
 		}
 	}
 }

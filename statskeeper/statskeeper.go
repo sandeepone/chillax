@@ -109,28 +109,3 @@ func GetRequestDataDurationsAgo(endDatetime time.Time, durationString string) ([
 	}
 	return dataSlice, nil
 }
-
-func GetRequestLatencyDataPointsDurationsAgo(endDatetime time.Time, durationString string) ([][]int64, error) {
-	dataSlice, err := GetRequestDataDurationsAgo(endDatetime, durationString)
-	if err != nil {
-		return nil, err
-	}
-
-	dataPoints := make([][]int64, 0)
-
-	for _, rawJson := range dataSlice {
-		//
-		// Skip any errors found here and move on to the next JSON data.
-		//
-		var jsonData map[string]interface{}
-
-		json.Unmarshal(rawJson, &jsonData)
-
-		dataPoint := make([]int64, 2)
-		dataPoint[0] = int64(jsonData["CurrentUnixNano"].(float64))
-		dataPoint[1] = int64(jsonData["Latency"].(float64))
-
-		dataPoints = append(dataPoints, dataPoint)
-	}
-	return dataPoints, nil
-}

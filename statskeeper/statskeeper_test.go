@@ -35,20 +35,3 @@ func TestGetRequestDataDurationsAgo(t *testing.T) {
 		}
 	}
 }
-
-func TestGetRequestLatencyDataPointsDurationsAgo(t *testing.T) {
-	data, err := GetRequestLatencyDataPointsDurationsAgo(time.Now(), "-5h")
-	if err != nil {
-		t.Errorf("Unable to get data. err: %v", err)
-	}
-	if len(data) <= 0 {
-		t.Error("Unable to get data")
-	}
-
-	// Check that each datum actually contains array of (x,y) points.
-	for _, datum := range data {
-		if len(datum) != 2 {
-			t.Errorf("Each data must always contain (x,y) values. datum: %v", datum)
-		}
-	}
-}
