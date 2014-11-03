@@ -31,7 +31,6 @@ func (p *AdminBase) String() string {
 
 	<!-- DynaTable -->
 	<!-- Note: Put this on CDNJS -->
-	<link rel="stylesheet" media="all" href="//s3.amazonaws.com/dynatable-docs-assets/css/jquery.dynatable.css" />
 	<script type='text/javascript' src='//s3.amazonaws.com/dynatable-docs-assets/js/jquery.dynatable.js'></script>
 
 	<style>
