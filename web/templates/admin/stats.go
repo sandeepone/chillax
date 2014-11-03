@@ -35,7 +35,7 @@ func (p *AdminStats) String() string {
 	<div class="large-12 columns">
 		<table id="primary-table" class="full-width">
 			<thead>
-				<th data-dynatable-column="CurrentUnixNano">Timestamp</th>
+				<th data-dynatable-column="CurrentTime">Timestamp</th>
 				<th data-dynatable-column="Latency">Latency (ns)</th>
 				<th data-dynatable-column="Method">Method</th>
 				<th data-dynatable-column="RemoteAddr">Remote Address</th>
@@ -48,12 +48,13 @@ func (p *AdminStats) String() string {
 		<script>
 		$.dynatableSetup({
 			features: {
-				paginate: false
+				paginate: false,
+				search: false
 			},
 		});
 
 		$.ajax({
-			url: '/chillax/api/stats/requests.json?duration=-336h&end=2014-11-02T17:38:36.718Z',
+			url: '/chillax/api/stats/requests.json?duration={{ .DurationString }}&end=' + (new Date()).toISOString(),
 			success: function(data) {
 				console.log(data)
 				$('#primary-table').dynatable({
