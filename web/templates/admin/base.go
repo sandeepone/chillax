@@ -29,6 +29,11 @@ func (p *AdminBase) String() string {
 	<script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
 	<script src="//cdnjs.cloudflare.com/ajax/libs/foundation/5.4.6/js/foundation.min.js"></script>
 
+	<!-- DynaTable -->
+	<!-- Note: Put this on CDNJS -->
+	<link rel="stylesheet" media="all" href="//s3.amazonaws.com/dynatable-docs-assets/css/jquery.dynatable.css" />
+	<script type='text/javascript' src='//s3.amazonaws.com/dynatable-docs-assets/js/jquery.dynatable.js'></script>
+
 	<style>
 	.full-width {
 		width: 100%;
