@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/chillaxio/chillax/libmetrics"
+	"github.com/chillaxio/chillax/libtime"
 	chillax_storage "github.com/chillaxio/chillax/storage"
+	"os"
 )
 
 func SaveCpu(storage chillax_storage.Storer, host string) (*libmetrics.CpuMetrics, error) {
@@ -19,6 +21,17 @@ func SaveCpu(storage chillax_storage.Storer, host string) (*libmetrics.CpuMetric
 	err = storage.Create(dataPath, cpuToml)
 
 	return cpu, err
+}
+
+func SaveCpuAsync(storage chillax_storage.Storer, intervalString string) {
+	host, _ := os.Hostname()
+
+	go func() {
+		for {
+			SaveCpu(storage, host)
+			libtime.SleepString(intervalString)
+		}
+	}()
 }
 
 func LoadCpu(storage chillax_storage.Storer, host string) (*libmetrics.CpuMetrics, error) {
