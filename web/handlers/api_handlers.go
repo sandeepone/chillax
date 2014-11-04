@@ -16,81 +16,12 @@ import (
 	"strings"
 )
 
-func ApiStatsRequestsJsonHandler(storage chillax_storage.Storer) func(http.ResponseWriter, *http.Request) {
+func ApiStatsCpuJsonHandler(storage chillax_storage.Storer) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
-			params := r.URL.Query()
-			endDateString := params["end"][0]
-			durationString := params["duration"][0]
-
-			endDate, err := libtime.ParseIsoString(endDateString)
-			if err != nil {
-				http.Error(w, err.Error(), 500)
-				return
-			}
-
-			requestDataBytes, err := chillax_statskeeper.GetRequestDataDurationsAgo(endDate, durationString)
-			if err != nil {
-				http.Error(w, err.Error(), 500)
-				return
-			}
-
-			requestDataBytesJsonBytes := libstring.SliceOfJsonBytesToJsonArrayBytes(requestDataBytes)
 
 			w.Header().Set("Content-Type", "application/json")
-			w.Write(requestDataBytesJsonBytes)
-		}
-	}
-}
-
-func ApiStatsRequestsCsvHandler(storage chillax_storage.Storer) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "GET" {
-			params := r.URL.Query()
-			endDateString := params["end"][0]
-			durationString := params["duration"][0]
-
-			endDate, err := libtime.ParseIsoString(endDateString)
-			if err != nil {
-				http.Error(w, err.Error(), 500)
-				return
-			}
-
-			requestData, err := chillax_statskeeper.GetRequestDataDurationsAgo(endDate, durationString)
-			if err != nil {
-				http.Error(w, err.Error(), 500)
-				return
-			}
-
-			w.Header().Set("Content-Type", "text/csv")
-
-			csvWriter := csv.NewWriter(w)
-
-			// Header
-			recordHeader := []string{
-				"CurrentUnixNano",
-				"Latency",
-				"Method",
-				"RemoteAddr",
-				"URI",
-				"UserAgent",
-			}
-			csvWriter.Write(recordHeader)
-
-			for _, dataBytes := range requestData {
-				data := make(map[string]interface{})
-				json.Unmarshal(dataBytes, &data)
-
-				var record []string
-				record = append(record, fmt.Sprintf("%v", int64(data["CurrentUnixNano"].(float64))))
-				record = append(record, fmt.Sprintf("%v", int64(data["Latency"].(float64))))
-				record = append(record, data["Method"].(string))
-				record = append(record, data["RemoteAddr"].(string))
-				record = append(record, data["URI"].(string))
-				record = append(record, data["UserAgent"].(string))
-				csvWriter.Write(record)
-			}
-			csvWriter.Flush()
+			w.Write(``)
 		}
 	}
 }
