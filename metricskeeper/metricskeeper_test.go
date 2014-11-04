@@ -41,3 +41,28 @@ func TestSaveAndLoadCpu(t *testing.T) {
 	// Cleanup
 	storage.Delete(fmt.Sprintf("/hosts/%v/metrics/cpu", host))
 }
+
+func TestLoadCpuFromAllHosts(t *testing.T) {
+	host := "127.0.0.1"
+	storage := chillax_storage.NewStorage()
+
+	storage.Delete(fmt.Sprintf("/hosts/%v/metrics/cpu", host))
+
+	cpu, err := SaveCpu(storage, host)
+	if err != nil {
+		t.Errorf("Saving CPU data should work. err: %v", err)
+	}
+
+	cpusFromStorage, err := LoadCpuFromAllHosts(storage)
+
+	if (cpu.LoadAverages[0] != cpusFromStorage[0].LoadAverages[0]) || (cpu.NumCpu != cpusFromStorage[0].NumCpu) || (cpu.LoadAveragesPerCpu[0] != cpusFromStorage[0].LoadAveragesPerCpu[0]) {
+		t.Errorf("Cpu data was not saved properly. cpu: %v, cpusFromStorage: %v", cpu, cpusFromStorage)
+	}
+
+	if len(cpusFromStorage) != 1 {
+		t.Errorf("Should get only 1 cpu data. cpusFromStorage: %v", cpusFromStorage)
+	}
+
+	// Cleanup
+	storage.Delete(fmt.Sprintf("/hosts/%v/metrics/cpu", host))
+}

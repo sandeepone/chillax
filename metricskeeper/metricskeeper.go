@@ -50,3 +50,19 @@ func LoadCpu(storage chillax_storage.Storer, host string) (*libmetrics.CpuMetric
 
 	return cpu, err
 }
+
+func LoadCpuFromAllHosts(storage chillax_storage.Storer) ([]*libmetrics.CpuMetrics, error) {
+	hosts, err := storage.List("/hosts")
+	if err != nil {
+		return nil, err
+	}
+
+	data := make([]*libmetrics.CpuMetrics, 0)
+	for _, host := range hosts {
+		cpu, err := LoadCpu(storage, host)
+		if err == nil {
+			data = append(data, cpu)
+		}
+	}
+	return data, err
+}
