@@ -11,7 +11,7 @@ func GetCpuTomlForTest(host string) ([]byte, error) {
 	return storage.Get(fmt.Sprintf("/hosts/%v/metrics/cpu", host))
 }
 
-func TestReserveLargestPortWhichIsTheDefault(t *testing.T) {
+func TestSaveAndLoadCpu(t *testing.T) {
 	host := "127.0.0.1"
 	storage := chillax_storage.NewStorage()
 
@@ -22,7 +22,7 @@ func TestReserveLargestPortWhichIsTheDefault(t *testing.T) {
 		t.Errorf("Cpu data should be nil.")
 	}
 
-	err = SaveCpu(storage, host)
+	cpu, err := SaveCpu(storage, host)
 	if err != nil {
 		t.Errorf("Saving CPU data should work. err: %v", err)
 	}
@@ -30,6 +30,12 @@ func TestReserveLargestPortWhichIsTheDefault(t *testing.T) {
 	_, err = GetCpuTomlForTest(host)
 	if err != nil {
 		t.Errorf("Cpu data should not be nil.")
+	}
+
+	cpuFromStorage, err := LoadCpu(storage, host)
+
+	if (cpu.LoadAverages[0] != cpuFromStorage.LoadAverages[0]) || (cpu.NumCpu != cpuFromStorage.NumCpu) || (cpu.LoadAveragesPerCpu[0] != cpuFromStorage.LoadAveragesPerCpu[0]) {
+		t.Errorf("Cpu data was not saved properly. cpu: %v, cpuFromStorage: %v", cpu, cpuFromStorage)
 	}
 
 	// Cleanup
