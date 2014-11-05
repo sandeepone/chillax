@@ -5,8 +5,8 @@ package libmetrics
 import (
 	"bufio"
 	"bytes"
-	// "encoding/json"
-	// "github.com/BurntSushi/toml"
+	"encoding/json"
+	"github.com/BurntSushi/toml"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -38,3 +38,15 @@ func NewVmstatDarwin() VmstatDarwin {
 }
 
 type VmstatDarwin map[string]int64
+
+func (v *VmstatDarwin) ToJson() ([]byte, error) {
+	return json.Marshal(v)
+}
+
+func (v *VmstatDarwin) ToToml() ([]byte, error) {
+	var buffer bytes.Buffer
+
+	err := toml.NewEncoder(&buffer).Encode(v)
+
+	return buffer.Bytes(), err
+}

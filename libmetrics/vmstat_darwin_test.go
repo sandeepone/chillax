@@ -17,3 +17,16 @@ func TestNewVmstatDarwin(t *testing.T) {
 		}
 	}
 }
+
+func TestVmstatDarwinSerialization(t *testing.T) {
+	data := NewVmstatDarwin()
+	_, err := data.ToJson()
+	if err != nil {
+		t.Errorf("Serializing to JSON should not break. err: %v", err)
+	}
+
+	_, err = data.ToToml()
+	if err != nil {
+		t.Errorf("Serializing to TOML should not break. err: %v", err)
+	}
+}
