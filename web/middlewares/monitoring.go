@@ -3,7 +3,6 @@ package middlewares
 import (
 	"fmt"
 	"github.com/Sirupsen/logrus"
-	chillax_statskeeper "github.com/chillaxio/chillax/statskeeper"
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	gorilla_context "github.com/gorilla/context"
 	"net/http"
@@ -39,8 +38,6 @@ func RecordRequestTimerMiddleware(storage chillax_storage.Storer) func(http.Resp
 						"UserAgent":       r.UserAgent(),
 						"Latency":         latency,
 					}
-
-					chillax_statskeeper.SaveRequest(currentTime, fields)
 
 					fields["CurrentTime"] = fmt.Sprintf(`"%v"`, currentTime.String())
 					fields["UserAgent"] = fmt.Sprintf(`"%v"`, r.UserAgent())

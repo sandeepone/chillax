@@ -1,13 +1,10 @@
 package handlers
 
 import (
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"github.com/chillaxio/chillax/libstring"
-	"github.com/chillaxio/chillax/libtime"
+	chillax_metricskeeper "github.com/chillaxio/chillax/metricskeeper"
 	chillax_proxy_backend "github.com/chillaxio/chillax/proxy/backend"
-	chillax_statskeeper "github.com/chillaxio/chillax/statskeeper"
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	chillax_web_pipelines "github.com/chillaxio/chillax/web/pipelines"
 	"github.com/peterbourgon/mergemap"
@@ -19,9 +16,20 @@ import (
 func ApiStatsCpuJsonHandler(storage chillax_storage.Storer) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
+			metrics, err := chillax_metricskeeper.LoadCpuFromAllHosts(storage)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+
+			inJson, err := json.Marshal(metrics)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
 
 			w.Header().Set("Content-Type", "application/json")
-			w.Write(``)
+			w.Write(inJson)
 		}
 	}
 }

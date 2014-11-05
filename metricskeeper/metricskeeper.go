@@ -18,7 +18,7 @@ func SaveCpu(storage chillax_storage.Storer, host string) (*libmetrics.CpuMetric
 		return nil, err
 	}
 
-	err = storage.Create(dataPath, cpuToml)
+	err = storage.Update(dataPath, cpuToml)
 
 	return cpu, err
 }
@@ -60,6 +60,7 @@ func LoadCpuFromAllHosts(storage chillax_storage.Storer) ([]*libmetrics.CpuMetri
 	data := make([]*libmetrics.CpuMetrics, 0)
 	for _, host := range hosts {
 		cpu, err := LoadCpu(storage, host)
+
 		if err == nil {
 			data = append(data, cpu)
 		}

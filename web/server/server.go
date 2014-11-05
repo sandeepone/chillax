@@ -10,6 +10,7 @@ import (
 	gorilla_mux "github.com/gorilla/mux"
 	"github.com/stretchr/graceful"
 
+	"github.com/chillaxio/chillax/metricskeeper"
 	"github.com/chillaxio/chillax/portkeeper"
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	chillax_web_handlers "github.com/chillaxio/chillax/web/handlers"
@@ -166,6 +167,10 @@ func (s *Server) BeforeListenAndServeGeneric() {
 	// This value is hard-coded for now.
 	s.CleanReservedPortsAsync("5m")
 
+	// Save CPU data every 5 minutes.
+	// This value is hard-coded for now.
+	s.SaveCpuAsync("5m")
+
 	// Wrap mux inside middleware before launching server.
 	s.SetDefaultMiddlewaresBeforeHttpServe()
 	s.Middleware.UseHandler(s.Handler)
@@ -209,4 +214,8 @@ func (s *Server) CheckProxiesAsync() {
 
 func (s *Server) CleanReservedPortsAsync(sleepString string) {
 	portkeeper.CleanReservedPortsAsync(sleepString)
+}
+
+func (s *Server) SaveCpuAsync(sleepString string) {
+	metricskeeper.SaveCpuAsync(s.Storage, sleepString)
 }
