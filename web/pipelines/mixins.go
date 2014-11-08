@@ -98,6 +98,8 @@ func (mixin *PipelineAndStageMixin) Run() RunInstance {
 		response, err := mixin.Do()
 
 		if err == nil && response != nil && response.Body != nil {
+			defer response.Body.Close()
+
 			responseBytes, err := ioutil.ReadAll(response.Body)
 
 			if err == nil && len(responseBytes) > 0 {
