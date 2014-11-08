@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/user"
 	"path"
 	"strings"
 	"time"
@@ -40,63 +39,6 @@ func (pb *ProxyBackend) IsDocker() bool {
 	return false
 }
 
-// HttpTransport looks for specific locations for CAs.
-func (pb *ProxyBackend) HttpTransport() *http.Transport {
-	currentUser, _ := user.Current()
-
-	tlsConfig := &tls.Config{}
-
-	if os.Getenv("DOCKER_TLS_VERIFY") == "0" {
-		tlsConfig.InsecureSkipVerify = true
-	}
-
-	certFiles := []string{
-		"/etc/ssl/certs/ca-certificates.crt",                                          // Debian/Ubuntu/Gentoo etc.
-		"/etc/pki/tls/certs/ca-bundle.crt",                                            // Fedora/RHEL
-		"/etc/ssl/ca-bundle.pem",                                                      // OpenSUSE
-		"/etc/ssl/cert.pem",                                                           // OpenBSD
-		"/usr/local/share/certs/ca-root-nss.crt",                                      // FreeBSD/DragonFly
-		path.Join(currentUser.HomeDir, "/.boot2docker/certs/boot2docker-vm/cert.pem"), // Boot2Docker
-	}
-
-	if os.Getenv("DOCKER_CERT_PATH") != "" {
-		certFiles = append(certFiles, path.Join(os.Getenv("DOCKER_CERT_PATH"), "cert.pem"))
-	}
-
-	roots := x509.NewCertPool()
-
-	for _, file := range certFiles {
-		data, err := ioutil.ReadFile(file)
-		if err == nil {
-			roots.AppendCertsFromPEM(data)
-		}
-	}
-
-	tlsConfig.RootCAs = roots
-
-	if os.Getenv("DOCKER_CERT_PATH") != "" {
-		cert, err := tls.LoadX509KeyPair(
-			path.Join(os.Getenv("DOCKER_CERT_PATH"), "cert.pem"),
-			path.Join(os.Getenv("DOCKER_CERT_PATH"), "key.pem"))
-
-		if err == nil {
-			tlsConfig.Certificates = []tls.Certificate{cert}
-		}
-	} else {
-		cert, err := tls.LoadX509KeyPair(
-			path.Join(currentUser.HomeDir, "/.boot2docker/certs/boot2docker-vm/cert.pem"),
-			path.Join(currentUser.HomeDir, "/.boot2docker/certs/boot2docker-vm/key.pem"))
-
-		if err == nil {
-			tlsConfig.Certificates = []tls.Certificate{cert}
-		}
-	}
-
-	return &http.Transport{
-		TLSClientConfig: tlsConfig,
-	}
-}
-
 func (pb *ProxyBackend) NewDockerClients() map[string]*dockerclient.Client {
 	dockers := make(map[string]*dockerclient.Client)
 
@@ -110,14 +52,15 @@ func (pb *ProxyBackend) NewDockerClients() map[string]*dockerclient.Client {
 	return dockers
 }
 
-func (pb *ProxyBackend) NewDockerClient(dockerUri string) (*dockerclient.Client, error) {
-	client, err := dockerclient.NewClient(dockerUri)
-	if err != nil {
-		return nil, err
-	}
-
+func (pb *ProxyBackend) NewDockerClient(dockerUri string) (client *dockerclient.Client, err error) {
 	if os.Getenv("DOCKER_CERT_PATH") != "" {
-		client.HTTPClient = &http.Client{Transport: pb.HttpTransport()}
+		cert := path.Join(os.Getenv("DOCKER_CERT_PATH"), "cert.pem")
+		key := path.Join(os.Getenv("DOCKER_CERT_PATH"), "key.pem")
+		ca := path.Join(os.Getenv("DOCKER_CERT_PATH"), "ca.pem")
+
+		client, err = dockerclient.NewTLSClient(dockerUri, cert, key, ca)
+	} else {
+		client, err = dockerclient.NewClient(dockerUri)
 	}
 
 	return client, err

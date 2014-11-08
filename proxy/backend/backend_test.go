@@ -56,8 +56,8 @@ func TestDeserializeFromToml(t *testing.T) {
 	if len(backend.Docker.Containers[0].Env) != 4 {
 		t.Errorf("backend.Docker.Containers[0].Env should contains 4 items. Backend.Docker.Containers[0]: %s", backend.Docker.Containers[0])
 	}
-	if backend.Docker.Containers[0].Host != "tcp://127.0.0.1:2375" {
-		t.Errorf("backend.Docker.Containers[0].Host should == tcp://127.0.0.1:2375. Backend.Docker.Containers[0]: %s", backend.Docker.Containers[0])
+	if backend.Docker.Containers[0].Host != "https://192.168.59.103:2376" {
+		t.Errorf("backend.Docker.Containers[0].Host should == https://192.168.59.103:2376. Backend.Docker.Containers[0]: %s", backend.Docker.Containers[0])
 	}
 	if backend.Docker.Containers[0].Ports[0] != "65000:8080/tcp" {
 		t.Errorf("backend.Docker.Containers[0].Ports[0] should == 65000:8080/tcp. Backend.Docker.Containers[0]: %s", backend.Docker.Containers[0])
