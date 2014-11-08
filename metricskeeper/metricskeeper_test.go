@@ -55,12 +55,12 @@ func TestLoadCpuFromAllHosts(t *testing.T) {
 
 	cpusFromStorage, err := LoadCpuFromAllHosts(storage)
 
-	if (cpu.LoadAverages[0] != cpusFromStorage[0].LoadAverages[0]) || (cpu.NumCpu != cpusFromStorage[0].NumCpu) || (cpu.LoadAveragesPerCpu[0] != cpusFromStorage[0].LoadAveragesPerCpu[0]) {
-		t.Errorf("Cpu data was not saved properly. cpu: %v, cpusFromStorage: %v", cpu, cpusFromStorage)
-	}
-
-	if len(cpusFromStorage) != 1 {
-		t.Errorf("Should get only 1 cpu data. cpusFromStorage: %v", cpusFromStorage)
+	for h, cpuData := range cpusFromStorage {
+		if h == host {
+			if (cpu.LoadAverages[0] != cpuData.LoadAverages[0]) || (cpu.NumCpu != cpuData.NumCpu) || (cpu.LoadAveragesPerCpu[0] != cpuData.LoadAveragesPerCpu[0]) {
+				t.Errorf("Cpu data was not saved properly. cpu: %v, cpusFromStorage: %v", cpu, cpuData)
+			}
+		}
 	}
 
 	// Cleanup

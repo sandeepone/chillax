@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	chillax_storage "github.com/chillaxio/chillax/storage"
-	chillax_web_settings "github.com/chillaxio/chillax/web/settings"
 	gorilla_mux "github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
@@ -27,38 +26,31 @@ func NewPipelineJsonDefinitionForTest() []byte {
 	return definition
 }
 
-func NewServerSettingsForTest() *chillax_web_settings.ServerSettings {
-	settings, _ := chillax_web_settings.NewServerSettings()
-	return settings
-}
-
-func NewGorillaMuxForTest(settings *chillax_web_settings.ServerSettings) *gorilla_mux.Router {
+func NewGorillaMuxForTest() *gorilla_mux.Router {
 	mux := gorilla_mux.NewRouter()
 
 	mux.HandleFunc(
 		"/chillax/api/proxies",
-		ApiProxiesHandler(settings)).Methods("POST")
+		ApiProxiesHandler()).Methods("POST")
 
 	mux.HandleFunc(
 		"/chillax/api/pipelines",
-		ApiPipelinesHandler(settings)).Methods("POST")
+		ApiPipelinesHandler()).Methods("POST")
 
 	mux.HandleFunc(
 		"/chillax/api/pipelines/run",
-		ApiPipelinesRunHandler(settings)).Methods("POST")
+		ApiPipelinesRunHandler()).Methods("POST")
 
 	mux.HandleFunc(
 		"/chillax/api/pipelines/{Id}/run",
-		ApiPipelineRunHandler(settings)).Methods("POST")
+		ApiPipelineRunHandler()).Methods("POST")
 
 	return mux
 }
 
 func TestApiProxies(t *testing.T) {
 	// ---- Setup ----
-	settings := NewServerSettingsForTest()
-
-	mux := NewGorillaMuxForTest(settings)
+	mux := NewGorillaMuxForTest()
 
 	go http.ListenAndServe(":18000", mux)
 
@@ -97,9 +89,7 @@ func TestApiProxies(t *testing.T) {
 
 func TestApiPipelinesAndRun(t *testing.T) {
 	// ---- Setup ----
-	settings := NewServerSettingsForTest()
-
-	mux := NewGorillaMuxForTest(settings)
+	mux := NewGorillaMuxForTest()
 
 	go http.ListenAndServe(":18001", mux)
 
@@ -170,9 +160,7 @@ func TestApiPipelinesAndRun(t *testing.T) {
 
 func TestApiPipelinesRun(t *testing.T) {
 	// ---- Setup ----
-	settings := NewServerSettingsForTest()
-
-	mux := NewGorillaMuxForTest(settings)
+	mux := NewGorillaMuxForTest()
 
 	go http.ListenAndServe(":18002", mux)
 
