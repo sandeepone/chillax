@@ -4,10 +4,10 @@ import (
 	"testing"
 )
 
-func TestParseUptime(t *testing.T) {
-	data := ParseUptime()
+func TestParseLoadAverages(t *testing.T) {
+	data := ParseLoadAverages()
 	if len(data) != 3 {
-		t.Errorf("ParseUptime should return 3 load averages value. data: %v", data)
+		t.Errorf("ParseLoadAverages should return 3 load averages value. data: %v", data)
 	}
 	for _, datum := range data {
 		if datum <= 0 {
@@ -17,7 +17,10 @@ func TestParseUptime(t *testing.T) {
 }
 
 func TestNewCpuMetrics(t *testing.T) {
-	c := NewCpuMetrics()
+	c, err := NewCpuMetrics()
+	if err != nil {
+		t.Errorf("Should be able to get CPU metrics. err: %v", err)
+	}
 
 	for _, datum := range c.LoadAverages {
 		if datum <= 0 {
@@ -35,8 +38,12 @@ func TestNewCpuMetrics(t *testing.T) {
 }
 
 func TestCpuMetricsSerialization(t *testing.T) {
-	data := NewCpuMetrics()
-	_, err := data.ToJson()
+	data, err := NewCpuMetrics()
+	if err != nil {
+		t.Errorf("Should be able to get CPU metrics. err: %v", err)
+	}
+
+	_, err = data.ToJson()
 	if err != nil {
 		t.Errorf("Serializing to JSON should not break. err: %v", err)
 	}

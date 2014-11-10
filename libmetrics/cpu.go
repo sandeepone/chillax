@@ -3,6 +3,7 @@ package libmetrics
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"github.com/BurntSushi/toml"
 	"os/exec"
 	"runtime"
@@ -10,13 +11,17 @@ import (
 	"strings"
 )
 
-func ParseUptime() []float64 {
+func ParseLoadAverages() []float64 {
 	out, _ := exec.Command("uptime").Output()
 
 	chunks := strings.Split(string(out[:]), ",")
 	loadAvgs := chunks[len(chunks)-1]
 	loadAvgChunks := strings.Split(loadAvgs, ":")
 	loadAvgValStr := strings.Fields(loadAvgChunks[len(loadAvgChunks)-1])
+
+	if len(loadAvgValStr) != 3 {
+		return nil
+	}
 
 	loadAvg1, _ := strconv.ParseFloat(loadAvgValStr[0], 64)
 	loadAvg2, _ := strconv.ParseFloat(loadAvgValStr[1], 64)
@@ -25,12 +30,17 @@ func ParseUptime() []float64 {
 	return []float64{loadAvg1, loadAvg2, loadAvg3}
 }
 
-func NewCpuMetrics() *CpuMetrics {
+func NewCpuMetrics() (*CpuMetrics, error) {
 	c := &CpuMetrics{}
-	c.LoadAverages = ParseUptime()
+	c.LoadAverages = ParseLoadAverages()
 	c.NumCpu = runtime.NumCPU()
 	c.LoadAveragesPerCpu = c.GetLoadAveragesPerCpu()
-	return c
+
+	if c.LoadAverages == nil {
+		return nil, errors.New("Unable to get load averages data.")
+	}
+
+	return c, nil
 }
 
 type CpuMetrics struct {

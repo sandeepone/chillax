@@ -11,7 +11,11 @@ import (
 
 func SaveCpu(storage chillax_storage.Storer, host string) (*libmetrics.CpuMetrics, error) {
 	dataPath := fmt.Sprintf("/hosts/%v/metrics/cpu", host)
-	cpu := libmetrics.NewCpuMetrics()
+	cpu, err := libmetrics.NewCpuMetrics()
+	if err != nil {
+		return nil, err
+	}
+
 	cpuToml, err := cpu.ToToml()
 
 	if err != nil {
@@ -41,7 +45,10 @@ func LoadCpu(storage chillax_storage.Storer, host string) (*libmetrics.CpuMetric
 		return nil, err
 	}
 
-	cpu := libmetrics.NewCpuMetrics()
+	cpu, err := libmetrics.NewCpuMetrics()
+	if err != nil {
+		return nil, err
+	}
 
 	_, err = toml.Decode(string(cpuTomlBytes), cpu)
 	if err != nil {
