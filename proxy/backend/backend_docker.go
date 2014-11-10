@@ -1,14 +1,10 @@
 package backend
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"github.com/chillaxio/chillax/libstring"
 	chillax_portkeeper "github.com/chillaxio/chillax/portkeeper"
 	dockerclient "github.com/fsouza/go-dockerclient"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -86,7 +82,6 @@ func (pb *ProxyBackend) CreateDockerContainerOptions(publiclyAvailablePort int) 
 
 func (pb *ProxyBackend) StartDockerContainerOptions(containerPorts []string) *dockerclient.HostConfig {
 	config := &dockerclient.HostConfig{}
-	// config.ContainerIDFile = "/etc/cidfile"
 	config.PortBindings = make(map[dockerclient.Port][]dockerclient.PortBinding)
 
 	for _, ports := range containerPorts {
@@ -253,18 +248,26 @@ func (pb *ProxyBackend) StartDockerContainer(containerConfig ProxyBackendDockerC
 	return err
 }
 
-func (pb *ProxyBackend) StopAndRemoveDockerContainers() error {
+func (pb *ProxyBackend) StopAndRemoveDockerContainers() []error {
+	errors := make([]error, 0)
+
 	for _, containerConfig := range pb.Docker.Containers {
 		client, err := pb.NewDockerClient(containerConfig.Host)
 		if err != nil {
-			return err
+			errors = append(errors, err)
 		}
 
-		client.StopContainer(containerConfig.Id, DOCKER_TIMEOUT)
+		err = client.StopContainer(containerConfig.Id, DOCKER_TIMEOUT)
+		if err != nil {
+			errors = append(errors, err)
+		}
 
-		client.RemoveContainer(dockerclient.RemoveContainerOptions{ID: containerConfig.Id})
+		err = client.RemoveContainer(dockerclient.RemoveContainerOptions{ID: containerConfig.Id})
+		if err != nil {
+			errors = append(errors, err)
+		}
 	}
-	return nil
+	return errors
 }
 
 func (pb *ProxyBackend) StopAndRemoveDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {

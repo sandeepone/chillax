@@ -103,10 +103,12 @@ func (s *Server) NewLogrusLogger() *logrus.Logger {
 
 // NewGorillaMux creates a multiplexer will all the correct endpoints as well as admin pages.
 func (s *Server) NewGorillaMux() *gorilla_mux.Router {
-	muxFactory := chillax_web_multiplexer.NewMuxFactory(s.Settings.ProxyHandlerTomls)
+	muxFactory := chillax_web_multiplexer.NewMuxFactory(s.Storage, s.Settings.ProxyHandlerTomls)
 
-	muxFactory.CreateProxyBackends()
-	muxFactory.StartProxyBackends()
+	muxFactory.ReloadAndRunProxyHandlers()
+
+	// muxFactory.CreateProxyBackends()
+	// muxFactory.StartProxyBackends()
 	mux := muxFactory.GorillaMuxWithProxyBackends()
 
 	// API Handlers
@@ -197,7 +199,7 @@ func (s *Server) RunAllInProgressPipelinesAsync() {
 
 // CheckProxiesAsync hits every proxy endpoints.
 func (s *Server) CheckProxiesAsync() {
-	muxFactory := chillax_web_multiplexer.NewMuxFactory(s.Settings.ProxyHandlerTomls)
+	muxFactory := chillax_web_multiplexer.NewMuxFactory(s.Storage, s.Settings.ProxyHandlerTomls)
 
 	proxyUris := make([]string, len(muxFactory.ProxyHandlers))
 	for i, proxyHandler := range muxFactory.ProxyHandlers {

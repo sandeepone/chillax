@@ -88,6 +88,36 @@ func (ph *ProxyHandler) StopBackends() []error {
 	return errors
 }
 
+func (ph *ProxyHandler) RecreateAndStartBackends() []error {
+	var errors []error
+
+	if ph.Backend.IsDocker() {
+		// TODO(didip): Should not stop and remove old containers first for rolling deploy.
+		errors = ph.Backend.StopAndRemoveDockerContainers()
+		if len(errors) > 0 {
+			return errors
+		}
+
+		err := ph.Backend.CreateDockerContainers()
+		if err != nil {
+			return append(errors, err)
+		}
+
+		errors = ph.Backend.StartDockerContainers()
+
+	} else {
+		err := ph.CreateBackends()
+		if err != nil {
+			errors = append(errors, err)
+			return errors
+		}
+
+		errors = ph.StartBackends()
+	}
+
+	return errors
+}
+
 // RealIP extracts actual client IP address.
 func (ph *ProxyHandler) RealIP(r *http.Request) string {
 	host, _, _ := net.SplitHostPort(r.RemoteAddr)
