@@ -2,6 +2,7 @@ package templates
 
 import (
 	"bytes"
+	"os"
 	"testing"
 )
 
@@ -19,6 +20,8 @@ type Person struct {
 }
 
 func TestTemplateSrc(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	gt := &GoTemplateTestStruct{}
 	gt.Name = "GoTemplateTestStruct"
 
@@ -28,6 +31,8 @@ func TestTemplateSrc(t *testing.T) {
 }
 
 func TestTemplateExecute(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	gt := &GoTemplateTestStruct{}
 	gt.Name = "GoTemplateTestStruct"
 	gt.Src = gt.String()

@@ -16,6 +16,8 @@ func NewStageForTest() *Stage {
 }
 
 func TestNewStage(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	stage := NewStageForTest()
 
 	if stage.Method != "POST" {

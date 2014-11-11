@@ -50,6 +50,8 @@ func NewGorillaMuxForTest() *gorilla_mux.Router {
 
 func TestApiProxies(t *testing.T) {
 	// ---- Setup ----
+	os.Setenv("CHILLAX_ENV", "test")
+
 	mux := NewGorillaMuxForTest()
 
 	go http.ListenAndServe(":18000", mux)
@@ -89,6 +91,8 @@ func TestApiProxies(t *testing.T) {
 
 func TestApiPipelinesAndRun(t *testing.T) {
 	// ---- Setup ----
+	os.Setenv("CHILLAX_ENV", "test")
+
 	mux := NewGorillaMuxForTest()
 
 	go http.ListenAndServe(":18001", mux)
@@ -160,6 +164,8 @@ func TestApiPipelinesAndRun(t *testing.T) {
 
 func TestApiPipelinesRun(t *testing.T) {
 	// ---- Setup ----
+	os.Setenv("CHILLAX_ENV", "test")
+
 	mux := NewGorillaMuxForTest()
 
 	go http.ListenAndServe(":18002", mux)

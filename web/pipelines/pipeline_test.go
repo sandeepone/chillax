@@ -17,6 +17,8 @@ func NewPipelineForTest() *Pipeline {
 }
 
 func TestNewPipeline(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	pipeline := NewPipelineForTest()
 
 	if pipeline.Method != "POST" {
@@ -73,6 +75,8 @@ func TestNewPipeline(t *testing.T) {
 }
 
 func TestPipelineSave(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	pipeline := NewPipelineForTest()
 	err := pipeline.Save()
 
@@ -82,6 +86,8 @@ func TestPipelineSave(t *testing.T) {
 }
 
 func TestNestingStages(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	pipeline := NewPipelineForTest()
 
 	stage := pipeline.Stages[1]
@@ -98,6 +104,8 @@ func TestNestingStages(t *testing.T) {
 }
 
 func TestEmptyInProgressPipelines(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	pipelines, err := AllInProgressPipelines()
 
 	if err != nil && !strings.Contains(err.Error(), "no such file or directory") {

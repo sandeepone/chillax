@@ -1,10 +1,13 @@
 package server
 
 import (
+	"os"
 	"testing"
 )
 
 func TestNewServerWithoutConfigPath(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	server, err := NewServer()
 
 	if err != nil {

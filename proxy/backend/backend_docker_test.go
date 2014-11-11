@@ -17,6 +17,8 @@ func NewDockerProxyBackendForTest() *ProxyBackend {
 }
 
 func TestSerializeDockerBackendFromToml(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	backend := NewDockerProxyBackendForTest()
 
 	_, err := backend.Serialize()
@@ -27,6 +29,8 @@ func TestSerializeDockerBackendFromToml(t *testing.T) {
 }
 
 func TestSaveDockerBackend(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	backend := NewDockerProxyBackendForTest()
 
 	err := backend.Save()
@@ -37,6 +41,8 @@ func TestSaveDockerBackend(t *testing.T) {
 }
 
 func TestIsDocker(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	backend := NewDockerProxyBackendForTest()
 
 	if !backend.IsDocker() {
@@ -54,6 +60,8 @@ func TestIsDocker(t *testing.T) {
 }
 
 func TestCreateDockerContainerOptions(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	backend := NewDockerProxyBackendForTest()
 
 	publiclyAvailablePort := 65536
@@ -79,6 +87,8 @@ func TestCreateDockerContainers(t *testing.T) {
 }
 
 func TestDockerContainerMapPorts(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	backend := NewDockerProxyBackendForTest()
 
 	errors := backend.CreateDockerContainers()
@@ -103,6 +113,8 @@ func TestDockerContainerMapPorts(t *testing.T) {
 }
 
 func TestStartStopRestartAndRemoveOneDockerContainer(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	backend := NewDockerProxyBackendForTest()
 
 	errors := backend.CreateDockerContainers()
@@ -137,6 +149,8 @@ func TestStartStopRestartAndRemoveOneDockerContainer(t *testing.T) {
 }
 
 func TestStartMultipleDockerContainers(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	backend := NewDockerProxyBackendForTest()
 
 	backend.CreateDockerContainers()
@@ -169,6 +183,8 @@ func TestStartMultipleDockerContainers(t *testing.T) {
 }
 
 func TestInspectAndRestartDockerContainer(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	backend := NewDockerProxyBackendForTest()
 
 	errors := backend.CreateDockerContainers()
@@ -198,6 +214,8 @@ func TestInspectAndRestartDockerContainer(t *testing.T) {
 }
 
 func TestWatchDockerContainer(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	backend := NewDockerProxyBackendForTest()
 	backend.Ping = "50ms"
 

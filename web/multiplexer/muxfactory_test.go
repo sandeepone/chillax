@@ -19,6 +19,8 @@ func NewMuxFactoryForTest(t *testing.T) *MuxFactory {
 }
 
 func TestMuxFactoryStartStopBackends(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	mp := NewMuxFactoryForTest(t)
 
 	errors := mp.CreateProxyBackends()

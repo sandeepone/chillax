@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 )
@@ -12,6 +13,8 @@ import (
 // NewPipelineForTest is defined in pipeline_test.go
 
 func TestRunInstanceParentId(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	pipeline := NewPipelineForTest()
 
 	runInstance := pipeline.Run()
@@ -28,6 +31,8 @@ func TestRunInstanceParentId(t *testing.T) {
 }
 
 func TestRunInstanceHasPerformed(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	pipeline := NewPipelineForTest()
 
 	runInstance := pipeline.Run()
@@ -44,6 +49,8 @@ func TestRunInstanceHasPerformed(t *testing.T) {
 }
 
 func TestBadRunShouldRecordErrorOnRunInstances(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	pipeline := NewPipelineForTest()
 
 	runInstance := pipeline.Run()
@@ -60,6 +67,8 @@ func TestBadRunShouldRecordErrorOnRunInstances(t *testing.T) {
 }
 
 func TestGoodNestedRunsShouldRecordResultsOnRunInstances(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	// Setup mock endpoints for stage[0], stage[1], and stage[1[0]]
 	server0Body := `{"pick": "me"}`
 	server0 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

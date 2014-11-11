@@ -1,14 +1,16 @@
 package pingers
 
 import (
+	chillax_storage "github.com/chillaxio/chillax/storage"
+	"os"
 	"strings"
 	"testing"
 	"time"
-
-	chillax_storage "github.com/chillaxio/chillax/storage"
 )
 
 func TestNewPinger(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	pinger := NewPinger("http://localhost:8080/chillax/admin")
 
 	if pinger.Method != "GET" {
@@ -26,6 +28,8 @@ func TestNewPinger(t *testing.T) {
 }
 
 func TestPingerIsUp(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	pinger := NewPinger("http://localhost:8080/chillax/admin")
 
 	isUp, err := pinger.IsUp()
@@ -40,6 +44,8 @@ func TestPingerIsUp(t *testing.T) {
 }
 
 func TestPingerFailCount(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	chillax_storage.NewStorage().Delete("/pingers")
 
 	pinger := NewPinger("http://localhost:8080/chillax/admin")
@@ -52,6 +58,8 @@ func TestPingerFailCount(t *testing.T) {
 }
 
 func TestNewPingerGroup(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	pg := NewPingerGroup([]string{"http://localhost:8080/chillax/admin"})
 
 	if pg.SleepTime != 1*time.Minute {
@@ -63,6 +71,8 @@ func TestNewPingerGroup(t *testing.T) {
 }
 
 func TestPingerGroupSave(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	pg := NewPingerGroup([]string{"http://localhost:8080/chillax/admin"})
 
 	for uri, pinger := range pg.Pingers {

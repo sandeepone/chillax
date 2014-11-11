@@ -16,6 +16,8 @@ func NewProcessProxyBackendForTest() *ProxyBackend {
 }
 
 func TestDeserializeProcessProxyBackendFromToml(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	backend := NewProcessProxyBackendForTest()
 
 	if backend.Command == "" {
@@ -27,6 +29,8 @@ func TestDeserializeProcessProxyBackendFromToml(t *testing.T) {
 }
 
 func TestStartRestartAndStopProcesses(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	backend := NewProcessProxyBackendForTest()
 	backend.CreateProcesses()
 

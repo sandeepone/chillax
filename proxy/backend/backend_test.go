@@ -16,6 +16,8 @@ func NewSerializedDockerProxyBackendForTest() *ProxyBackend {
 }
 
 func TestDeserializeFromToml(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	backend := NewSerializedDockerProxyBackendForTest()
 
 	if backend.Path != "/path/to/scraper" {
@@ -76,6 +78,8 @@ func TestDeserializeFromToml(t *testing.T) {
 }
 
 func TestSaveFromToml(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	backend := NewSerializedDockerProxyBackendForTest()
 
 	backend.storage.Delete("/proxies/")

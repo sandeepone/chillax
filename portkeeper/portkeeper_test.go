@@ -5,6 +5,7 @@ import (
 	"github.com/chillaxio/chillax/libstring"
 	"github.com/chillaxio/chillax/libtime"
 	chillax_storage "github.com/chillaxio/chillax/storage"
+	"os"
 	"os/exec"
 	"strings"
 	"testing"
@@ -25,6 +26,8 @@ func CheckLengthOfUsedPortsForTest(t *testing.T, dockerHost string, expectation 
 }
 
 func TestLsofPort(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	cmd := exec.Command("python", "-m", "SimpleHTTPServer", "33456")
 	cmd.Start()
 
@@ -39,6 +42,8 @@ func TestLsofPort(t *testing.T) {
 }
 
 func TestReservePortShouldNotCareOfHostProtocol(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	dockerUri := "tcp://127.0.0.1:2375"
 	dockerHost := libstring.HostWithoutPort(dockerUri)
 	storage := chillax_storage.NewStorage()
@@ -53,6 +58,8 @@ func TestReservePortShouldNotCareOfHostProtocol(t *testing.T) {
 }
 
 func TestCleanReservedPortsShouldNotCareOfHostProtocol(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	dockerUri := "tcp://127.0.0.1:2375"
 	dockerHost := libstring.HostWithoutPort(dockerUri)
 	storage := chillax_storage.NewStorage()
@@ -69,6 +76,8 @@ func TestCleanReservedPortsShouldNotCareOfHostProtocol(t *testing.T) {
 }
 
 func TestReserveLargestPortWhichIsTheDefault(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	dockerHost := "127.0.0.1"
 	storage := chillax_storage.NewStorage()
 
@@ -94,6 +103,8 @@ func TestReserveLargestPortWhichIsTheDefault(t *testing.T) {
 }
 
 func TestReserveGapPort(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	dockerHost := "127.0.0.1"
 	storage := chillax_storage.NewStorage()
 

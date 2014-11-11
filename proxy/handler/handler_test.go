@@ -21,6 +21,8 @@ func NewProxyHandlerForTest() *ProxyHandler {
 }
 
 func TestBackendHosts(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	handler := NewProxyHandlerForTest()
 	handler.CreateBackends()
 
@@ -44,6 +46,8 @@ func TestBackendHosts(t *testing.T) {
 }
 
 func TestChooseBackendHost(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	handler := NewProxyHandlerForTest()
 	handler.CreateBackends()
 
@@ -55,6 +59,8 @@ func TestChooseBackendHost(t *testing.T) {
 }
 
 func TestProxyHandlerFunction(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	handler := NewProxyHandlerForTest()
 	handler.CreateBackends()
 

@@ -3,6 +3,7 @@ package metricskeeper
 import (
 	"fmt"
 	chillax_storage "github.com/chillaxio/chillax/storage"
+	"os"
 	"testing"
 )
 
@@ -12,6 +13,8 @@ func GetCpuTomlForTest(host string) ([]byte, error) {
 }
 
 func TestSaveAndLoadCpu(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	host := "127.0.0.1"
 	storage := chillax_storage.NewStorage()
 
@@ -43,6 +46,8 @@ func TestSaveAndLoadCpu(t *testing.T) {
 }
 
 func TestLoadCpuFromAllHosts(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
 	host := "127.0.0.1"
 	storage := chillax_storage.NewStorage()
 
