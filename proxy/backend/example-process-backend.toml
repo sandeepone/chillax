@@ -1,4 +1,4 @@
-path = "/proxy/backend"
+path = "/test/process/backend"
 command = "/usr/bin/python -m SimpleHTTPServer $HTTP_PORT"
 numprocs = 2
 delay = "0s"

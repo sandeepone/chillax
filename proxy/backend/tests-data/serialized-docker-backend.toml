@@ -1,4 +1,4 @@
-path = "/path/to/scraper"
+path = "/test/docker/backend"
 delay = "1m"
 ping = "30s"
 numprocs = 2

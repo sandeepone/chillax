@@ -85,6 +85,7 @@ func (pb *ProxyBackend) CreateProcesses() []error {
 		pb.Process.Instances[i] = pb.NewProxyBackendProcessInstanceConfig(host, newPort)
 
 		err := pb.Save()
+
 		if err != nil {
 			errorSlice = append(errorSlice, err)
 		}
@@ -93,7 +94,7 @@ func (pb *ProxyBackend) CreateProcesses() []error {
 }
 
 func (pb *ProxyBackend) StartProcesses() []error {
-	errorSlice := make([]error, pb.Numprocs)
+	errorSlice := make([]error, 0)
 
 	if pb.Process == nil {
 		return errorSlice
@@ -104,7 +105,7 @@ func (pb *ProxyBackend) StartProcesses() []error {
 		os.Setenv(envParts[0], envParts[1])
 	}
 
-	for i, instance := range pb.Process.Instances {
+	for _, instance := range pb.Process.Instances {
 		//
 		// Start process only if instance.Host is local
 		//
@@ -113,7 +114,9 @@ func (pb *ProxyBackend) StartProcesses() []error {
 			if err == nil {
 				err = pb.Save()
 			}
-			errorSlice[i] = err
+			if err != nil {
+				errorSlice = append(errorSlice, err)
+			}
 		}
 	}
 
@@ -121,7 +124,7 @@ func (pb *ProxyBackend) StartProcesses() []error {
 }
 
 func (pb *ProxyBackend) StopProcesses() []error {
-	errorSlice := make([]error, pb.Numprocs)
+	errorSlice := make([]error, 0)
 
 	if pb.Process == nil {
 		return errorSlice
@@ -129,8 +132,8 @@ func (pb *ProxyBackend) StopProcesses() []error {
 
 	errChan := make(chan error, pb.Numprocs)
 
-	for i, instance := range pb.Process.Instances {
-		go func(i int) {
+	for _, instance := range pb.Process.Instances {
+		go func() {
 			if instance.ProcessWrapper == nil {
 				errChan <- errors.New("Process has not been started.")
 			} else {
@@ -139,14 +142,17 @@ func (pb *ProxyBackend) StopProcesses() []error {
 				if err == nil {
 					err = pb.Save()
 				}
-				errChan <- err
+				if err != nil {
+					errChan <- err
+				}
 			}
-		}(i)
+		}()
 	}
 
-	for i := 0; i < len(pb.Process.Instances); i++ {
-		err := <-errChan
-		errorSlice[i] = err
+	for err := range errChan {
+		if err != nil {
+			errorSlice = append(errorSlice, err)
+		}
 	}
 	close(errChan)
 
@@ -154,22 +160,24 @@ func (pb *ProxyBackend) StopProcesses() []error {
 }
 
 func (pb *ProxyBackend) RestartProcesses() []error {
-	errorSlice := make([]error, pb.Numprocs)
+	errorSlice := make([]error, 0)
 
 	if pb.Process == nil {
 		return errorSlice
 	}
 
-	for i, instance := range pb.Process.Instances {
+	for _, instance := range pb.Process.Instances {
 		if instance.ProcessWrapper == nil {
-			errorSlice[i] = errors.New("Process has not been started.")
+			errorSlice = append(errorSlice, errors.New("Process has not been started."))
 		} else {
 			err := instance.ProcessWrapper.RestartAndWatch()
 
 			if err == nil {
 				err = pb.Save()
 			}
-			errorSlice[i] = err
+			if err != nil {
+				errorSlice = append(errorSlice, err)
+			}
 		}
 	}
 

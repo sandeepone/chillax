@@ -20,8 +20,8 @@ func TestDeserializeFromToml(t *testing.T) {
 
 	backend := NewSerializedDockerProxyBackendForTest()
 
-	if backend.Path != "/path/to/scraper" {
-		t.Errorf("backend.Path should be /path/to/scraper. Backend: %s", backend)
+	if backend.Path != "/test/docker/backend" {
+		t.Errorf("backend.Path should be /test/docker/backend. Backend: %s", backend)
 	}
 	if backend.Command != "" {
 		t.Errorf("backend.Command should not exists. Backend: %s", backend)
@@ -82,20 +82,13 @@ func TestSaveFromToml(t *testing.T) {
 
 	backend := NewSerializedDockerProxyBackendForTest()
 
-	backend.storage.Delete("/proxies/")
-
-	proxies, err := backend.storage.List("/proxies")
-	prevProxiesLength := len(proxies)
-
-	err = backend.Save()
+	err := backend.Save()
 	if err != nil {
 		t.Errorf("Unable to save backend. Error: %v", err)
 	}
 
-	proxies, err = backend.storage.List("/proxies")
-	currentProxiesLength := len(proxies)
-
-	if currentProxiesLength <= prevProxiesLength {
-		t.Errorf("proxy definition was not saved correctly. currentProxiesLength: %v", currentProxiesLength)
+	_, err = backend.storage.Get("/proxies/test-docker-backend")
+	if err != nil {
+		t.Errorf("Proxy definition was not saved correctly. Error: %v", err)
 	}
 }
