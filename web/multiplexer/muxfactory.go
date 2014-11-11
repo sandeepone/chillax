@@ -22,6 +22,7 @@ type MuxFactory struct {
 	ProxyHandlers           []*chillax_proxy_handler.ProxyHandler
 }
 
+// NewProxyHandlersGivenToml creates a slice of ProxyHandler stuct given TOML definition.
 func (mf *MuxFactory) NewProxyHandlersGivenToml(proxyHandlerTomls [][]byte) []*chillax_proxy_handler.ProxyHandler {
 	proxyHandlers := make([]*chillax_proxy_handler.ProxyHandler, len(proxyHandlerTomls))
 
@@ -31,10 +32,12 @@ func (mf *MuxFactory) NewProxyHandlersGivenToml(proxyHandlerTomls [][]byte) []*c
 	return proxyHandlers
 }
 
+// LoadProxyHandlersFromStorage loads proxies data from config.
 func (mf *MuxFactory) LoadProxyHandlersFromConfig(proxyHandlerTomls [][]byte) {
 	mf.ProxyHandlersFromConfig = mf.NewProxyHandlersGivenToml(proxyHandlerTomls)
 }
 
+// LoadProxyHandlersFromStorage loads proxies data from storage.
 func (mf *MuxFactory) LoadProxyHandlersFromStorage(storage chillax_storage.Storer) {
 	proxyNames, err := storage.List("/proxies")
 	if err == nil {
