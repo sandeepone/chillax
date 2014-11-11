@@ -101,9 +101,9 @@ func (mf *MuxFactory) CreateProxyBackends() []error {
 	errors := make([]error, 0)
 
 	for _, handler := range mf.ProxyHandlers {
-		err := handler.CreateBackends()
-		if err != nil {
-			errors = append(errors, err)
+		createBackendErrors := handler.CreateBackends()
+		if len(createBackendErrors) > 0 {
+			errors = append(errors, createBackendErrors...)
 		}
 	}
 

@@ -59,9 +59,13 @@ func (pb *ProxyBackend) NewProxyBackendProcessInstanceConfig(host string, httpPo
 	return pbpi
 }
 
-func (pb *ProxyBackend) CreateProcesses() error {
+func (pb *ProxyBackend) CreateProcesses() []error {
+	errorSlice := make([]error, 0)
+
 	if pb.Process == nil {
-		return errors.New("[process] section is missing.")
+		missingProcessSectionErr := errors.New("[process] section is missing.")
+		errorSlice = append(errorSlice, missingProcessSectionErr)
+		return errorSlice
 	}
 
 	numHosts := len(pb.Process.Hosts)
@@ -82,10 +86,10 @@ func (pb *ProxyBackend) CreateProcesses() error {
 
 		err := pb.Save()
 		if err != nil {
-			return err
+			errorSlice = append(errorSlice, err)
 		}
 	}
-	return nil
+	return errorSlice
 }
 
 func (pb *ProxyBackend) StartProcesses() []error {

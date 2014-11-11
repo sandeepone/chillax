@@ -53,15 +53,15 @@ func (ph *ProxyHandler) PingLastCheck(host string) int64 {
 }
 
 // CreateBackends instantiate all backends.
-func (ph *ProxyHandler) CreateBackends() error {
-	var err error
+func (ph *ProxyHandler) CreateBackends() []error {
+	var errors []error
 
 	if ph.Backend.IsDocker() {
-		err = ph.Backend.CreateDockerContainers()
+		errors = ph.Backend.CreateDockerContainers()
 	} else {
-		err = ph.Backend.CreateProcesses()
+		errors = ph.Backend.CreateProcesses()
 	}
-	return err
+	return errors
 }
 
 // StartBackends start all backends.
@@ -98,17 +98,17 @@ func (ph *ProxyHandler) RecreateAndStartBackends() []error {
 			return errors
 		}
 
-		err := ph.Backend.CreateDockerContainers()
-		if err != nil {
-			return append(errors, err)
+		createDockerErrors := ph.Backend.CreateDockerContainers()
+		if len(createDockerErrors) > 0 {
+			return append(errors, createDockerErrors...)
 		}
 
 		errors = ph.Backend.StartDockerContainers()
 
 	} else {
-		err := ph.CreateBackends()
-		if err != nil {
-			errors = append(errors, err)
+		createBackendErrors := ph.CreateBackends()
+		if len(createBackendErrors) > 0 {
+			errors = append(errors, createBackendErrors...)
 			return errors
 		}
 
