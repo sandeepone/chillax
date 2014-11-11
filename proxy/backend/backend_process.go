@@ -127,15 +127,16 @@ func (pb *ProxyBackend) StopProcesses() []error {
 	errorSlice := make([]error, 0)
 
 	if pb.Process == nil {
+		errorSlice = append(errorSlice, errors.New("Process is not defined."))
 		return errorSlice
 	}
 
-	errChan := make(chan error, pb.Numprocs)
+	tempErrorSlice := make([]error, len(pb.Process.Instances))
 
-	for _, instance := range pb.Process.Instances {
-		go func() {
+	for i, instance := range pb.Process.Instances {
+		go func(i int) {
 			if instance.ProcessWrapper == nil {
-				errChan <- errors.New("Process has not been started.")
+				tempErrorSlice[i] = errors.New("Process has not been started.")
 			} else {
 				err := instance.ProcessWrapper.Stop()
 
@@ -143,18 +144,17 @@ func (pb *ProxyBackend) StopProcesses() []error {
 					err = pb.Save()
 				}
 				if err != nil {
-					errChan <- err
+					tempErrorSlice[i] = err
 				}
 			}
-		}()
+		}(i)
 	}
 
-	for err := range errChan {
+	for _, err := range tempErrorSlice {
 		if err != nil {
 			errorSlice = append(errorSlice, err)
 		}
 	}
-	close(errChan)
 
 	return errorSlice
 }

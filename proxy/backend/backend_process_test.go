@@ -59,6 +59,10 @@ func TestStartRestartAndStopProcesses(t *testing.T) {
 		}
 	}
 
+	if len(backend.Process.Instances) != 2 {
+		t.Errorf("Expected to start 2 processes, got: %v", len(backend.Process.Instances))
+	}
+
 	for _, instance := range backend.Process.Instances {
 		if instance.ProcessWrapper == nil {
 			t.Fatalf("Process was not started.")
@@ -77,15 +81,15 @@ func TestStartRestartAndStopProcesses(t *testing.T) {
 	// 	}
 	// }
 
-	// errors = backend.StopProcesses()
+	errors = backend.StopProcesses()
 
-	// if len(errors) > 0 {
-	// 	t.Fatalf("errors slice should be empty. Errors: %v", errors)
-	// }
+	if len(errors) > 0 {
+		t.Fatalf("errors slice should be empty. Errors: %v", errors)
+	}
 
-	// for _, err := range errors {
-	// 	if err != nil {
-	// 		t.Fatalf("Failed to stop process. Error: %v", err)
-	// 	}
-	// }
+	for _, err := range errors {
+		if err != nil {
+			t.Fatalf("Failed to stop process. Error: %v", err)
+		}
+	}
 }
