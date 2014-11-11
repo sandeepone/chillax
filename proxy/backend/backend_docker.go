@@ -130,12 +130,12 @@ func (pb *ProxyBackend) PullDockerImage(dockerHost string) error {
 	)
 }
 
-func (pb *ProxyBackend) CreateDockerContainers() error {
-	var err error
+func (pb *ProxyBackend) CreateDockerContainers() []error {
+	errors := make([]error, 0)
 
 	numDockers := len(pb.Docker.Hosts)
 	if numDockers < 1 {
-		return nil
+		return errors
 	}
 
 	pb.Docker.Containers = make([]ProxyBackendDockerContainerConfig, pb.Numprocs)
@@ -150,24 +150,25 @@ func (pb *ProxyBackend) CreateDockerContainers() error {
 		dockerHost := pb.Docker.Hosts[dockerHostsIndex]
 
 		// Pull docker image first.
-		err = pb.PullDockerImage(dockerHost)
+		err := pb.PullDockerImage(dockerHost)
 		if err != nil {
-			return err
-		}
+			errors = append(errors, err)
+		} else {
+			containerConfig, err := pb.CreateDockerContainer(dockerHost)
+			if err != nil {
+				errors = append(errors, err)
+			} else {
+				pb.Docker.Containers[i] = containerConfig
 
-		containerConfig, err := pb.CreateDockerContainer(dockerHost)
-		if err != nil {
-			return err
-		}
+				err = pb.Save()
+				if err != nil {
+					errors = append(errors, err)
+				}
+			}
 
-		pb.Docker.Containers[i] = containerConfig
-
-		err = pb.Save()
-		if err != nil {
-			return err
 		}
 	}
-	return err
+	return errors
 }
 
 func (pb *ProxyBackend) NewProxyBackendDockerContainerConfig(dockerHost string) ProxyBackendDockerContainerConfig {
@@ -306,18 +307,6 @@ func (pb *ProxyBackend) StopDockerContainer(containerConfig ProxyBackendDockerCo
 	}
 
 	return client.StopContainer(containerConfig.Id, DOCKER_TIMEOUT)
-}
-
-func (pb *ProxyBackend) RestartDockerContainers() error {
-	for _, containerConfig := range pb.Docker.Containers {
-		client, err := pb.NewDockerClient(containerConfig.Host)
-		if err != nil {
-			return err
-		}
-
-		return client.RestartContainer(containerConfig.Id, DOCKER_TIMEOUT)
-	}
-	return nil
 }
 
 func (pb *ProxyBackend) RestartDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {

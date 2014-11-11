@@ -69,10 +69,10 @@ func TestCreateDockerContainerOptions(t *testing.T) {
 
 func TestCreateDockerContainers(t *testing.T) {
 	backend := NewDockerProxyBackendForTest()
-	err := backend.CreateDockerContainers()
+	errors := backend.CreateDockerContainers()
 
-	if err != nil {
-		t.Errorf("Failed to create Docker containers. Error: %v", err)
+	if len(errors) > 0 {
+		t.Errorf("Failed to create Docker containers. Errors: %v", errors)
 	}
 
 	backend.StopAndRemoveDockerContainers()
@@ -81,15 +81,15 @@ func TestCreateDockerContainers(t *testing.T) {
 func TestDockerContainerMapPorts(t *testing.T) {
 	backend := NewDockerProxyBackendForTest()
 
-	err := backend.CreateDockerContainers()
+	errors := backend.CreateDockerContainers()
 
-	if err != nil {
-		t.Errorf("Failed to create Docker containers. Error: %v", err)
+	if len(errors) > 0 {
+		t.Errorf("Failed to create Docker containers. Errors: %v", errors)
 	}
 
 	container1 := backend.Docker.Containers[0]
 
-	err = backend.StartDockerContainer(container1)
+	err := backend.StartDockerContainer(container1)
 
 	if err != nil {
 		t.Errorf("Failed to start Docker container. Error: %v", err)
@@ -105,16 +105,16 @@ func TestDockerContainerMapPorts(t *testing.T) {
 func TestStartStopRestartAndRemoveOneDockerContainer(t *testing.T) {
 	backend := NewDockerProxyBackendForTest()
 
-	err := backend.CreateDockerContainers()
+	errors := backend.CreateDockerContainers()
 
-	if err != nil {
-		t.Errorf("Failed to create Docker containers. Error: %v", err)
+	if len(errors) > 0 {
+		t.Errorf("Failed to create Docker containers. Errors: %v", errors)
 	}
 
 	container1 := backend.Docker.Containers[0]
 	container2 := backend.Docker.Containers[1]
 
-	err = backend.StartDockerContainer(container1)
+	err := backend.StartDockerContainer(container1)
 
 	if err != nil {
 		t.Errorf("Failed to start Docker container. Error: %v", err)
@@ -171,10 +171,10 @@ func TestStartMultipleDockerContainers(t *testing.T) {
 func TestInspectAndRestartDockerContainer(t *testing.T) {
 	backend := NewDockerProxyBackendForTest()
 
-	err := backend.CreateDockerContainers()
+	errors := backend.CreateDockerContainers()
 
-	if err != nil {
-		t.Errorf("Failed to create Docker containers. Error: %v", err)
+	if len(errors) > 0 {
+		t.Errorf("Failed to create Docker containers. Errors: %v", errors)
 	}
 
 	container1 := backend.Docker.Containers[0]
@@ -201,10 +201,10 @@ func TestWatchDockerContainer(t *testing.T) {
 	backend := NewDockerProxyBackendForTest()
 	backend.Ping = "50ms"
 
-	err := backend.CreateDockerContainers()
+	errors := backend.CreateDockerContainers()
 
-	if err != nil {
-		t.Errorf("Failed to create Docker containers. Error: %v", err)
+	if len(errors) > 0 {
+		t.Errorf("Failed to create Docker containers. Errors: %v", errors)
 	}
 
 	container1 := backend.Docker.Containers[0]
