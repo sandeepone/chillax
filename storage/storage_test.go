@@ -39,3 +39,27 @@ func TestRootFileSystemWithTestEnvironment(t *testing.T) {
 		t.Errorf("Root of FileSystem storage should be located at $HOME/chillax-%v", chillaxEnv)
 	}
 }
+
+func TestCreateGetDelete(t *testing.T) {
+	os.Setenv("CHILLAX_ENV", "test")
+
+	storage := NewStorage()
+
+	err := storage.Create("/dostuff", []byte("dostuff"))
+	if err != nil {
+		t.Errorf("Create should not fail. Error: %v", err)
+	}
+
+	data, err := storage.Get("/dostuff")
+	if err != nil {
+		t.Errorf("Get should not fail. Error: %v", err)
+	}
+	if string(data) != "dostuff" {
+		t.Errorf("Get should not fail.")
+	}
+
+	err = storage.Delete("/dostuff")
+	if err != nil {
+		t.Errorf("Delete should not fail. Error: %v", err)
+	}
+}
