@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"fmt"
 	"github.com/chillaxio/chillax/libenv"
 	"io/ioutil"
 	"os"
@@ -13,11 +14,13 @@ import (
 
 func NewStorage() Storer {
 	storageType := libenv.EnvWithDefault("STORAGE_TYPE", "FileSystem")
+	chillaxEnv := libenv.EnvWithDefault("CHILLAX_ENV", "development")
+
 	if storageType == "FileSystem" {
 		currentUser, _ := user.Current()
 
 		store := &FileSystem{}
-		store.Root = currentUser.HomeDir + "/chillax"
+		store.Root = filepath.Join(currentUser.HomeDir, fmt.Sprintf("chillax-%v", chillaxEnv))
 		return store
 	}
 	return nil
