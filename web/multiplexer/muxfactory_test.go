@@ -2,6 +2,7 @@ package multiplexer
 
 import (
 	"github.com/chillaxio/chillax/libtime"
+	chillax_storage "github.com/chillaxio/chillax/storage"
 	chillax_web_settings "github.com/chillaxio/chillax/web/settings"
 	"os"
 	"path/filepath"
@@ -13,7 +14,7 @@ func NewMuxFactoryForTest(t *testing.T) *MuxFactory {
 	os.Setenv("PROXY_HANDLERS_PATH", fullpath)
 
 	settings, _ := chillax_web_settings.NewServerSettings()
-	mp := NewMuxFactory(settings.ProxyHandlerTomls)
+	mp := NewMuxFactory(chillax_storage.NewStorage(), settings.ProxyHandlerTomls)
 
 	return mp
 }
