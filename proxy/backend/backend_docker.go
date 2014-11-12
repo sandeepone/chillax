@@ -107,6 +107,9 @@ func (pb *ProxyBackend) PullDockerImage(dockerHost string) error {
 	}
 
 	apiImages, err := client.ListImages(false)
+	if err != nil {
+		return err
+	}
 
 	for _, apiImage := range apiImages {
 		for _, remoteRepository := range apiImage.RepoTags {
@@ -230,15 +233,6 @@ func (pb *ProxyBackend) StartDockerContainers() []error {
 	return errors
 }
 
-func (pb *ProxyBackend) InspectDockerContainer(containerConfig ProxyBackendDockerContainerConfig) (*dockerclient.Container, error) {
-	client, err := pb.NewDockerClient(containerConfig.Host)
-	if err != nil {
-		return nil, err
-	}
-
-	return client.InspectContainer(containerConfig.Id)
-}
-
 func (pb *ProxyBackend) StartDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
 	client, err := pb.NewDockerClient(containerConfig.Host)
 	if err != nil {
@@ -318,12 +312,27 @@ func (pb *ProxyBackend) RestartDockerContainer(containerConfig ProxyBackendDocke
 	return client.RestartContainer(containerConfig.Id, DOCKER_TIMEOUT)
 }
 
+func (pb *ProxyBackend) InspectDockerContainer(containerConfig ProxyBackendDockerContainerConfig) (*dockerclient.Container, error) {
+	client, err := pb.NewDockerClient(containerConfig.Host)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.InspectContainer(containerConfig.Id)
+}
+
 func (pb *ProxyBackend) InspectAndStartDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
 	jsonData, err := pb.InspectDockerContainer(containerConfig)
 	if err == nil && !jsonData.State.Running {
 		err = pb.StartDockerContainer(containerConfig)
 	}
 	return err
+}
+
+func (pb *ProxyBackend) WatchDockerContainers() {
+	for _, containerConfig := range pb.Docker.Containers {
+		go pb.WatchDockerContainer(containerConfig)
+	}
 }
 
 func (pb *ProxyBackend) WatchDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
