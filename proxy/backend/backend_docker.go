@@ -312,6 +312,8 @@ func (pb *ProxyBackend) RestartDockerContainer(containerConfig ProxyBackendDocke
 	return client.RestartContainer(containerConfig.Id, DOCKER_TIMEOUT)
 }
 
+// InspectDockerContainer hits /containers/{Id}/json remote API based on containerConfig info.
+// See: https://github.com/fsouza/go-dockerclient/blob/master/container.go#L197
 func (pb *ProxyBackend) InspectDockerContainer(containerConfig ProxyBackendDockerContainerConfig) (*dockerclient.Container, error) {
 	client, err := pb.NewDockerClient(containerConfig.Host)
 	if err != nil {
@@ -321,12 +323,21 @@ func (pb *ProxyBackend) InspectDockerContainer(containerConfig ProxyBackendDocke
 	return client.InspectContainer(containerConfig.Id)
 }
 
-func (pb *ProxyBackend) InspectAndStartDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
+func (pb *ProxyBackend) InspectAndStartDockerContainer(containerConfig ProxyBackendDockerContainerConfig) (ProxyBackendDockerContainerConfig, error) {
 	jsonData, err := pb.InspectDockerContainer(containerConfig)
-	if err == nil && !jsonData.State.Running {
+
+	if err != nil && strings.Contains(err.Error(), "No such container") {
+		containerConfig, err = pb.CreateDockerContainer(containerConfig.Host)
+		if err == nil {
+			err = pb.Save()
+		}
+	}
+
+	if err == nil && jsonData != nil && !jsonData.State.Running {
 		err = pb.StartDockerContainer(containerConfig)
 	}
-	return err
+
+	return containerConfig, err
 }
 
 func (pb *ProxyBackend) WatchDockerContainers() {
@@ -344,7 +355,7 @@ func (pb *ProxyBackend) WatchDockerContainer(containerConfig ProxyBackendDockerC
 	inspectErrCounter := 0
 
 	for {
-		err = pb.InspectAndStartDockerContainer(containerConfig)
+		containerConfig, err = pb.InspectAndStartDockerContainer(containerConfig)
 
 		if err != nil {
 			if inspectErrCounter > 10 {

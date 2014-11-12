@@ -200,7 +200,7 @@ func TestInspectAndRestartDockerContainer(t *testing.T) {
 		t.Errorf("Container1 should not be running")
 	}
 
-	err = backend.InspectAndStartDockerContainer(container1)
+	_, err = backend.InspectAndStartDockerContainer(container1)
 	if err != nil {
 		t.Errorf("Failed to inspect and restart Docker container. Error: %v", err)
 	}
