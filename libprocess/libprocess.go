@@ -11,6 +11,14 @@ import (
 	"time"
 )
 
+func CheckProcessByPid(pid int) error {
+	process, err := os.FindProcess(int(pid))
+	if err == nil {
+		err = process.Signal(syscall.Signal(0))
+	}
+	return err
+}
+
 type ProcessWrapper struct {
 	Name           string
 	Command        string
@@ -57,6 +65,14 @@ func (p *ProcessWrapper) IsProcessStarted() bool {
 	return p.cmdStruct.Process != nil
 }
 
+func (p *ProcessWrapper) IsProcessExists() bool {
+	err := CheckProcessByPid(p.Pid)
+	if err != nil && err.Error() == "no such process" {
+		return false
+	}
+	return true
+}
+
 func (p *ProcessWrapper) StartAndWatch() error {
 	err := p.Start()
 	if err != nil {
@@ -77,14 +93,9 @@ func (p *ProcessWrapper) StartAndWatch() error {
 
 // Start process
 func (p *ProcessWrapper) Start() error {
-	err := libtime.SleepString(p.StartDelay)
-	if err != nil {
-		return err
-	}
-
 	p.cmdStruct = p.NewCmd(p.Command)
 
-	err = p.cmdStruct.Start()
+	err := p.cmdStruct.Start()
 	if err != nil {
 		return err
 	}
@@ -94,6 +105,8 @@ func (p *ProcessWrapper) Start() error {
 
 	p.ListenStopSignals()
 
+	err = libtime.SleepString(p.StartDelay)
+
 	return err
 }
 
@@ -102,11 +115,6 @@ func (p *ProcessWrapper) Stop() error {
 	var err error
 
 	if p.cmdStruct != nil && p.cmdStruct.Process != nil {
-		err := libtime.SleepString(p.StopDelay)
-		if err != nil {
-			return err
-		}
-
 		if p.Pid > 0 {
 			err = p.cmdStruct.Process.Kill()
 		}
@@ -114,6 +122,8 @@ func (p *ProcessWrapper) Stop() error {
 		if err == nil {
 			p.Release("stopped")
 		}
+
+		err = libtime.SleepString(p.StopDelay)
 	}
 
 	return err
