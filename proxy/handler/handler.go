@@ -70,6 +70,7 @@ func (ph *ProxyHandler) StartBackends() []error {
 
 	if ph.Backend.IsDocker() {
 		errors = ph.Backend.StartDockerContainers()
+		errors = append(errors, ph.Backend.WatchDockerContainers()...)
 	} else {
 		errors = ph.Backend.StartProcesses()
 	}
