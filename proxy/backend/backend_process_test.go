@@ -35,7 +35,7 @@ func TestStartRestartAndStopProcesses(t *testing.T) {
 
 	errors := backend.CreateProcesses()
 	if len(errors) > 0 {
-		t.Fatalf("CreateProcesses should not return errors. Errors: %v", errors)
+		t.Errorf("CreateProcesses should not return errors. Errors: %v", errors)
 	}
 
 	backendFromStorage, loadErr := LoadProxyBackendByName("test-process-backend")
@@ -50,12 +50,12 @@ func TestStartRestartAndStopProcesses(t *testing.T) {
 	errors = backend.StartProcesses()
 
 	if len(errors) > 0 {
-		t.Fatalf("StartProcesses returns errors. Errors: %v, backend.Process.Instances: %v", errors, backend.Process.Instances)
+		t.Errorf("StartProcesses returns errors. Errors: %v, backend.Process.Instances: %v", errors, backend.Process.Instances)
 	}
 
 	for _, err := range errors {
 		if err != nil {
-			t.Fatalf("Failed to start process. Error: %v", err)
+			t.Errorf("Failed to start process. Error: %v", err)
 		}
 	}
 
@@ -65,31 +65,31 @@ func TestStartRestartAndStopProcesses(t *testing.T) {
 
 	for _, instance := range backend.Process.Instances {
 		if instance.ProcessWrapper == nil {
-			t.Fatalf("Process was not started.")
+			t.Errorf("Process was not started.")
 		}
 	}
 
-	// errors = backend.RestartProcesses()
-
-	// if len(errors) > 0 {
-	// 	t.Fatalf("errors slice should be empty. Errors: %v", errors)
-	// }
-
-	// for _, err := range errors {
-	// 	if err != nil {
-	// 		t.Fatalf("Failed to restart process. Error: %v", err)
-	// 	}
-	// }
-
-	errors = backend.StopProcesses()
+	errors = backend.RestartProcesses()
 
 	if len(errors) > 0 {
-		t.Fatalf("errors slice should be empty. Errors: %v", errors)
+		t.Errorf("errors slice should be empty. Errors: %v", errors)
 	}
 
 	for _, err := range errors {
 		if err != nil {
-			t.Fatalf("Failed to stop process. Error: %v", err)
+			t.Errorf("Failed to restart process. Error: %v", err)
+		}
+	}
+
+	errors = backend.StopProcesses()
+
+	if len(errors) > 0 {
+		t.Errorf("errors slice should be empty. Errors: %v", errors)
+	}
+
+	for _, err := range errors {
+		if err != nil {
+			t.Errorf("Failed to stop process. Error: %v", err)
 		}
 	}
 }

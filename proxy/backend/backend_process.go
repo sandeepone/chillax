@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // Process data structure
@@ -131,29 +132,78 @@ func (pb *ProxyBackend) StopProcesses() []error {
 		return errorSlice
 	}
 
-	tempErrorSlice := make([]error, len(pb.Process.Instances))
+	newProcessInstances := make([]ProxyBackendProcessInstanceConfig, 0)
 
-	for i, instance := range pb.Process.Instances {
-		go func(i int) {
+	for _, instance := range pb.Process.Instances {
+		if instance.ProcessWrapper == nil {
+			errorSlice = append(errorSlice, errors.New("Process has not been started."))
+		} else {
+			err := instance.ProcessWrapper.Stop()
+
+			if err != nil {
+				errorSlice = append(errorSlice, err)
+				newProcessInstances = append(newProcessInstances, instance)
+			}
+		}
+	}
+
+	// Update Process.Instances since we have killed some/all of them.
+	pb.Process.Instances = newProcessInstances
+
+	saveErr := pb.Save()
+	if saveErr != nil {
+		errorSlice = append(errorSlice, saveErr)
+	}
+
+	return errorSlice
+}
+
+// StopProcessesAsync stops all processes at the same time.
+// It has subtle bug where some of the processes do not die fast enough.
+func (pb *ProxyBackend) StopProcessesAsync() []error {
+	errorSlice := make([]error, 0)
+
+	if pb.Process == nil {
+		errorSlice = append(errorSlice, errors.New("Process is not defined."))
+		return errorSlice
+	}
+
+	newProcessInstances := make([]ProxyBackendProcessInstanceConfig, 0)
+
+	var wg sync.WaitGroup
+	var mutex = &sync.Mutex{}
+
+	for _, instance := range pb.Process.Instances {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+
 			if instance.ProcessWrapper == nil {
-				tempErrorSlice[i] = errors.New("Process has not been started.")
+				mutex.Lock()
+				errorSlice = append(errorSlice, errors.New("Process has not been started."))
+				mutex.Unlock()
+
 			} else {
 				err := instance.ProcessWrapper.Stop()
 
-				if err == nil {
-					err = pb.Save()
-				}
 				if err != nil {
-					tempErrorSlice[i] = err
+					mutex.Lock()
+					errorSlice = append(errorSlice, err)
+					newProcessInstances = append(newProcessInstances, instance)
+					mutex.Unlock()
 				}
 			}
-		}(i)
+		}()
 	}
+	wg.Wait()
 
-	for _, err := range tempErrorSlice {
-		if err != nil {
-			errorSlice = append(errorSlice, err)
-		}
+	// Update Process.Instances since we have killed some/all of them.
+	pb.Process.Instances = newProcessInstances
+
+	saveErr := pb.Save()
+	if saveErr != nil {
+		errorSlice = append(errorSlice, saveErr)
 	}
 
 	return errorSlice
