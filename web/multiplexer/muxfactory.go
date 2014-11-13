@@ -54,69 +54,25 @@ func (mf *MuxFactory) LoadProxyHandlersFromStorage(storage chillax_storage.Store
 	}
 }
 
-// ForceFromConfigAndRunProxyHandlers always chooses proxy data from config file before starting proxies.
-func (mf *MuxFactory) ForceFromConfigAndRunProxyHandlers() []error {
-	mf.ProxyHandlers = mf.ProxyHandlersFromConfig
-	errors := mf.CreateProxyBackends()
-	if len(errors) != 0 {
-		return errors
-	}
-
-	errors = mf.StartProxyBackends()
-	if len(errors) != 0 {
-		return errors
-	}
-
-	return nil
-}
-
-func (mf *MuxFactory) ReloadAndRunProxyHandlers() []error {
-	errors := make([]error, 0)
-
+// CreateAndStartBackends create and start new backends as needed per numprocs.
+func (mf *MuxFactory) CreateAndStartBackends() []error {
 	if len(mf.ProxyHandlers) == 0 {
-		fromConfigErrors := mf.ForceFromConfigAndRunProxyHandlers()
-		errors = append(errors, fromConfigErrors...)
-	} else {
-		recreateErrors := mf.RecreateAndStartBackends()
-		errors = append(errors, recreateErrors...)
+		mf.ProxyHandlers = mf.ProxyHandlersFromConfig
 	}
 
-	return errors
-}
-
-func (mf *MuxFactory) RecreateAndStartBackends() []error {
 	errors := make([]error, 0)
 
 	for _, handler := range mf.ProxyHandlers {
-		errorsFromRecreate := handler.RecreateAndStartBackends()
-		if errorsFromRecreate != nil {
-			errors = append(errors, errorsFromRecreate...)
-		}
-	}
-
-	return errors
-}
-
-func (mf *MuxFactory) CreateProxyBackends() []error {
-	errors := make([]error, 0)
-
-	for _, handler := range mf.ProxyHandlers {
-		createBackendErrors := handler.CreateBackends()
-		if len(createBackendErrors) > 0 {
-			errors = append(errors, createBackendErrors...)
-		}
-	}
-
-	return errors
-}
-
-func (mf *MuxFactory) StartProxyBackends() []error {
-	errors := make([]error, 0)
-
-	for _, handler := range mf.ProxyHandlers {
-		errs := handler.StartBackends()
-		if errs != nil {
+		errs := handler.CreateBackends()
+		if len(errs) > 0 {
 			errors = append(errors, errs...)
+		}
+
+		if len(errors) == 0 {
+			errs = handler.StartBackends()
+			if errs != nil {
+				errors = append(errors, errs...)
+			}
 		}
 	}
 

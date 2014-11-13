@@ -105,10 +105,8 @@ func (s *Server) NewLogrusLogger() *logrus.Logger {
 func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 	muxFactory := chillax_web_multiplexer.NewMuxFactory(s.Storage, s.Settings.ProxyHandlerTomls)
 
-	muxFactory.ReloadAndRunProxyHandlers()
+	muxFactory.CreateAndStartBackends()
 
-	// muxFactory.CreateProxyBackends()
-	// muxFactory.StartProxyBackends()
 	mux := muxFactory.GorillaMuxWithProxyBackends()
 
 	// API Handlers

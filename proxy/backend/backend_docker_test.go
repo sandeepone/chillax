@@ -155,7 +155,7 @@ func TestStartMultipleDockerContainers(t *testing.T) {
 
 	backend.CreateDockerContainers()
 
-	errs := backend.StartDockerContainers()
+	errs := backend.InspectAndStartDockerContainers()
 
 	if errs[0] != nil || errs[1] != nil {
 		t.Errorf("Failed to start Docker containers. Errors: %v", errs)
@@ -200,7 +200,7 @@ func TestInspectAndRestartDockerContainer(t *testing.T) {
 		t.Errorf("Container1 should not be running")
 	}
 
-	_, err = backend.InspectAndStartDockerContainer(container1)
+	err = backend.InspectAndStartDockerContainer(container1)
 	if err != nil {
 		t.Errorf("Failed to inspect and restart Docker container. Error: %v", err)
 	}

@@ -62,6 +62,20 @@ func (pb *ProxyBackend) NewDockerClient(dockerUri string) (client *dockerclient.
 	return client, err
 }
 
+func (pb *ProxyBackend) NewProxyBackendDockerContainerConfig(dockerHost string) ProxyBackendDockerContainerConfig {
+	containerConfig := ProxyBackendDockerContainerConfig{}
+
+	containerConfig.Tag = pb.Docker.Tag
+	containerConfig.Env = pb.Env
+	containerConfig.Host = dockerHost
+	containerConfig.Ports = make([]string, len(pb.Docker.Ports))
+	containerConfig.MapPorts = make(map[string]int)
+
+	containerConfig.MapPorts[pb.Docker.HttpPortEnv] = chillax_portkeeper.ReservePort(containerConfig.Host)
+
+	return containerConfig
+}
+
 func (pb *ProxyBackend) CreateDockerContainerOptions(publiclyAvailablePort int) *dockerclient.CreateContainerOptions {
 	containerOpts := &dockerclient.CreateContainerOptions{}
 	containerOpts.Name = fmt.Sprintf("%v-%v", pb.ProxyName(), publiclyAvailablePort)
@@ -141,9 +155,14 @@ func (pb *ProxyBackend) CreateDockerContainers() []error {
 		return errors
 	}
 
-	pb.Docker.Containers = make([]ProxyBackendDockerContainerConfig, pb.Numprocs)
+	numProcsToCreate := pb.Numprocs - pb.UpNumprocs()
+	if numProcsToCreate <= 0 {
+		return errors
+	}
 
-	for i := 0; i < pb.Numprocs; i++ {
+	// pb.Docker.Containers = make([]ProxyBackendDockerContainerConfig, numProcsToCreate)
+
+	for i := 0; i < numProcsToCreate; i++ {
 		dockerHostsIndex := i
 
 		if i >= numDockers {
@@ -156,12 +175,14 @@ func (pb *ProxyBackend) CreateDockerContainers() []error {
 		err := pb.PullDockerImage(dockerHost)
 		if err != nil {
 			errors = append(errors, err)
+
 		} else {
 			containerConfig, err := pb.CreateDockerContainer(dockerHost)
 			if err != nil {
 				errors = append(errors, err)
+
 			} else {
-				pb.Docker.Containers[i] = containerConfig
+				pb.Docker.Containers = append(pb.Docker.Containers, containerConfig)
 
 				err = pb.Save()
 				if err != nil {
@@ -172,20 +193,6 @@ func (pb *ProxyBackend) CreateDockerContainers() []error {
 		}
 	}
 	return errors
-}
-
-func (pb *ProxyBackend) NewProxyBackendDockerContainerConfig(dockerHost string) ProxyBackendDockerContainerConfig {
-	containerConfig := ProxyBackendDockerContainerConfig{}
-
-	containerConfig.Tag = pb.Docker.Tag
-	containerConfig.Env = pb.Env
-	containerConfig.Host = dockerHost
-	containerConfig.Ports = make([]string, len(pb.Docker.Ports))
-	containerConfig.MapPorts = make(map[string]int)
-
-	containerConfig.MapPorts[pb.Docker.HttpPortEnv] = chillax_portkeeper.ReservePort(containerConfig.Host)
-
-	return containerConfig
 }
 
 func (pb *ProxyBackend) CreateDockerContainer(dockerHost string) (ProxyBackendDockerContainerConfig, error) {
@@ -216,13 +223,13 @@ func (pb *ProxyBackend) CreateDockerContainer(dockerHost string) (ProxyBackendDo
 	return containerConfig, err
 }
 
-func (pb *ProxyBackend) StartDockerContainers() []error {
+func (pb *ProxyBackend) InspectAndStartDockerContainers() []error {
 	errChan := make(chan error, len(pb.Docker.Containers))
 	errors := make([]error, len(pb.Docker.Containers))
 
 	for _, containerConfig := range pb.Docker.Containers {
 		go func(containerConfig ProxyBackendDockerContainerConfig) {
-			errChan <- pb.StartDockerContainer(containerConfig)
+			errChan <- pb.InspectAndStartDockerContainer(containerConfig)
 		}(containerConfig)
 	}
 
@@ -241,6 +248,64 @@ func (pb *ProxyBackend) StartDockerContainer(containerConfig ProxyBackendDockerC
 
 	err = client.StartContainer(containerConfig.Id, pb.StartDockerContainerOptions(containerConfig.Ports))
 	return err
+}
+
+func (pb *ProxyBackend) CreateStartAndStopRemoveOldDockerContainers() []error {
+	errors := make([]error, 0)
+
+	originalContainers := pb.Docker.Containers
+	for _, containerConfig := range originalContainers {
+		err := pb.CreateStartAndStopRemoveOldDockerContainer(containerConfig)
+		if err != nil {
+			errors = append(errors, err)
+		}
+	}
+	return errors
+}
+
+func (pb *ProxyBackend) CreateStartAndStopRemoveOldDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
+	newContainerConfig, err := pb.CreateAndStartDockerContainer(containerConfig)
+	if err != nil {
+		return err
+	}
+
+	err = pb.StopAndRemoveDockerContainer(containerConfig)
+	if err != nil {
+		return err
+	}
+
+	newContainerConfigs := make([]ProxyBackendDockerContainerConfig, 0)
+	for _, otherContainerConfig := range pb.Docker.Containers {
+		if otherContainerConfig.Id != containerConfig.Id {
+			newContainerConfigs = append(newContainerConfigs, otherContainerConfig)
+		}
+	}
+	newContainerConfigs = append(newContainerConfigs, newContainerConfig)
+
+	pb.Docker.Containers = newContainerConfigs
+
+	err = pb.Save()
+
+	return err
+}
+
+func (pb *ProxyBackend) CreateAndStartDockerContainer(containerConfig ProxyBackendDockerContainerConfig) (ProxyBackendDockerContainerConfig, error) {
+	newContainerConfig, err := pb.CreateDockerContainer(containerConfig.Host)
+	if err != nil {
+		return containerConfig, err
+	}
+
+	err = pb.StartDockerContainer(containerConfig)
+	if err != nil {
+		return containerConfig, err
+	}
+
+	err = pb.Save()
+	if err != nil {
+		return containerConfig, err
+	}
+
+	return newContainerConfig, nil
 }
 
 func (pb *ProxyBackend) StopAndRemoveDockerContainers() []error {
@@ -286,12 +351,12 @@ func (pb *ProxyBackend) StopAndRemoveDockerContainer(containerConfig ProxyBacken
 }
 
 func (pb *ProxyBackend) StopDockerContainers() []error {
-	var errors []error
+	errors := make([]error, 0)
 
-	for i, containerConfig := range pb.Docker.Containers {
+	for _, containerConfig := range pb.Docker.Containers {
 		err := pb.StopDockerContainer(containerConfig)
 		if err != nil {
-			errors[i] = err
+			errors = append(errors, err)
 		}
 	}
 	return errors
@@ -326,7 +391,7 @@ func (pb *ProxyBackend) InspectDockerContainer(containerConfig ProxyBackendDocke
 	return client.InspectContainer(containerConfig.Id)
 }
 
-func (pb *ProxyBackend) InspectAndStartDockerContainer(containerConfig ProxyBackendDockerContainerConfig) (ProxyBackendDockerContainerConfig, error) {
+func (pb *ProxyBackend) InspectCreateAndStartDockerContainer(containerConfig ProxyBackendDockerContainerConfig) (ProxyBackendDockerContainerConfig, error) {
 	jsonData, err := pb.InspectDockerContainer(containerConfig)
 
 	if err != nil && strings.Contains(err.Error(), "No such container") {
@@ -341,6 +406,16 @@ func (pb *ProxyBackend) InspectAndStartDockerContainer(containerConfig ProxyBack
 	}
 
 	return containerConfig, err
+}
+
+func (pb *ProxyBackend) InspectAndStartDockerContainer(containerConfig ProxyBackendDockerContainerConfig) error {
+	jsonData, err := pb.InspectDockerContainer(containerConfig)
+
+	if err == nil && jsonData != nil && !jsonData.State.Running {
+		err = pb.StartDockerContainer(containerConfig)
+	}
+
+	return err
 }
 
 func (pb *ProxyBackend) WatchDockerContainers() {
@@ -358,7 +433,7 @@ func (pb *ProxyBackend) WatchDockerContainer(containerConfig ProxyBackendDockerC
 	inspectErrCounter := 0
 
 	for {
-		containerConfig, err = pb.InspectAndStartDockerContainer(containerConfig)
+		containerConfig, err = pb.InspectCreateAndStartDockerContainer(containerConfig)
 
 		if err != nil {
 			if inspectErrCounter > 10 {

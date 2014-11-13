@@ -69,8 +69,10 @@ func (ph *ProxyHandler) StartBackends() []error {
 	var errors []error
 
 	if ph.Backend.IsDocker() {
-		errors = ph.Backend.StartDockerContainers()
-		errors = append(errors, ph.Backend.WatchDockerContainers()...)
+		errors = ph.Backend.InspectAndStartDockerContainers()
+		if len(errors) == 0 {
+			ph.Backend.WatchDockerContainers()
+		}
 	} else {
 		errors = ph.Backend.StartProcesses()
 	}
@@ -86,36 +88,6 @@ func (ph *ProxyHandler) StopBackends() []error {
 	} else {
 		errors = ph.Backend.StopProcesses()
 	}
-	return errors
-}
-
-func (ph *ProxyHandler) RecreateAndStartBackends() []error {
-	var errors []error
-
-	if ph.Backend.IsDocker() {
-		// TODO(didip): Should not stop and remove old containers first for rolling deploy.
-		errors = ph.Backend.StopAndRemoveDockerContainers()
-		if len(errors) > 0 {
-			return errors
-		}
-
-		createDockerErrors := ph.Backend.CreateDockerContainers()
-		if len(createDockerErrors) > 0 {
-			return append(errors, createDockerErrors...)
-		}
-
-		errors = ph.Backend.StartDockerContainers()
-
-	} else {
-		createBackendErrors := ph.CreateBackends()
-		if len(createBackendErrors) > 0 {
-			errors = append(errors, createBackendErrors...)
-			return errors
-		}
-
-		errors = ph.StartBackends()
-	}
-
 	return errors
 }
 

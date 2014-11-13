@@ -13,8 +13,10 @@ func NewMuxFactoryForTest(t *testing.T) *MuxFactory {
 	fullpath, _ := filepath.Abs("../../examples/configs/proxy-handlers")
 	os.Setenv("PROXY_HANDLERS_PATH", fullpath)
 
+	storage := chillax_storage.NewStorage()
+
 	settings, _ := chillax_web_settings.NewServerSettings()
-	mp := NewMuxFactory(chillax_storage.NewStorage(), settings.ProxyHandlerTomls)
+	mp := NewMuxFactory(storage, settings.ProxyHandlerTomls)
 
 	return mp
 }
@@ -24,17 +26,10 @@ func TestMuxFactoryStartStopBackends(t *testing.T) {
 
 	mp := NewMuxFactoryForTest(t)
 
-	errors := mp.CreateProxyBackends()
+	errors := mp.CreateAndStartBackends()
 	for _, err := range errors {
 		if err != nil {
-			t.Errorf("Failed to create backends. Error: %v", err)
-		}
-	}
-
-	errors = mp.StartProxyBackends()
-	for _, err := range errors {
-		if err != nil {
-			t.Errorf("Failed to start backends. Error: %v", err)
+			t.Errorf("Failed to create and start backends. Error: %v", err)
 		}
 	}
 
