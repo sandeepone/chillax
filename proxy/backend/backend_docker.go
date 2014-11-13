@@ -247,21 +247,12 @@ func (pb *ProxyBackend) StopAndRemoveDockerContainers() []error {
 	errors := make([]error, 0)
 
 	for _, containerConfig := range pb.Docker.Containers {
-		client, err := pb.NewDockerClient(containerConfig.Host)
-		if err != nil {
-			errors = append(errors, err)
-		}
-
-		err = client.StopContainer(containerConfig.Id, DOCKER_TIMEOUT)
-		if err != nil {
-			errors = append(errors, err)
-		}
-
-		err = client.RemoveContainer(dockerclient.RemoveContainerOptions{ID: containerConfig.Id})
+		err := pb.StopAndRemoveDockerContainer(containerConfig)
 		if err != nil {
 			errors = append(errors, err)
 		}
 	}
+
 	return errors
 }
 
@@ -277,6 +268,20 @@ func (pb *ProxyBackend) StopAndRemoveDockerContainer(containerConfig ProxyBacken
 	}
 
 	err = client.RemoveContainer(dockerclient.RemoveContainerOptions{ID: containerConfig.Id})
+	if err == nil {
+		newContainerConfigs := make([]ProxyBackendDockerContainerConfig, 0)
+
+		for _, otherContainerConfig := range pb.Docker.Containers {
+			if otherContainerConfig.Id != containerConfig.Id {
+				newContainerConfigs = append(newContainerConfigs, otherContainerConfig)
+			}
+		}
+
+		pb.Docker.Containers = newContainerConfigs
+
+		err = pb.Save()
+	}
+
 	return err
 }
 
@@ -284,11 +289,9 @@ func (pb *ProxyBackend) StopDockerContainers() []error {
 	var errors []error
 
 	for i, containerConfig := range pb.Docker.Containers {
-		client, err := pb.NewDockerClient(containerConfig.Host)
+		err := pb.StopDockerContainer(containerConfig)
 		if err != nil {
 			errors[i] = err
-		} else {
-			errors[i] = client.StopContainer(containerConfig.Id, DOCKER_TIMEOUT)
 		}
 	}
 	return errors
