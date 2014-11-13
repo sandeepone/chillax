@@ -39,23 +39,20 @@ func ApiProxiesHandler() func(http.ResponseWriter, *http.Request) {
 		if r.Method == "GET" {
 
 		} else if r.Method == "POST" {
-			requestBodyBytes, err := ioutil.ReadAll(r.Body)
+			proxyBackend, err := saveProxyBackend(w, r)
 			if err != nil {
 				http.Error(w, err.Error(), 500)
 				return
 			}
 
-			proxyBackend, err := chillax_proxy_backend.NewProxyBackend(requestBodyBytes)
+			proxyBackendJsonBytes, err := json.Marshal(proxyBackend)
 			if err != nil {
 				http.Error(w, err.Error(), 500)
 				return
 			}
 
-			err = proxyBackend.Save()
-			if err != nil {
-				http.Error(w, err.Error(), 500)
-				return
-			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(proxyBackendJsonBytes)
 		}
 	}
 }
@@ -133,6 +130,25 @@ func ApiPipelineRunHandler() func(http.ResponseWriter, *http.Request) {
 //
 // Private functions
 //
+func saveProxyBackend(w http.ResponseWriter, r *http.Request) (*chillax_proxy_backend.ProxyBackend, error) {
+	requestBodyBytes, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	proxyBackend, err := chillax_proxy_backend.NewProxyBackendGivenJsonBytes(requestBodyBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	err = proxyBackend.Save()
+	if err != nil {
+		return nil, err
+	}
+
+	return proxyBackend, nil
+}
+
 func savePipeline(w http.ResponseWriter, r *http.Request) (*chillax_web_pipelines.Pipeline, error) {
 	requestBodyBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
