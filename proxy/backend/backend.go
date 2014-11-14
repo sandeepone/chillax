@@ -2,7 +2,6 @@ package backend
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"github.com/BurntSushi/toml"
 	chillax_storage "github.com/chillaxio/chillax/storage"
@@ -21,15 +20,6 @@ func LoadProxyBackendByName(proxyName string) (*ProxyBackend, error) {
 	}
 
 	return NewProxyBackend(definition)
-}
-
-func NewProxyBackendGivenJsonBytes(definition []byte) (*ProxyBackend, error) {
-	backend := &ProxyBackend{}
-	backend.Numprocs = 1
-
-	err := json.Unmarshal(definition, backend)
-
-	return backend, err
 }
 
 func NewProxyBackend(tomlBytes []byte) (*ProxyBackend, error) {
