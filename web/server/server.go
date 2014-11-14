@@ -49,7 +49,7 @@ func NewServer() (*Server, error) {
 	server.Paths["ApiStats"] = server.Paths["ApiPrefix"] + "/stats"
 	server.Paths["ApiStatsCpuJson"] = server.Paths["ApiStats"] + "/cpu.json"
 
-	server.Paths["ApiProxies"] = server.Paths["ApiPrefix"] + "/proxies"
+	server.Paths["ApiProxies"] = server.Paths["ApiPrefix"] + "/proxies.toml"
 	server.Paths["ApiPipelines"] = server.Paths["ApiPrefix"] + "/pipelines"
 	server.Paths["ApiPipelinesRun"] = server.Paths["ApiPrefix"] + "/pipelines/run"
 	server.Paths["ApiPipelineRun"] = server.Paths["ApiPrefix"] + "/pipelines/{Id}/run"
@@ -112,7 +112,7 @@ func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 	// API Handlers
 	mux.HandleFunc(
 		s.Paths["ApiProxies"],
-		chillax_web_handlers.ApiProxiesHandler()).Methods("POST")
+		chillax_web_handlers.ApiProxiesTomlHandler()).Methods("POST")
 
 	mux.HandleFunc(
 		s.Paths["ApiStatsCpuJson"],

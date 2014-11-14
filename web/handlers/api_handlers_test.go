@@ -30,8 +30,8 @@ func NewGorillaMuxForTest() *gorilla_mux.Router {
 	mux := gorilla_mux.NewRouter()
 
 	mux.HandleFunc(
-		"/chillax/api/proxies",
-		ApiProxiesHandler()).Methods("POST")
+		"/chillax/api/proxies.toml",
+		ApiProxiesTomlHandler()).Methods("POST")
 
 	mux.HandleFunc(
 		"/chillax/api/pipelines",
@@ -68,7 +68,7 @@ func TestApiProxies(t *testing.T) {
 	proxies, err := storage.List("/proxies")
 	prevProxiesLength := len(proxies)
 
-	req, err := http.NewRequest("POST", "http://localhost:18000/chillax/api/proxies", bytes.NewBuffer(definition))
+	req, err := http.NewRequest("POST", "http://localhost:18000/chillax/api/proxies.toml", bytes.NewBuffer(definition))
 	if err != nil {
 		t.Errorf("Fail to create POST request. Error: %v", err)
 	}

@@ -34,7 +34,7 @@ func ApiStatsCpuJsonHandler(storage chillax_storage.Storer) func(http.ResponseWr
 	}
 }
 
-func ApiProxiesHandler() func(http.ResponseWriter, *http.Request) {
+func ApiProxiesTomlHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
 
