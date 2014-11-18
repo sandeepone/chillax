@@ -3,14 +3,13 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/carbocation/interpose"
-	gorilla_mux "github.com/gorilla/mux"
-	"github.com/stretchr/graceful"
-
-	"github.com/chillaxio/chillax/metricskeeper"
+	chillax_host "github.com/chillaxio/chillax/host"
+	"github.com/chillaxio/chillax/libtime"
 	"github.com/chillaxio/chillax/portkeeper"
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	chillax_web_handlers "github.com/chillaxio/chillax/web/handlers"
@@ -19,6 +18,8 @@ import (
 	chillax_web_pingers "github.com/chillaxio/chillax/web/pingers"
 	chillax_web_pipelines "github.com/chillaxio/chillax/web/pipelines"
 	chillax_web_settings "github.com/chillaxio/chillax/web/settings"
+	gorilla_mux "github.com/gorilla/mux"
+	"github.com/stretchr/graceful"
 )
 
 // NewServer is the constructor for creating Chillax server.
@@ -245,5 +246,13 @@ func (s *Server) CleanReservedPortsAsync(sleepString string) {
 }
 
 func (s *Server) SaveCpuAsync(sleepString string) {
-	metricskeeper.SaveCpuAsync(s.Storage, sleepString)
+	host, _ := os.Hostname()
+	chost := chillax_host.NewChillaxHost(s.Storage, host)
+
+	go func() {
+		for {
+			chost.SaveCpu()
+			libtime.SleepString(sleepString)
+		}
+	}()
 }

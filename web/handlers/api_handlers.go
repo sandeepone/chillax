@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	chillax_metricskeeper "github.com/chillaxio/chillax/metricskeeper"
+	chillax_host "github.com/chillaxio/chillax/host"
 	chillax_proxy_backend "github.com/chillaxio/chillax/proxy/backend"
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	chillax_web_pipelines "github.com/chillaxio/chillax/web/pipelines"
@@ -17,7 +17,7 @@ import (
 func ApiStatsCpuJsonHandler(storage chillax_storage.Storer) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "GET" {
-			metrics, err := chillax_metricskeeper.LoadCpuFromAllHosts(storage)
+			metrics, err := chillax_host.GetCpuFromAllHosts(storage)
 			if err != nil {
 				http.Error(w, err.Error(), 500)
 				return
