@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	chillax_proxy_backend "github.com/chillaxio/chillax/proxy/backend"
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	gorilla_mux "github.com/gorilla/mux"
 	"io/ioutil"
@@ -43,7 +44,7 @@ func NewGorillaMuxForTest() *gorilla_mux.Router {
 
 	mux.HandleFunc(
 		"/proxies/{name}.json",
-		ApiProxyJsonHandler()).Methods("GET")
+		ApiProxyJsonHandler()).Methods("GET", "DELETE")
 
 	mux.HandleFunc(
 		"/chillax/api/proxy/{name}/restart",
@@ -64,7 +65,7 @@ func NewGorillaMuxForTest() *gorilla_mux.Router {
 	return mux
 }
 
-func TestApiProxies(t *testing.T) {
+func TestCreateGetUpdateAndDeleteProxyFromApi(t *testing.T) {
 	// ---- Setup ----
 	os.Setenv("CHILLAX_ENV", "test")
 
@@ -74,16 +75,9 @@ func TestApiProxies(t *testing.T) {
 
 	definition := NewProxyBackendDefinitionForTest()
 
-	storage := chillax_storage.NewStorage()
-
-	storage.Delete("/proxies/")
-
 	// ---- Setup ----
 
-	// Get existing number of proxies
-	proxies, err := storage.List("/proxies")
-	prevProxiesLength := len(proxies)
-
+	// Create a proxy
 	req, err := http.NewRequest("POST", "http://localhost:18000/chillax/api/proxies.toml", bytes.NewBuffer(definition))
 	if err != nil {
 		t.Errorf("Fail to create POST request. Error: %v", err)
@@ -96,13 +90,43 @@ func TestApiProxies(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	// Get new number of proxies
-	proxies, err = storage.List("/proxies")
-	currentProxiesLength := len(proxies)
-
-	if currentProxiesLength <= prevProxiesLength {
-		t.Errorf("proxy definition was not saved correctly. prevProxiesLength: %v, currentProxiesLength: %v", prevProxiesLength, currentProxiesLength)
+	// Get a proxy
+	resp, err = http.Get("http://localhost:18000/chillax/api/proxies/test-chillax-api-proxies-post.json")
+	if err != nil {
+		t.Errorf("Fail to perform GET request. Error: %v", err)
 	}
+	defer resp.Body.Close()
+
+	// Update a proxy with new definition via PUT
+	backend, _ := chillax_proxy_backend.NewProxyBackend(definition)
+	backend.Numprocs = 5
+	definition, _ = backend.Serialize()
+
+	req, err = http.NewRequest("PUT", "http://localhost:18000/chillax/api/proxies/test-chillax-api-proxies-post.json", bytes.NewBuffer(definition))
+	if err != nil {
+		t.Errorf("Fail to create PUT request. Error: %v", err)
+	}
+
+	client = &http.Client{}
+	resp, err = client.Do(req)
+	if err != nil {
+		t.Errorf("Fail to perform PUT request. Error: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// DELETE a proxy
+	req, err = http.NewRequest("DELETE", "http://localhost:18000/chillax/api/proxies/test-chillax-api-proxies-post.json", nil)
+	if err != nil {
+		t.Errorf("Fail to create DELETE request. Error: %v", err)
+	}
+
+	client = &http.Client{}
+	resp, err = client.Do(req)
+	if err != nil {
+		t.Errorf("Fail to perform DELETE request. Error: %v", err)
+	}
+	defer resp.Body.Close()
+
 }
 
 func TestApiPipelinesAndRun(t *testing.T) {
