@@ -7,6 +7,7 @@ import (
 	chillax_proxy_backend "github.com/chillaxio/chillax/proxy/backend"
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	chillax_web_pipelines "github.com/chillaxio/chillax/web/pipelines"
+	gorilla_mux "github.com/gorilla/mux"
 	"github.com/peterbourgon/mergemap"
 	"io/ioutil"
 	"net/http"
@@ -56,6 +57,87 @@ func ApiProxiesTomlHandler() func(http.ResponseWriter, *http.Request) {
 				http.Error(w, err.Error(), 500)
 				return
 			}
+		}
+	}
+}
+
+func ApiProxiesRestartHandler() func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			// tell chillax_web_handler to restart all endpoints and return error.
+		}
+	}
+}
+
+func ApiProxyTomlHandler() func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := gorilla_mux.Vars(r)
+		proxyName := vars["name"]
+
+		requestBodyBytes, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		proxyBackend, err := chillax_proxy_backend.LoadProxyBackendByName(proxyName)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		if r.Method == "POST" || r.Method == "PUT" {
+			proxyBackend, err = chillax_proxy_backend.UpdateProxyBackend(proxyBackend, requestBodyBytes)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+
+			err = proxyBackend.Save()
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+
+		} else if r.Method == "DELETE" {
+			err = chillax_proxy_backend.DeleteProxyBackendByName(proxyName)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+
+		}
+	}
+}
+
+func ApiProxyJsonHandler() func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := gorilla_mux.Vars(r)
+		proxyName := vars["name"]
+
+		proxyBackend, err := chillax_proxy_backend.LoadProxyBackendByName(proxyName)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
+		if r.Method == "GET" {
+			inJson, err := json.Marshal(proxyBackend)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(inJson)
+		}
+	}
+}
+
+func ApiProxyRestartHandler() func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "POST" {
+			// tell chillax_web_handler to restart 1 endpoint and return error.
 		}
 	}
 }

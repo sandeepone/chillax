@@ -42,24 +42,7 @@ func NewServer() (*Server, error) {
 		},
 	}
 
-	server.Paths = make(map[string]string)
-
-	server.Paths["ApiPrefix"] = "/chillax/api"
-
-	server.Paths["ApiStats"] = server.Paths["ApiPrefix"] + "/stats"
-	server.Paths["ApiStatsCpuJson"] = server.Paths["ApiStats"] + "/cpu.json"
-
-	server.Paths["ApiProxies"] = server.Paths["ApiPrefix"] + "/proxies.toml"
-	server.Paths["ApiPipelines"] = server.Paths["ApiPrefix"] + "/pipelines"
-	server.Paths["ApiPipelinesRun"] = server.Paths["ApiPrefix"] + "/pipelines/run"
-	server.Paths["ApiPipelineRun"] = server.Paths["ApiPrefix"] + "/pipelines/{Id}/run"
-
-	server.Paths["AdminPrefix"] = "/chillax/admin"
-	server.Paths["AdminStats"] = server.Paths["AdminPrefix"] + "/stats"
-	server.Paths["AdminProxies"] = server.Paths["AdminPrefix"] + "/proxies"
-	server.Paths["AdminProxy"] = server.Paths["AdminProxies"] + "/{Name}"
-	server.Paths["AdminPipelines"] = server.Paths["AdminPrefix"] + "/pipelines"
-	server.Paths["AdminPipeline"] = server.Paths["AdminPipelines"] + "/{Id}"
+	server.SetDefaultPaths()
 
 	server.Logger = server.NewLogrusLogger()
 	server.Storage = chillax_storage.NewStorage()
@@ -101,6 +84,35 @@ func (s *Server) NewLogrusLogger() *logrus.Logger {
 	return log
 }
 
+func (s *Server) SetDefaultPaths() {
+	paths := make(map[string]string)
+
+	paths["ApiPrefix"] = "/chillax/api"
+
+	paths["ApiStats"] = paths["ApiPrefix"] + "/stats"
+	paths["ApiStatsCpuJson"] = paths["ApiStats"] + "/cpu.json"
+
+	paths["ApiProxiesToml"] = paths["ApiPrefix"] + "/proxies.toml"
+	paths["ApiProxiesRestart"] = paths["ApiPrefix"] + "/proxies/restart"
+
+	paths["ApiProxyToml"] = paths["ApiPrefix"] + "/proxies/{name}.toml"
+	paths["ApiProxyJson"] = paths["ApiPrefix"] + "/proxies/{name}.json"
+	paths["ApiProxyRestart"] = paths["ApiPrefix"] + "/proxies/{name}/restart"
+
+	paths["ApiPipelines"] = paths["ApiPrefix"] + "/pipelines"
+	paths["ApiPipelinesRun"] = paths["ApiPrefix"] + "/pipelines/run"
+	paths["ApiPipelineRun"] = paths["ApiPrefix"] + "/pipelines/{Id}/run"
+
+	paths["AdminPrefix"] = "/chillax/admin"
+	paths["AdminStats"] = paths["AdminPrefix"] + "/stats"
+	paths["AdminProxies"] = paths["AdminPrefix"] + "/proxies"
+	paths["AdminProxy"] = paths["AdminProxies"] + "/{Name}"
+	paths["AdminPipelines"] = paths["AdminPrefix"] + "/pipelines"
+	paths["AdminPipeline"] = paths["AdminPipelines"] + "/{Id}"
+
+	s.Paths = paths
+}
+
 // NewGorillaMux creates a multiplexer will all the correct endpoints as well as admin pages.
 func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 	muxFactory := chillax_web_multiplexer.NewMuxFactory(s.Storage, s.Settings.ProxyHandlerTomls)
@@ -111,8 +123,24 @@ func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 
 	// API Handlers
 	mux.HandleFunc(
-		s.Paths["ApiProxies"],
+		s.Paths["ApiProxiesToml"],
 		chillax_web_handlers.ApiProxiesTomlHandler()).Methods("POST")
+
+	mux.HandleFunc(
+		s.Paths["ApiProxiesRestart"],
+		chillax_web_handlers.ApiProxiesRestartHandler()).Methods("POST")
+
+	mux.HandleFunc(
+		s.Paths["ApiProxyToml"],
+		chillax_web_handlers.ApiProxyTomlHandler()).Methods("POST", "PUT", "DELETE")
+
+	mux.HandleFunc(
+		s.Paths["ApiProxyJson"],
+		chillax_web_handlers.ApiProxyJsonHandler()).Methods("GET")
+
+	mux.HandleFunc(
+		s.Paths["ApiProxyRestart"],
+		chillax_web_handlers.ApiProxyRestartHandler()).Methods("POST")
 
 	mux.HandleFunc(
 		s.Paths["ApiStatsCpuJson"],
