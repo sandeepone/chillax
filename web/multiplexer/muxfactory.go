@@ -22,36 +22,15 @@ type MuxFactory struct {
 	ProxyHandlers           []*chillax_proxy_handler.ProxyHandler
 }
 
-// NewProxyHandlersGivenToml creates a slice of ProxyHandler stuct given TOML definition.
-func (mf *MuxFactory) NewProxyHandlersGivenToml(proxyHandlerTomls [][]byte) []*chillax_proxy_handler.ProxyHandler {
-	proxyHandlers := make([]*chillax_proxy_handler.ProxyHandler, len(proxyHandlerTomls))
-
-	for i, definition := range proxyHandlerTomls {
-		proxyHandlers[i] = chillax_proxy_handler.NewProxyHandler(definition)
-	}
-	return proxyHandlers
-}
-
-// LoadProxyHandlersFromStorage loads proxies data from config.
+// LoadProxyHandlersFromConfig loads proxies data from config.
 func (mf *MuxFactory) LoadProxyHandlersFromConfig(proxyHandlerTomls [][]byte) {
-	mf.ProxyHandlersFromConfig = mf.NewProxyHandlersGivenToml(proxyHandlerTomls)
+	mf.ProxyHandlersFromConfig = chillax_proxy_handler.NewProxyHandlers(proxyHandlerTomls)
 }
 
 // LoadProxyHandlersFromStorage loads proxies data from storage.
 func (mf *MuxFactory) LoadProxyHandlersFromStorage(storage chillax_storage.Storer) {
-	proxyNames, err := storage.List("/proxies")
-	if err == nil {
-		proxyHandlerTomls := make([][]byte, 0)
-
-		for _, proxyName := range proxyNames {
-			proxyHandlerToml, err := storage.Get("/proxies/" + proxyName)
-			if err == nil {
-				proxyHandlerTomls = append(proxyHandlerTomls, proxyHandlerToml)
-			}
-		}
-
-		mf.ProxyHandlers = mf.NewProxyHandlersGivenToml(proxyHandlerTomls)
-	}
+	proxyHandlers := chillax_proxy_handler.NewProxyHandlersFromStorage(storage)
+	mf.ProxyHandlers = proxyHandlers
 }
 
 // CreateAndStartBackends create and start new backends as needed per numprocs.

@@ -13,18 +13,44 @@ import (
 	"strconv"
 )
 
-// NewProxyHandlers is constructor for all ProxyHandler.
-func NewProxyHandlers() []*ProxyHandler {
-	var handlers []*ProxyHandler
-
-	storage := chillax_storage.NewStorage()
-	allProxies, _ := storage.List("/proxies")
-
-	for index, proxyName := range allProxies {
-		definition, _ := storage.Get("/proxies/" + proxyName)
-		handlers[index] = NewProxyHandler(definition)
+// LoadProxyHandlerByName creates ProxyHandler given proxy backend name.
+func LoadProxyHandlerByName(proxyName string) (*ProxyHandler, error) {
+	backend, err := chillax_proxy_backend.LoadProxyBackendByName(proxyName)
+	if err != nil {
+		return nil, err
 	}
-	return handlers
+
+	handler := &ProxyHandler{}
+	handler.Backend = backend
+
+	return handler, nil
+}
+
+// NewProxyHandlers is constructor for all ProxyHandlers given as TOML.
+func NewProxyHandlers(proxyHandlerTomls [][]byte) []*ProxyHandler {
+	proxyHandlers := make([]*ProxyHandler, len(proxyHandlerTomls))
+
+	for i, definition := range proxyHandlerTomls {
+		proxyHandlers[i] = NewProxyHandler(definition)
+	}
+	return proxyHandlers
+}
+
+// NewProxyHandlersFromStorage loads proxies data from storage.
+func NewProxyHandlersFromStorage(storage chillax_storage.Storer) []*ProxyHandler {
+	proxyNames, err := storage.List("/proxies")
+	proxyHandlers := make([]*ProxyHandler, 0)
+
+	if err == nil {
+		for _, proxyName := range proxyNames {
+			proxyHandlerToml, err := storage.Get("/proxies/" + proxyName)
+			if err == nil {
+				handler := NewProxyHandler(proxyHandlerToml)
+				proxyHandlers = append(proxyHandlers, handler)
+			}
+		}
+	}
+	return proxyHandlers
 }
 
 // NewProxyHandler is constructor for one ProxyHandler.
@@ -87,6 +113,21 @@ func (ph *ProxyHandler) StopBackends() []error {
 		errors = ph.Backend.StopDockerContainers()
 	} else {
 		errors = ph.Backend.StopProcesses()
+	}
+	return errors
+}
+
+// RestartBackends rolling restarts all backends.
+func (ph *ProxyHandler) RestartBackends() []error {
+	var errors []error
+
+	if ph.Backend.IsDocker() {
+		errors = ph.Backend.CreateStartAndStopRemoveOldDockerContainers()
+	} else {
+		errors = ph.Backend.StopProcesses()
+		if len(errors) == 0 {
+			errors = ph.Backend.StartProcesses()
+		}
 	}
 	return errors
 }

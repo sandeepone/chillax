@@ -5,6 +5,7 @@ import (
 	"fmt"
 	chillax_host "github.com/chillaxio/chillax/host"
 	chillax_proxy_backend "github.com/chillaxio/chillax/proxy/backend"
+	chillax_proxy_handler "github.com/chillaxio/chillax/proxy/handler"
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	chillax_web_pipelines "github.com/chillaxio/chillax/web/pipelines"
 	gorilla_mux "github.com/gorilla/mux"
@@ -144,8 +145,21 @@ func ApiProxyJsonHandler() func(http.ResponseWriter, *http.Request) {
 
 func ApiProxyRestartHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := gorilla_mux.Vars(r)
+		proxyName := vars["name"]
+
+		proxyHandler, err := chillax_proxy_handler.LoadProxyHandlerByName(proxyName)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+
 		if r.Method == "POST" {
-			// tell chillax_web_handler to restart 1 endpoint and return error.
+			errors := proxyHandler.RestartBackends()
+			if len(errors) > 0 {
+				http.Error(w, errors[0].Error(), 500)
+				return
+			}
 		}
 	}
 }
