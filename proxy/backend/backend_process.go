@@ -3,9 +3,9 @@ package backend
 import (
 	"errors"
 	"fmt"
+	chillax_host "github.com/chillaxio/chillax/host"
 	"github.com/chillaxio/chillax/libnet"
 	"github.com/chillaxio/chillax/libprocess"
-	chillax_portkeeper "github.com/chillaxio/chillax/portkeeper"
 	"os"
 	"strconv"
 	"strings"
@@ -81,7 +81,8 @@ func (pb *ProxyBackend) CreateProcesses() []error {
 		}
 
 		host := pb.Process.Hosts[hostIndex]
-		newPort := chillax_portkeeper.ReservePort(host)
+		chillaxHost := chillax_host.NewChillaxHost(pb.storage, host)
+		newPort := chillaxHost.ReservePort()
 
 		pb.Process.Instances[i] = pb.NewProxyBackendProcessInstanceConfig(host, newPort)
 

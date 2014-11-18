@@ -10,7 +10,6 @@ import (
 	"github.com/carbocation/interpose"
 	chillax_host "github.com/chillaxio/chillax/host"
 	"github.com/chillaxio/chillax/libtime"
-	"github.com/chillaxio/chillax/portkeeper"
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	chillax_web_handlers "github.com/chillaxio/chillax/web/handlers"
 	chillax_web_middlewares "github.com/chillaxio/chillax/web/middlewares"
@@ -242,7 +241,15 @@ func (s *Server) CheckProxiesAsync() {
 }
 
 func (s *Server) CleanReservedPortsAsync(sleepString string) {
-	portkeeper.CleanReservedPortsAsync(sleepString)
+	host, _ := os.Hostname()
+	chost := chillax_host.NewChillaxHost(s.Storage, host)
+
+	go func() {
+		for {
+			chost.CleanReservedPorts()
+			libtime.SleepString(sleepString)
+		}
+	}()
 }
 
 func (s *Server) SaveCpuAsync(sleepString string) {

@@ -2,6 +2,7 @@ package libprocess
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/chillaxio/chillax/libtime"
 	"os"
 	"os/exec"
@@ -17,6 +18,14 @@ func CheckProcessByPid(pid int) error {
 		err = process.Signal(syscall.Signal(0))
 	}
 	return err
+}
+
+func LsofAll() ([]byte, error) {
+	return exec.Command("lsof", "-i").Output()
+}
+
+func LsofPort(port int) ([]byte, error) {
+	return exec.Command("lsof", "-i", fmt.Sprintf(":%v", port)).Output()
 }
 
 type ProcessWrapper struct {

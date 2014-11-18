@@ -4,8 +4,18 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"github.com/chillaxio/chillax/libmetrics"
+	"github.com/chillaxio/chillax/libnumber"
+	"github.com/chillaxio/chillax/libprocess"
+	"github.com/chillaxio/chillax/libstring"
 	chillax_storage "github.com/chillaxio/chillax/storage"
+	"strconv"
+	"strings"
+	"sync"
 )
+
+const MAX_PORT = 65535
+
+var ModuleMutex = &sync.Mutex{}
 
 func GetAllHosts(storage chillax_storage.Storer) ([]*ChillaxHost, error) {
 	hosts, err := storage.List("/hosts")
@@ -96,4 +106,62 @@ func (chost *ChillaxHost) LoadCpu() (*libmetrics.CpuMetrics, error) {
 	chost.CpuMetrics = cpu
 
 	return cpu, err
+}
+
+func (chost *ChillaxHost) ReservePort() int {
+	host := libstring.HostWithoutPort(chost.Name)
+
+	ModuleMutex.Lock()
+
+	usedPorts, _ := chost.storage.List(fmt.Sprintf("/hosts/%v/used-ports", host))
+
+	var reservedPort int
+
+	if len(usedPorts) == 0 {
+		reservedPort = MAX_PORT
+		chost.storage.Create(fmt.Sprintf("/hosts/%v/used-ports/%v", host, reservedPort), make([]byte, 0))
+
+		ModuleMutex.Unlock()
+		return reservedPort
+	}
+
+	usedIntPorts := make([]int, len(usedPorts))
+	for index, port := range usedPorts {
+		usedIntPorts[index], _ = strconv.Atoi(port)
+	}
+
+	newSmallestPort := usedIntPorts[0] - 1
+	firstGapPort := libnumber.FirstGapIntSlice(usedIntPorts)
+	reservedPort = libnumber.LargestInt([]int{firstGapPort, newSmallestPort})
+
+	chost.storage.Create(fmt.Sprintf("/hosts/%v/used-ports/%v", host, reservedPort), make([]byte, 0))
+
+	ModuleMutex.Unlock()
+
+	return reservedPort
+}
+
+func (chost *ChillaxHost) CleanReservedPorts() error {
+	var err error
+
+	host := libstring.HostWithoutPort(chost.Name)
+
+	usedPorts, err := chost.storage.List(fmt.Sprintf("/hosts/%v/used-ports", host))
+	if err != nil || (len(usedPorts) == 0) {
+		return err
+	}
+
+	lsofOutput, _ := libprocess.LsofAll()
+	lsofOutputString := string(lsofOutput)
+
+	if lsofOutputString != "" {
+		for _, port := range usedPorts {
+			chunk := fmt.Sprintf(":%v ", port)
+
+			if !strings.Contains(lsofOutputString, chunk) {
+				err = chost.storage.Delete(fmt.Sprintf("/hosts/%v/used-ports/%v", host, port))
+			}
+		}
+	}
+	return err
 }

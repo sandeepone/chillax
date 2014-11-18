@@ -2,8 +2,8 @@ package backend
 
 import (
 	"fmt"
+	chillax_host "github.com/chillaxio/chillax/host"
 	"github.com/chillaxio/chillax/libstring"
-	chillax_portkeeper "github.com/chillaxio/chillax/portkeeper"
 	dockerclient "github.com/fsouza/go-dockerclient"
 	"os"
 	"path"
@@ -71,7 +71,7 @@ func (pb *ProxyBackend) NewProxyBackendDockerContainerConfig(dockerHost string) 
 	containerConfig.Ports = make([]string, len(pb.Docker.Ports))
 	containerConfig.MapPorts = make(map[string]int)
 
-	containerConfig.MapPorts[pb.Docker.HttpPortEnv] = chillax_portkeeper.ReservePort(containerConfig.Host)
+	containerConfig.MapPorts[pb.Docker.HttpPortEnv] = chillax_host.NewChillaxHost(pb.storage, containerConfig.Host).ReservePort()
 
 	return containerConfig
 }
