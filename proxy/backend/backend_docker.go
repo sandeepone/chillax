@@ -160,8 +160,6 @@ func (pb *ProxyBackend) CreateDockerContainers() []error {
 		return errors
 	}
 
-	// pb.Docker.Containers = make([]ProxyBackendDockerContainerConfig, numProcsToCreate)
-
 	for i := 0; i < numProcsToCreate; i++ {
 		dockerHostsIndex := i
 
@@ -250,6 +248,7 @@ func (pb *ProxyBackend) StartDockerContainer(containerConfig ProxyBackendDockerC
 	return err
 }
 
+// CreateStartAndStopRemoveOldDockerContainers performs rolling deploy.
 func (pb *ProxyBackend) CreateStartAndStopRemoveOldDockerContainers() []error {
 	errors := make([]error, 0)
 
