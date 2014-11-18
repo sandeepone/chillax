@@ -130,6 +130,14 @@ func ApiProxyJsonHandler() func(http.ResponseWriter, *http.Request) {
 
 			w.Header().Set("Content-Type", "application/json")
 			w.Write(inJson)
+
+		} else if r.Method == "DELETE" {
+			err = chillax_proxy_backend.DeleteProxyBackendByName(proxyName)
+			if err != nil {
+				http.Error(w, err.Error(), 500)
+				return
+			}
+
 		}
 	}
 }
