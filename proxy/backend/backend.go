@@ -22,6 +22,14 @@ func LoadProxyBackendByName(proxyName string) (*ProxyBackend, error) {
 	return NewProxyBackend(definition)
 }
 
+func DeleteProxyBackendByName(proxyName string) error {
+	storage := chillax_storage.NewStorage()
+
+	err := storage.Delete(fmt.Sprintf("/proxies/%v", proxyName))
+
+	return err
+}
+
 func NewProxyBackend(tomlBytes []byte) (*ProxyBackend, error) {
 	backend := &ProxyBackend{}
 	backend.Numprocs = 1
@@ -38,6 +46,20 @@ func NewProxyBackend(tomlBytes []byte) (*ProxyBackend, error) {
 	return backend, err
 }
 
+func UpdateProxyBackend(backend *ProxyBackend, tomlBytes []byte) (*ProxyBackend, error) {
+	_, err := toml.Decode(string(tomlBytes), backend)
+	if err != nil {
+		return nil, err
+	}
+
+	err = backend.Save()
+	if err != nil {
+		return nil, err
+	}
+
+	return backend, err
+}
+
 type ProxyBackend struct {
 	Domain   string
 	Path     string
@@ -46,9 +68,9 @@ type ProxyBackend struct {
 	Delay    string
 	Ping     string
 	Env      []string
-	Process  *ProxyBackendProcessConfig
-	Docker   *ProxyBackendDockerConfig
-	storage  chillax_storage.Storer
+	Process  *ProxyBackendProcessConfig `json:",omitempty"`
+	Docker   *ProxyBackendDockerConfig  `json:",omitempty"`
+	storage  chillax_storage.Storer     `json:"-"`
 }
 
 func (pb *ProxyBackend) ProxyName() string {

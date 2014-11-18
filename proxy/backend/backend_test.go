@@ -77,7 +77,7 @@ func TestDeserializeFromToml(t *testing.T) {
 	}
 }
 
-func TestSaveFromToml(t *testing.T) {
+func TestSaveLoadUpdateAndDeleteByName(t *testing.T) {
 	os.Setenv("CHILLAX_ENV", "test")
 
 	backend := NewSerializedDockerProxyBackendForTest()
@@ -87,8 +87,41 @@ func TestSaveFromToml(t *testing.T) {
 		t.Errorf("Unable to save backend. Error: %v", err)
 	}
 
-	_, err = backend.storage.Get("/proxies/test-docker-backend")
+	// Load backend and check data
+	backendFromStorage, err := LoadProxyBackendByName("test-docker-backend")
 	if err != nil {
-		t.Errorf("Proxy definition was not saved correctly. Error: %v", err)
+		t.Errorf("Unable to load proxy backend by name. Error: %v", err)
+	}
+
+	if backend.Path != backendFromStorage.Path {
+		t.Errorf("Loaded the wrong proxy backend.")
+	}
+
+	// Modify path
+	backend.Numprocs = 10
+	newBackendPayload, err := backend.Serialize()
+	if err != nil {
+		t.Errorf("Failed to generate updated backend definition. Error: %v", err)
+	}
+
+	// update backend
+	_, err = UpdateProxyBackend(backendFromStorage, newBackendPayload)
+	if err != nil {
+		t.Errorf("Failed to update proxy backend. Error: %v", err)
+	}
+
+	// Reload backend again
+	backendFromStorage, err = LoadProxyBackendByName("test-docker-backend")
+	if err != nil {
+		t.Errorf("Unable to load proxy backend by name. Error: %v", err)
+	}
+
+	if backendFromStorage.Numprocs != backend.Numprocs {
+		t.Errorf("Failed to update proxy backend. backendFromStorage.Numprocs: %v", backendFromStorage.Numprocs)
+	}
+
+	err = DeleteProxyBackendByName("test-docker-backend")
+	if err != nil {
+		t.Errorf("Failed to delete proxy backend. Error: %v", err)
 	}
 }
