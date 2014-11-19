@@ -36,7 +36,7 @@ func NewGorillaMuxForTest() *gorilla_mux.Router {
 
 	mux.HandleFunc(
 		"/chillax/api/proxies/restart",
-		ApiProxiesRestartHandler()).Methods("POST")
+		ApiProxiesRestartHandler(chillax_storage.NewStorage())).Methods("POST")
 
 	mux.HandleFunc(
 		"/proxies/{name}.toml",

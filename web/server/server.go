@@ -128,7 +128,7 @@ func (s *Server) NewGorillaMux() *gorilla_mux.Router {
 
 	mux.HandleFunc(
 		s.Paths["ApiProxiesRestart"],
-		chillax_web_handlers.ApiProxiesRestartHandler()).Methods("POST")
+		chillax_web_handlers.ApiProxiesRestartHandler(s.Storage)).Methods("POST")
 
 	mux.HandleFunc(
 		s.Paths["ApiProxyToml"],

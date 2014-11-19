@@ -62,10 +62,18 @@ func ApiProxiesTomlHandler() func(http.ResponseWriter, *http.Request) {
 	}
 }
 
-func ApiProxiesRestartHandler() func(http.ResponseWriter, *http.Request) {
+func ApiProxiesRestartHandler(storage chillax_storage.Storer) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "POST" {
-			// tell chillax_web_handler to restart all endpoints and return error.
+			proxyHandlers := chillax_proxy_handler.NewProxyHandlersFromStorage(storage)
+
+			for _, proxyHandler := range proxyHandlers {
+				errors := proxyHandler.RestartBackends()
+				if len(errors) > 0 {
+					http.Error(w, errors[0].Error(), 500)
+					return
+				}
+			}
 		}
 	}
 }
