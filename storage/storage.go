@@ -1,30 +1,8 @@
 package storage
 
 import (
-	"fmt"
 	"github.com/chillaxio/chillax/libenv"
-	"io/ioutil"
-	"os"
-	"os/user"
-	"path"
-	"path/filepath"
-	"strings"
-	"sync"
 )
-
-func NewStorage() Storer {
-	storageType := libenv.EnvWithDefault("STORAGE_TYPE", "FileSystem")
-	chillaxEnv := libenv.EnvWithDefault("CHILLAX_ENV", "development")
-
-	if storageType == "FileSystem" {
-		currentUser, _ := user.Current()
-
-		store := &FileSystem{}
-		store.Root = filepath.Join(currentUser.HomeDir, fmt.Sprintf("chillax-%v", chillaxEnv))
-		return store
-	}
-	return nil
-}
 
 type Storer interface {
 	GetRoot() string
@@ -32,90 +10,23 @@ type Storer interface {
 	Update(string, []byte) error
 	Get(string) ([]byte, error)
 	List(string) ([]string, error)
-	ListRecursive(string) ([]string, error)
 	Delete(string) error
 }
 
-type FileSystem struct {
-	Root string
-}
+func NewStorage() Storer {
+	storageType := libenv.EnvWithDefault("STORAGE_TYPE", "FileSystem")
+	chillaxEnv := libenv.EnvWithDefault("CHILLAX_ENV", "development")
 
-func (fs *FileSystem) GetRoot() string {
-	return fs.Root
-}
-
-func (fs *FileSystem) CreateOrUpdate(fullpath string, data []byte) error {
-	var err error
-
-	mutex := &sync.Mutex{}
-	fullpath = path.Join(fs.Root, fullpath)
-	basepath := path.Dir(fullpath)
-
-	mutex.Lock()
-
-	if _, err = os.Stat(fullpath); os.IsNotExist(err) {
-		// Create parent directory
-		err = os.MkdirAll(basepath, 0744)
-		if err != nil {
-			mutex.Unlock()
-			return err
-		}
-
-		// Create file
-		fileHandler, err := os.Create(fullpath)
-		if err != nil {
-			mutex.Unlock()
-			return err
-		}
-		defer fileHandler.Close()
+	if storageType == "FileSystem" {
+		return NewFileSystem(chillaxEnv)
 	}
+	if storageType == "S3" {
+		chillaxS3AccessKey := libenv.EnvWithDefault("CHILLAX_S3_ACCESS_KEY", "")
+		chillaxS3SecretKey := libenv.EnvWithDefault("CHILLAX_S3_SECRET_KEY", "")
+		chillaxS3Region := libenv.EnvWithDefault("CHILLAX_S3_REGION", "")
+		chillaxS3Bucket := libenv.EnvWithDefault("CHILLAX_S3_BUCKET", "")
 
-	err = ioutil.WriteFile(fullpath, data, 0744)
-
-	mutex.Unlock()
-
-	return err
-}
-
-func (fs *FileSystem) Create(fullpath string, data []byte) error {
-	return fs.CreateOrUpdate(fullpath, data)
-}
-
-func (fs *FileSystem) Update(fullpath string, data []byte) error {
-	return fs.CreateOrUpdate(fullpath, data)
-}
-
-func (fs *FileSystem) Get(fullpath string) ([]byte, error) {
-	if !strings.HasPrefix(fullpath, fs.Root) {
-		fullpath = path.Join(fs.Root, fullpath)
+		return NewS3(chillaxEnv, chillaxS3AccessKey, chillaxS3SecretKey, chillaxS3Region, chillaxS3Bucket)
 	}
-	return ioutil.ReadFile(fullpath)
-}
-
-func (fs *FileSystem) List(fullpath string) ([]string, error) {
-	if !strings.HasPrefix(fullpath, fs.Root) {
-		fullpath = path.Join(fs.Root, fullpath)
-	}
-	files, err := ioutil.ReadDir(fullpath)
-	names := make([]string, len(files))
-
-	for index, f := range files {
-		names[index] = f.Name()
-	}
-
-	return names, err
-}
-
-func (fs *FileSystem) ListRecursive(pattern string) ([]string, error) {
-	if !strings.HasPrefix(pattern, fs.Root) {
-		pattern = path.Join(fs.Root, pattern)
-	}
-	return filepath.Glob(pattern)
-}
-
-func (fs *FileSystem) Delete(fullpath string) error {
-	if !strings.HasPrefix(fullpath, fs.Root) {
-		fullpath = path.Join(fs.Root, fullpath)
-	}
-	return os.RemoveAll(fullpath)
+	return nil
 }
