@@ -10,7 +10,7 @@ import (
 )
 
 func TestDefaultStorageType(t *testing.T) {
-	storageType := libenv.EnvWithDefault("STORAGE_TYPE", "FileSystem")
+	storageType := libenv.EnvWithDefault("CHILLAX_STORAGE_TYPE", "FileSystem")
 	if storageType != "FileSystem" {
 		t.Error("Default storageType should equal to FileSystem")
 	}
@@ -40,7 +40,7 @@ func TestRootFileSystemWithTestEnvironment(t *testing.T) {
 	}
 }
 
-func TestCreateGetDelete(t *testing.T) {
+func TestFileSystemCreateGetDelete(t *testing.T) {
 	os.Setenv("CHILLAX_ENV", "test")
 
 	storage := NewStorage()
