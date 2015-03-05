@@ -14,5 +14,9 @@ func TestNewStoragesWithDefault(t *testing.T) {
 	if _, err := os.Stat(libstring.ExpandTildeAndEnv("~/chillax/kv-db")); os.IsNotExist(err) {
 		t.Fatal("Default key-value db file should exist.")
 	}
-	storages.KeyValue.Close()
+
+	err = storages.RemoveAll()
+	if err != nil {
+		t.Fatalf("Wiping storage should work. Error: %v", err)
+	}
 }

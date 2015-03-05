@@ -34,12 +34,14 @@ func NewStorages() (*Storages, error) {
 	}
 
 	s := &Storages{}
+	s.DataDir = dataDir
 	s.KeyValue = db
 
 	return s, nil
 }
 
 type Storages struct {
+	DataDir  string
 	KeyValue *bolt.DB
 }
 
@@ -48,4 +50,13 @@ func (s *Storages) CreateKVBucket(name string) error {
 		tx.CreateBucket([]byte(name))
 		return nil
 	})
+}
+
+func (s *Storages) RemoveAll() error {
+	err := s.KeyValue.Close()
+	if err != nil {
+		return err
+	}
+
+	return os.RemoveAll(s.DataDir)
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/boltdb/bolt"
 	chillax_storage "github.com/chillaxio/chillax/storage"
-	"time"
 )
 
 type BaseKV struct {
@@ -14,15 +13,10 @@ type BaseKV struct {
 	storages   *chillax_storage.Storages
 }
 
-func (b *BaseKV) ValidateBeforeSave() error {
-	return nil
-}
-
-func (b *BaseKV) Save() error {
-	err := b.ValidateBeforeSave()
-
-	if b.ID == "" {
-		b.ID = fmt.Sprintf("%v", time.Now().UnixNano())
+func (b *BaseKV) SaveByKey(key, value string, validationFunc func() error) error {
+	err := validationFunc()
+	if err != nil {
+		return err
 	}
 
 	inJson, err := json.Marshal(b)
@@ -36,6 +30,6 @@ func (b *BaseKV) Save() error {
 			return err
 		}
 
-		return bucket.Put([]byte("ID:"+b.ID), inJson)
+		return bucket.Put([]byte(fmt.Sprintf("%v:%v", key, value)), inJson)
 	})
 }

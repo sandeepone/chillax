@@ -10,6 +10,7 @@ func TestNewUser(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
+
 	u := NewUser(storages)
 	if u == nil {
 		t.Error("Creating user should not fail.")
@@ -20,10 +21,17 @@ func TestNewUser(t *testing.T) {
 	if u.bucketName == "" {
 		t.Error("bucketName should not be empty.")
 	}
-	storages.KeyValue.Close()
+	if u.ID == "" {
+		t.Error("User ID should not be empty.")
+	}
+
+	err = storages.RemoveAll()
+	if err != nil {
+		t.Fatalf("Wiping storage should work. Error: %v", err)
+	}
 }
 
-func TestSaveAndGetUser(t *testing.T) {
+func TestValidateBeforeSave(t *testing.T) {
 	storages, err := chillax_storage.NewStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
@@ -31,21 +39,77 @@ func TestSaveAndGetUser(t *testing.T) {
 
 	u := NewUser(storages)
 
-	err = u.Save()
-	if err != nil {
-		t.Errorf("Saving user should work. Error: %v", err)
+	err = u.ValidateBeforeSave()
+	if err == nil {
+		t.Fatalf("Validation should fail because Name or Password is empty. Name: %v, Password: %v", u.Name, u.Password)
 	}
 
-	if u.ID == "" {
-		t.Error("User ID should not be empty.")
+	u.Name = "aaa"
+	u.Password = "aaa"
+
+	err = u.ValidateBeforeSave()
+	if err != nil {
+		t.Fatalf("Validation should pass because Name or Password is not empty. Error: %v", err)
+	}
+}
+
+func TestUserSave(t *testing.T) {
+	storages, err := chillax_storage.NewStorages()
+	if err != nil {
+		t.Fatalf("Creating storages should not fail. Error: %v", err)
+	}
+
+	u := NewUser(storages)
+	err = u.ValidateBeforeSave()
+	if err == nil {
+		t.Fatalf("Validation should fail because Name or Password is empty. Name: %v, Password: %v", u.Name, u.Password)
+	}
+
+	err = u.Save()
+	if err == nil {
+		t.Fatalf("Saving user should not work because Name is empty.")
+	}
+
+	u.Name = "aaa"
+	u.Password = "aaa"
+
+	err = u.Save()
+	if err != nil {
+		t.Fatalf("Saving user should work because Name and Password is not empty.")
+	}
+
+	err = storages.RemoveAll()
+	if err != nil {
+		t.Fatalf("Wiping storage should work. Error: %v", err)
+	}
+}
+
+func TestUserGetById(t *testing.T) {
+	storages, err := chillax_storage.NewStorages()
+	if err != nil {
+		t.Fatalf("Creating storages should not fail. Error: %v", err)
+	}
+
+	u := NewUser(storages)
+	u.Name = "aaa"
+	u.Password = "aaa"
+
+	err = u.Save()
+	if err != nil {
+		t.Fatalf("Saving user should work because Name and Password is not empty.")
 	}
 
 	userFromStorage, err := GetUserById(storages, u.ID)
 	if err != nil {
 		t.Fatalf("Getting user should work. Error: %v", err)
 	}
+
 	if u.ID != userFromStorage.ID {
 		t.Error("Got the wrong user.")
 	}
-	storages.KeyValue.Close()
+
+	err = storages.RemoveAll()
+	if err != nil {
+		t.Fatalf("Wiping storage should work. Error: %v", err)
+	}
 }
