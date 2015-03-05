@@ -157,3 +157,37 @@ func TestGetUserByNameAndPassword(t *testing.T) {
 
 	storages.RemoveAll()
 }
+
+func TestCreateAndDeleteUserWalls(t *testing.T) {
+	storages, err := chillax_storage.NewStorages()
+	if err != nil {
+		t.Fatalf("Creating storages should not fail. Error: %v", err)
+	}
+
+	u, err := NewUser(storages, "didip", "password")
+	if err != nil {
+		t.Errorf("Creating user should not fail. Error: %v", err)
+	}
+
+	err = u.CreateWall("programming")
+	if err != nil {
+		t.Errorf("Creating a wall should not fail. Error: %v", err)
+	}
+
+	_, ok := u.Walls["programming"]
+	if !ok {
+		t.Error("Creating a wall should not fail.")
+	}
+
+	err = u.DeleteWall("programming")
+	if err != nil {
+		t.Errorf("Deleting a wall should not fail. Error: %v", err)
+	}
+
+	err = u.DeleteWall("aaa")
+	if err != nil {
+		t.Errorf("Deleting non-existing wall should not fail. Error: %v", err)
+	}
+
+	storages.RemoveAll()
+}
