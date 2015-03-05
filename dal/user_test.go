@@ -14,4 +14,10 @@ func TestNewUser(t *testing.T) {
 	if u == nil {
 		t.Error("Creating user should not fail.")
 	}
+	if u.storages == nil {
+		t.Error("storages should not be empty.")
+	}
+	if u.bucketName == "" {
+		t.Error("bucketName should not be empty.")
+	}
 }
