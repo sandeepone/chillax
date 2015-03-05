@@ -7,11 +7,12 @@ import (
 )
 
 func TestNewStoragesWithDefault(t *testing.T) {
-	_, err := NewStorages()
+	storages, err := NewStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 	if _, err := os.Stat(libstring.ExpandTildeAndEnv("~/chillax/kv-db")); os.IsNotExist(err) {
 		t.Fatal("Default key-value db file should exist.")
 	}
+	storages.KeyValue.Close()
 }
