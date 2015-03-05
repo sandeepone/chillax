@@ -1,6 +1,8 @@
 ## TODO
 
-* Rest service that saves links, images, videos, or pdf.
+* Each user have N walls.
+
+* Rest service that saves links, images, video-page, blog, or pdf.
 
 * Bookmarklet.
 
