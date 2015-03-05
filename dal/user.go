@@ -40,7 +40,29 @@ func GetUserById(storages *chillax_storage.Storages, id string) (*User, error) {
 			return nil
 		}
 
-		return json.Unmarshal(inJson, &u)
+		return json.Unmarshal(inJson, u)
+	})
+
+	return u, err
+}
+
+func GetUserByNameAndPassword(storages *chillax_storage.Storages, name, password string) (*User, error) {
+	u, err := NewUser(storages, "", "")
+
+	err = storages.KeyValue.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(u.bucketName))
+
+		inJson := bucket.Get([]byte("Name:" + name))
+		if inJson == nil {
+			return nil
+		}
+
+		err := json.Unmarshal(inJson, u)
+		if err != nil {
+			return err
+		}
+
+		return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 	})
 
 	return u, err
@@ -50,6 +72,14 @@ type User struct {
 	BaseKV
 	Name     string
 	Password string
+}
+
+func (u *User) GetBucketName() string {
+	return u.bucketName
+}
+
+func (u *User) GetStorages() *chillax_storage.Storages {
+	return u.storages
 }
 
 func (u *User) HashedPassword(password string) (string, error) {
@@ -71,9 +101,13 @@ func (u *User) ValidateBeforeSave() error {
 }
 
 func (u *User) Save() error {
-	return u.SaveByKey("ID", u.ID, u.ValidateBeforeSave)
+	err := SaveByKey("ID", u.ID, u)
+	if err != nil {
+		return err
+	}
+	return u.SaveByName()
 }
 
 func (u *User) SaveByName() error {
-	return u.SaveByKey("Name", u.Name, u.ValidateBeforeSave)
+	return SaveByKey("Name", u.Name, u)
 }

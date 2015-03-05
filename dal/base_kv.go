@@ -13,19 +13,25 @@ type BaseKV struct {
 	storages   *chillax_storage.Storages
 }
 
-func (b *BaseKV) SaveByKey(key, value string, validationFunc func() error) error {
-	err := validationFunc()
+type IKV interface {
+	ValidateBeforeSave() error
+	GetBucketName() string
+	GetStorages() *chillax_storage.Storages
+}
+
+func SaveByKey(key, value string, kvThing IKV) error {
+	err := kvThing.ValidateBeforeSave()
 	if err != nil {
 		return err
 	}
 
-	inJson, err := json.Marshal(b)
+	inJson, err := json.Marshal(kvThing)
 	if err != nil {
 		return err
 	}
 
-	return b.storages.KeyValue.Update(func(tx *bolt.Tx) error {
-		bucket, err := tx.CreateBucketIfNotExists([]byte(b.bucketName))
+	return kvThing.GetStorages().KeyValue.Update(func(tx *bolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists([]byte(kvThing.GetBucketName()))
 		if err != nil {
 			return err
 		}
