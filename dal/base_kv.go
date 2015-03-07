@@ -39,3 +39,14 @@ func SaveByKey(key, value string, kvThing IKV) error {
 		return bucket.Put([]byte(fmt.Sprintf("%v:%v", key, value)), inJson)
 	})
 }
+
+func DeleteByKey(key, value string, kvThing IKV) error {
+	return kvThing.GetStorages().KeyValue.Update(func(tx *bolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists([]byte(kvThing.GetBucketName()))
+		if err != nil {
+			return err
+		}
+
+		return bucket.Delete([]byte(fmt.Sprintf("%v:%v", key, value)))
+	})
+}

@@ -72,7 +72,7 @@ type User struct {
 	BaseKV
 	Name     string
 	Password string
-	Walls    map[string]bool
+	Walls    map[string]*Wall
 }
 
 func (u *User) GetBucketName() string {
@@ -93,21 +93,51 @@ func (u *User) HashedPassword(password string) (string, error) {
 
 func (u *User) CreateWall(name string) error {
 	if u.Walls == nil {
-		u.Walls = make(map[string]bool)
+		u.Walls = make(map[string]*Wall)
 	}
 
-	u.Walls[name] = true
+	wall, err := NewWall(u.storages, name)
+	if err != nil {
+		return err
+	}
+
+	err = wall.Save()
+	if err != nil {
+		return err
+	}
+
+	u.Walls[wall.ID] = wall
 
 	return u.Save()
 }
 
-func (u *User) DeleteWall(name string) error {
-	if u.Walls == nil {
-		return nil
+func (u *User) GetWallByName(name string) *Wall {
+	for _, wall := range u.Walls {
+		if wall.Name == name {
+			return wall
+		}
 	}
 
-	delete(u.Walls, name)
-	return u.Save()
+	return nil
+}
+
+func (u *User) DeleteWall(name string) error {
+	wall := u.GetWallByName(name)
+	if wall != nil {
+		delete(u.Walls, wall.ID)
+
+		err := u.Save()
+		if err != nil {
+			return err
+		}
+
+		err = wall.Delete()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (u *User) ValidateBeforeSave() error {

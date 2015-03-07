@@ -174,9 +174,9 @@ func TestCreateAndDeleteUserWalls(t *testing.T) {
 		t.Errorf("Creating a wall should not fail. Error: %v", err)
 	}
 
-	_, ok := u.Walls["programming"]
-	if !ok {
-		t.Error("Creating a wall should not fail.")
+	wall := u.GetWallByName("programming")
+	if wall == nil {
+		t.Error("Wall 'programming' should exist.")
 	}
 
 	err = u.DeleteWall("programming")
