@@ -10,14 +10,14 @@ import (
 	"time"
 )
 
-func NewUser(storages *chillax_storage.Storages, name, password string) (*User, error) {
+func NewUser(storages *chillax_storage.Storages, email, password string) (*User, error) {
 	var err error
 
 	u := &User{}
 	u.storages = storages
 	u.bucketName = "users"
 	u.ID = fmt.Sprintf("%v", time.Now().UnixNano())
-	u.Name = name
+	u.Email = email
 
 	if password != "" {
 		u.Password, err = u.HashedPassword(password)
@@ -46,13 +46,13 @@ func GetUserById(storages *chillax_storage.Storages, id string) (*User, error) {
 	return u, err
 }
 
-func GetUserByNameAndPassword(storages *chillax_storage.Storages, name, password string) (*User, error) {
+func GetUserByEmailAndPassword(storages *chillax_storage.Storages, email, password string) (*User, error) {
 	u, err := NewUser(storages, "", "")
 
 	err = storages.KeyValue.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(u.bucketName))
 
-		inJson := bucket.Get([]byte("Name:" + name))
+		inJson := bucket.Get([]byte("Email:" + email))
 		if inJson == nil {
 			return nil
 		}
@@ -70,6 +70,7 @@ func GetUserByNameAndPassword(storages *chillax_storage.Storages, name, password
 
 type User struct {
 	BaseKV
+	Email    string
 	Name     string
 	Password string
 	Walls    map[string]*Wall
@@ -141,8 +142,8 @@ func (u *User) DeleteWall(name string) error {
 }
 
 func (u *User) ValidateBeforeSave() error {
-	if u.Name == "" {
-		return errors.New("Name should not be empty.")
+	if u.Email == "" {
+		return errors.New("Email should not be empty.")
 	}
 	if u.Password == "" {
 		return errors.New("Password should not be empty.")
@@ -155,9 +156,9 @@ func (u *User) Save() error {
 	if err != nil {
 		return err
 	}
-	return u.SaveByName()
+	return u.SaveByEmail()
 }
 
-func (u *User) SaveByName() error {
-	return SaveByKey("Name", u.Name, u)
+func (u *User) SaveByEmail() error {
+	return SaveByKey("Email", u.Email, u)
 }

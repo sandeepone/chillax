@@ -11,7 +11,7 @@ func TestNewUser(t *testing.T) {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 
-	u, err := NewUser(storages, "didip", "password")
+	u, err := NewUser(storages, "didip@example.com", "password")
 	if err != nil {
 		t.Errorf("Creating user should not fail. Error: %v", err)
 	}
@@ -40,7 +40,7 @@ func TestHashedPassword(t *testing.T) {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 
-	u, err := NewUser(storages, "didip", "password")
+	u, err := NewUser(storages, "didip@example.com", "password")
 	if err != nil {
 		t.Errorf("Creating user should not fail. Error: %v", err)
 	}
@@ -58,14 +58,14 @@ func TestValidateBeforeSave(t *testing.T) {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 
-	u, err := NewUser(storages, "didip", "password")
+	u, err := NewUser(storages, "didip@example.com", "password")
 	if err != nil {
 		t.Errorf("Creating user should not fail. Error: %v", err)
 	}
 
 	err = u.ValidateBeforeSave()
 	if err != nil {
-		t.Fatalf("Validation should pass because Name or Password is not empty. Error: %v", err)
+		t.Fatalf("Validation should pass because Email or Password is not empty. Error: %v", err)
 	}
 
 	storages.RemoveAll()
@@ -77,14 +77,14 @@ func TestUserSave(t *testing.T) {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 
-	u, err := NewUser(storages, "didip", "password")
+	u, err := NewUser(storages, "didip@example.com", "password")
 	if err != nil {
 		t.Errorf("Creating user should not fail. Error: %v", err)
 	}
 
 	err = u.Save()
 	if err != nil {
-		t.Fatalf("Saving user should work because Name and Password is not empty.")
+		t.Fatalf("Saving user should work because Email and Password is not empty.")
 	}
 
 	storages.RemoveAll()
@@ -96,7 +96,7 @@ func TestGetUserById(t *testing.T) {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 
-	u, err := NewUser(storages, "didip", "password")
+	u, err := NewUser(storages, "didip@example.com", "password")
 	if err != nil {
 		t.Errorf("Creating user should not fail. Error: %v", err)
 	}
@@ -114,7 +114,7 @@ func TestGetUserById(t *testing.T) {
 	if u.ID != userFromStorage.ID {
 		t.Error("Got the wrong user.")
 	}
-	if u.Name != userFromStorage.Name {
+	if u.Email != userFromStorage.Email {
 		t.Error("Got the wrong user.")
 	}
 	if u.Password != userFromStorage.Password {
@@ -124,13 +124,13 @@ func TestGetUserById(t *testing.T) {
 	storages.RemoveAll()
 }
 
-func TestGetUserByNameAndPassword(t *testing.T) {
+func TestGetUserByEmailAndPassword(t *testing.T) {
 	storages, err := chillax_storage.NewStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 
-	u, err := NewUser(storages, "didip", "password")
+	u, err := NewUser(storages, "didip@example.com", "password")
 	if err != nil {
 		t.Errorf("Creating user should not fail. Error: %v", err)
 	}
@@ -140,19 +140,19 @@ func TestGetUserByNameAndPassword(t *testing.T) {
 		t.Fatalf("Saving user should work because Name and Password is not empty.")
 	}
 
-	userFromStorage, err := GetUserByNameAndPassword(storages, "didip", "password")
+	userFromStorage, err := GetUserByEmailAndPassword(storages, "didip@example.com", "password")
 	if err != nil {
 		t.Fatalf("Getting user should work. Error: %v", err)
 	}
 
 	if u.ID != userFromStorage.ID {
-		t.Errorf("Got the wrong user. userFromStorage.ID: %v, userFromStorage.Name: %v, userFromStorage.Password: %v", userFromStorage.ID, userFromStorage.Name, userFromStorage.Password)
+		t.Errorf("Got the wrong user. userFromStorage.ID: %v, userFromStorage.Email: %v, userFromStorage.Password: %v", userFromStorage.ID, userFromStorage.Email, userFromStorage.Password)
 	}
-	if u.Name != userFromStorage.Name {
-		t.Errorf("Got the wrong user. userFromStorage.ID: %v, userFromStorage.Name: %v, userFromStorage.Password: %v", userFromStorage.ID, userFromStorage.Name, userFromStorage.Password)
+	if u.Email != userFromStorage.Email {
+		t.Errorf("Got the wrong user. userFromStorage.ID: %v, userFromStorage.Email: %v, userFromStorage.Password: %v", userFromStorage.ID, userFromStorage.Email, userFromStorage.Password)
 	}
 	if u.Password != userFromStorage.Password {
-		t.Errorf("Got the wrong user. userFromStorage.ID: %v, userFromStorage.Name: %v, userFromStorage.Password: %v", userFromStorage.ID, userFromStorage.Name, userFromStorage.Password)
+		t.Errorf("Got the wrong user. userFromStorage.ID: %v, userFromStorage.Email: %v, userFromStorage.Password: %v", userFromStorage.ID, userFromStorage.Email, userFromStorage.Password)
 	}
 
 	storages.RemoveAll()
@@ -164,7 +164,7 @@ func TestCreateAndDeleteUserWalls(t *testing.T) {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 
-	u, err := NewUser(storages, "didip", "password")
+	u, err := NewUser(storages, "didip@example.com", "password")
 	if err != nil {
 		t.Errorf("Creating user should not fail. Error: %v", err)
 	}
