@@ -36,13 +36,15 @@ func NewStorages() (*Storages, error) {
 	s := &Storages{}
 	s.DataDir = dataDir
 	s.KeyValue = db
+	s.FileSystems = make(map[string]*FileSystem)
 
 	return s, nil
 }
 
 type Storages struct {
-	DataDir  string
-	KeyValue *bolt.DB
+	DataDir     string
+	KeyValue    *bolt.DB
+	FileSystems map[string]*FileSystem
 }
 
 func (s *Storages) CreateKVBucket(name string) error {
@@ -50,6 +52,11 @@ func (s *Storages) CreateKVBucket(name string) error {
 		tx.CreateBucket([]byte(name))
 		return nil
 	})
+}
+
+func (s *Storages) CreateFileSystem(userId string) error {
+	s.FileSystems[userId] = NewFileSystem(userId)
+	return nil
 }
 
 func (s *Storages) RemoveAll() error {
