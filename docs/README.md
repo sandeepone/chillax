@@ -1,5 +1,7 @@
 ## TODO
 
+* How to test http layer logic on login and logout
+
 * things:
     /things/2015/03/20
         /{nanoseconds}
