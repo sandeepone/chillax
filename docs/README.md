@@ -10,6 +10,18 @@
                 /200x300.png
 
 * Rest service that saves links, images, video-page, blog, or pdf.
+    * Create handlers:
+        POST/GET /users/signup
+        POST/GET /users/login
+        GET      /users/logout
+        POST     /things
+        GET      /things/2015/03/12/{id}
+                    /meta.json
+                    /{id}.txt
+                    /resized
+                        /300x400.png
+                        /200x300.png
+
 
 * Bookmarklet.
 
