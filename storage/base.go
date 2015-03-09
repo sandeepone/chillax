@@ -4,6 +4,7 @@ import (
 	"github.com/boltdb/bolt"
 	"github.com/chillaxio/chillax/libenv"
 	"github.com/chillaxio/chillax/libstring"
+	"github.com/gorilla/sessions"
 	"os"
 	"path"
 )
@@ -28,15 +29,21 @@ func NewStorages() (*Storages, error) {
 		return nil, err
 	}
 
-	db, err := bolt.Open(path.Join(dataDir, "kv-db"), 0644, nil)
+	kvdb, err := bolt.Open(path.Join(dataDir, "kv-db"), 0644, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	cookieStore, err := NewCookie(kvdb)
 	if err != nil {
 		return nil, err
 	}
 
 	s := &Storages{}
 	s.DataDir = dataDir
-	s.KeyValue = db
+	s.KeyValue = kvdb
 	s.FileSystems = make(map[string]*FileSystem)
+	s.Cookie = cookieStore
 
 	return s, nil
 }
@@ -45,6 +52,7 @@ type Storages struct {
 	DataDir     string
 	KeyValue    *bolt.DB
 	FileSystems map[string]*FileSystem
+	Cookie      *sessions.CookieStore
 }
 
 func (s *Storages) CreateKVBucket(name string) error {
