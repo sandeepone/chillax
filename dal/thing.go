@@ -85,7 +85,7 @@ func (t *Thing) Save(data []byte) error {
 
 	ext := libfile.GetExtensionByMime(t.Mime)
 
-	err = t.storages.FileSystems[t.UserId].Update(path.Join(t.Path, "content"+ext), data)
+	err = t.storages.FileSystems[t.UserId].Update(path.Join(t.Path, t.ID+ext), data)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (t *Thing) Save(data []byte) error {
 
 func (t *Thing) GetContent() ([]byte, error) {
 	ext := libfile.GetExtensionByMime(t.Mime)
-	return t.storages.FileSystems[t.UserId].Get(path.Join(t.Path, "content"+ext))
+	return t.storages.FileSystems[t.UserId].Get(path.Join(t.Path, t.ID+ext))
 }
 
 func (t *Thing) Delete() error {
