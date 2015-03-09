@@ -48,7 +48,27 @@ func PostApiUsersLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session, _ := storages.Cookie.Get(r, "login-session")
-	session.Values[user.ID] = user
+	session.Values["user"] = user
+	session.Save(r, w)
+
+	userJson, err := json.Marshal(user)
+	if err != nil {
+		libhttp.HandleErrorJson(w, err)
+		return
+	}
+
+	w.Write(userJson)
+}
+
+func GetApiUsersLogout(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	storages := context.Get(r, "storages").(*chillax_storage.Storages)
+
+	session, _ := storages.Cookie.Get(r, "login-session")
+
+	user := session.Values["user"]
+	delete(session.Values, "user")
 	session.Save(r, w)
 
 	userJson, err := json.Marshal(user)
