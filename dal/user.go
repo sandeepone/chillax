@@ -7,8 +7,32 @@ import (
 	"github.com/boltdb/bolt"
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	"golang.org/x/crypto/bcrypt"
+	"io"
 	"time"
 )
+
+func NewUserGivenJson(storages *chillax_storage.Storages, jsonBody io.ReadCloser) (*User, error) {
+	var userArgs map[string]interface{}
+
+	err := json.NewDecoder(jsonBody).Decode(&userArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, ok := userArgs["Email"]; !ok {
+		return nil, errors.New("Email key does not exist.")
+	}
+	if _, ok := userArgs["Password"]; !ok {
+		return nil, errors.New("Password key does not exist.")
+	}
+
+	u, err := NewUser(storages, userArgs["Email"].(string), userArgs["Password"].(string))
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}
 
 func NewUser(storages *chillax_storage.Storages, email, password string) (*User, error) {
 	var err error
@@ -44,6 +68,29 @@ func GetUserById(storages *chillax_storage.Storages, id string) (*User, error) {
 	})
 
 	return u, err
+}
+
+func GetUserByEmailAndPasswordJson(storages *chillax_storage.Storages, jsonBody io.ReadCloser) (*User, error) {
+	var userArgs map[string]interface{}
+
+	err := json.NewDecoder(jsonBody).Decode(&userArgs)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, ok := userArgs["Email"]; !ok {
+		return nil, errors.New("Email key does not exist.")
+	}
+	if _, ok := userArgs["Password"]; !ok {
+		return nil, errors.New("Password key does not exist.")
+	}
+
+	u, err := GetUserByEmailAndPassword(storages, userArgs["Email"].(string), userArgs["Password"].(string))
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
 }
 
 func GetUserByEmailAndPassword(storages *chillax_storage.Storages, email, password string) (*User, error) {
