@@ -96,15 +96,18 @@ func GetUserByEmailAndPasswordJson(storages *chillax_storage.Storages, jsonBody 
 func GetUserByEmailAndPassword(storages *chillax_storage.Storages, email, password string) (*User, error) {
 	u, err := NewUser(storages, "", "")
 
-	err = storages.KeyValue.View(func(tx *bolt.Tx) error {
-		bucket := tx.Bucket([]byte(u.bucketName))
+	err = storages.KeyValue.Update(func(tx *bolt.Tx) error {
+		bucket, err := tx.CreateBucketIfNotExists([]byte(u.bucketName))
+		if err != nil {
+			return err
+		}
 
 		inJson := bucket.Get([]byte("Email:" + email))
 		if inJson == nil {
 			return nil
 		}
 
-		err := json.Unmarshal(inJson, u)
+		err = json.Unmarshal(inJson, u)
 		if err != nil {
 			return err
 		}

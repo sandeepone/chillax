@@ -7,6 +7,7 @@ import (
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	"github.com/gorilla/context"
 	// "io/ioutil"
+	"errors"
 	"net/http"
 )
 
@@ -14,6 +15,18 @@ func PostApiUsers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	storages := context.Get(r, "storages").(*chillax_storage.Storages)
+
+	existingUser, err := chillax_dal.GetUserByEmailAndPasswordJson(storages, r.Body)
+	if err != nil {
+		libhttp.HandleErrorJson(w, err)
+		return
+	}
+
+	if existingUser != nil {
+		err = errors.New("User already exists.")
+		libhttp.HandleErrorJson(w, err)
+		return
+	}
 
 	user, err := chillax_dal.NewUserGivenJson(storages, r.Body)
 	if err != nil {
