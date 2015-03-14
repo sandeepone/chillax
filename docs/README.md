@@ -1,6 +1,8 @@
 ## TODO
 
-* How to test http layer logic on login and logout
+* Render /signup and /login page.
+
+* Render main page after login.
 
 * things:
     /things/2015/03/20

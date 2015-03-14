@@ -2,14 +2,68 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/GeertJohan/go.rice"
 	chillax_dal "github.com/chillaxio/chillax/dal"
 	"github.com/chillaxio/chillax/libhttp"
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	"github.com/gorilla/context"
+	"html/template"
 	// "io/ioutil"
 	"errors"
 	"net/http"
 )
+
+func GetSignup(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+
+	gorice := context.Get(r, "gorice").(*rice.Config)
+
+	box, err := gorice.FindBox("users-templates")
+	if err != nil {
+		libhttp.HandleErrorJson(w, err)
+		return
+	}
+
+	templateString, err := box.String("signup.html.tmpl")
+	if err != nil {
+		libhttp.HandleErrorJson(w, err)
+		return
+	}
+
+	tmpl, err := template.New("signup").Parse(templateString)
+	if err != nil {
+		libhttp.HandleErrorJson(w, err)
+		return
+	}
+
+	tmpl.Execute(w, nil)
+}
+
+func GetLogin(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+
+	gorice := context.Get(r, "gorice").(*rice.Config)
+
+	box, err := gorice.FindBox("users-templates")
+	if err != nil {
+		libhttp.HandleErrorJson(w, err)
+		return
+	}
+
+	templateString, err := box.String("login.html.tmpl")
+	if err != nil {
+		libhttp.HandleErrorJson(w, err)
+		return
+	}
+
+	tmpl, err := template.New("login").Parse(templateString)
+	if err != nil {
+		libhttp.HandleErrorJson(w, err)
+		return
+	}
+
+	tmpl.Execute(w, nil)
+}
 
 func PostApiUsers(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
