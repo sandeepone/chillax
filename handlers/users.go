@@ -24,16 +24,21 @@ func GetSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templateString, err := box.String("signup.html.tmpl")
-	if err != nil {
-		libhttp.HandleErrorJson(w, err)
-		return
-	}
+	tmpl := template.New("signup")
 
-	tmpl, err := template.New("signup").Parse(templateString)
-	if err != nil {
-		libhttp.HandleErrorJson(w, err)
-		return
+	for _, filename := range []string{"login-signup-parent.html.tmpl", "signup.html.tmpl"} {
+
+		templateString, err := box.String(filename)
+		if err != nil {
+			libhttp.HandleErrorJson(w, err)
+			return
+		}
+
+		tmpl, err = tmpl.Parse(templateString)
+		if err != nil {
+			libhttp.HandleErrorJson(w, err)
+			return
+		}
 	}
 
 	tmpl.Execute(w, nil)
@@ -50,16 +55,21 @@ func GetLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	templateString, err := box.String("login.html.tmpl")
-	if err != nil {
-		libhttp.HandleErrorJson(w, err)
-		return
-	}
+	tmpl := template.New("signup")
 
-	tmpl, err := template.New("login").Parse(templateString)
-	if err != nil {
-		libhttp.HandleErrorJson(w, err)
-		return
+	for _, filename := range []string{"login-signup-parent.html.tmpl", "login.html.tmpl"} {
+
+		templateString, err := box.String(filename)
+		if err != nil {
+			libhttp.HandleErrorJson(w, err)
+			return
+		}
+
+		tmpl, err = tmpl.Parse(templateString)
+		if err != nil {
+			libhttp.HandleErrorJson(w, err)
+			return
+		}
 	}
 
 	tmpl.Execute(w, nil)
