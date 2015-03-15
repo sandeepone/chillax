@@ -2,14 +2,14 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/GeertJohan/go.rice"
 	chillax_dal "github.com/chillaxio/chillax/dal"
 	"github.com/chillaxio/chillax/libhttp"
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	"github.com/gorilla/context"
 	"html/template"
-	// "io/ioutil"
-	"errors"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -80,8 +80,14 @@ func PostApiUsers(w http.ResponseWriter, r *http.Request) {
 
 	storages := context.Get(r, "storages").(*chillax_storage.Storages)
 
-	existingUser, err := chillax_dal.GetUserByEmailAndPasswordJson(storages, r.Body)
+	jsonPayload, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		libhttp.HandleErrorJson(w, err)
+		return
+	}
+
+	existingUser, err := chillax_dal.GetUserByEmailAndPasswordJson(storages, jsonPayload)
+	if err != nil && err.Error() != "Failed to get user." {
 		libhttp.HandleErrorJson(w, err)
 		return
 	}
@@ -92,7 +98,7 @@ func PostApiUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := chillax_dal.NewUserGivenJson(storages, r.Body)
+	user, err := chillax_dal.NewUserGivenJson(storages, jsonPayload)
 	if err != nil {
 		libhttp.HandleErrorJson(w, err)
 		return
@@ -118,7 +124,13 @@ func PostApiUsersLogin(w http.ResponseWriter, r *http.Request) {
 
 	storages := context.Get(r, "storages").(*chillax_storage.Storages)
 
-	user, err := chillax_dal.GetUserByEmailAndPasswordJson(storages, r.Body)
+	jsonPayload, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		libhttp.HandleErrorJson(w, err)
+		return
+	}
+
+	user, err := chillax_dal.GetUserByEmailAndPasswordJson(storages, jsonPayload)
 	if err != nil {
 		libhttp.HandleErrorJson(w, err)
 		return

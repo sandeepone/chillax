@@ -42,6 +42,8 @@ func (chillax *Chillax) Middlewares() (*interpose.Middleware, error) {
 func (chillax *Chillax) Mux() *gorilla_mux.Router {
 	router := gorilla_mux.NewRouter()
 
+	router.HandleFunc("/", chillax_handlers.GetDashboard).Methods("GET")
+
 	router.HandleFunc("/signup", chillax_handlers.GetSignup).Methods("GET")
 	router.HandleFunc("/login", chillax_handlers.GetLogin).Methods("GET")
 

@@ -7,26 +7,36 @@ import (
 	"github.com/boltdb/bolt"
 	chillax_storage "github.com/chillaxio/chillax/storage"
 	"golang.org/x/crypto/bcrypt"
-	"io"
 	"time"
 )
 
-func NewUserGivenJson(storages *chillax_storage.Storages, jsonBody io.ReadCloser) (*User, error) {
-	var userArgs map[string]interface{}
+func NewUserGivenJson(storages *chillax_storage.Storages, jsonBody []byte) (*User, error) {
+	var userArgs map[string]string
 
-	err := json.NewDecoder(jsonBody).Decode(&userArgs)
+	err := json.Unmarshal(jsonBody, &userArgs)
 	if err != nil {
 		return nil, err
 	}
 
 	if _, ok := userArgs["Email"]; !ok {
-		return nil, errors.New("Email key does not exist.")
+		return nil, errors.New("Email field does not exist.")
 	}
 	if _, ok := userArgs["Password"]; !ok {
-		return nil, errors.New("Password key does not exist.")
+		return nil, errors.New("Password field does not exist.")
+	}
+	if _, ok := userArgs["PasswordAgain"]; !ok {
+		return nil, errors.New("PasswordAgain field does not exist.")
 	}
 
-	u, err := NewUser(storages, userArgs["Email"].(string), userArgs["Password"].(string))
+	email := userArgs["Email"]
+	password := userArgs["Password"]
+	passwordAgain := userArgs["PasswordAgain"]
+
+	if password != passwordAgain {
+		return nil, errors.New("Password and PasswordAgain fields does not match.")
+	}
+
+	u, err := NewUser(storages, email, password)
 	if err != nil {
 		return nil, err
 	}
@@ -70,10 +80,10 @@ func GetUserById(storages *chillax_storage.Storages, id string) (*User, error) {
 	return u, err
 }
 
-func GetUserByEmailAndPasswordJson(storages *chillax_storage.Storages, jsonBody io.ReadCloser) (*User, error) {
-	var userArgs map[string]interface{}
+func GetUserByEmailAndPasswordJson(storages *chillax_storage.Storages, jsonBody []byte) (*User, error) {
+	var userArgs map[string]string
 
-	err := json.NewDecoder(jsonBody).Decode(&userArgs)
+	err := json.Unmarshal(jsonBody, &userArgs)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +95,7 @@ func GetUserByEmailAndPasswordJson(storages *chillax_storage.Storages, jsonBody 
 		return nil, errors.New("Password key does not exist.")
 	}
 
-	u, err := GetUserByEmailAndPassword(storages, userArgs["Email"].(string), userArgs["Password"].(string))
+	u, err := GetUserByEmailAndPassword(storages, userArgs["Email"], userArgs["Password"])
 	if err != nil {
 		return nil, err
 	}
@@ -114,6 +124,10 @@ func GetUserByEmailAndPassword(storages *chillax_storage.Storages, email, passwo
 
 		return bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
 	})
+
+	if u.Email == "" || u.Password == "" {
+		return nil, errors.New("Failed to get user.")
+	}
 
 	return u, err
 }
