@@ -37,7 +37,19 @@ $('.form-signup').submit(function(event) {
     dataType: "json"
   })
   .done(function(data, textStatus, jqXHR) {
-    window.location.href = "/";
+    $.ajax({
+      type: "POST",
+      url: "/api/users/login",
+      data: JSON.stringify(formData),
+      contentType: "application/json; charset=utf-8",
+      dataType: "json"
+    })
+    .done(function(data, textStatus, jqXHR) {
+      window.location.href = "/";
+    })
+    .fail(function(jqXHR, textStatus, errorThrown) {
+      alert($.parseJSON(jqXHR.responseText).Error);
+    });
   })
   .fail(function(jqXHR, textStatus, errorThrown) {
     alert($.parseJSON(jqXHR.responseText).Error);
