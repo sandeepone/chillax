@@ -47,6 +47,16 @@ func GetSignup(w http.ResponseWriter, r *http.Request) {
 func GetLogin(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 
+	storages := context.Get(r, "storages").(*chillax_storage.Storages)
+
+	session, _ := storages.Cookie.Get(r, "chillax-session")
+
+	currentUserInterface := session.Values["user"]
+	if currentUserInterface != nil {
+		http.Redirect(w, r, "/", 301)
+		return
+	}
+
 	gorice := context.Get(r, "gorice").(*rice.Config)
 
 	box, err := gorice.FindBox("users-templates")
