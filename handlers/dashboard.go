@@ -35,19 +35,16 @@ func GetDashboard(w http.ResponseWriter, r *http.Request) {
 
 	tmpl := template.New("dashboard")
 
-	for _, filename := range []string{"dashboard-base.html.tmpl"} {
+	templateString, err := box.String("dashboard-base.html.tmpl")
+	if err != nil {
+		libhttp.HandleErrorJson(w, err)
+		return
+	}
 
-		templateString, err := box.String(filename)
-		if err != nil {
-			libhttp.HandleErrorJson(w, err)
-			return
-		}
-
-		tmpl, err = tmpl.Parse(templateString)
-		if err != nil {
-			libhttp.HandleErrorJson(w, err)
-			return
-		}
+	tmpl, err = tmpl.Parse(templateString)
+	if err != nil {
+		libhttp.HandleErrorJson(w, err)
+		return
 	}
 
 	tmpl.Execute(w, currentUser)
