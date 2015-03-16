@@ -17,7 +17,7 @@ func GetDashboard(w http.ResponseWriter, r *http.Request) {
 
 	storages := context.Get(r, "storages").(*chillax_storage.Storages)
 
-	session, _ := storages.Cookie.Get(r, "login-session")
+	session, _ := storages.Cookie.Get(r, "chillax-session")
 
 	currentUserInterface := session.Values["user"]
 	if currentUserInterface == nil {
