@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"github.com/GeertJohan/go.rice"
 	chillax_dal "github.com/chillaxio/chillax/dal"
 	"github.com/chillaxio/chillax/libhttp"
 	chillax_storage "github.com/chillaxio/chillax/storage"
@@ -10,10 +9,8 @@ import (
 	"net/http"
 )
 
-func GetDashboard(w http.ResponseWriter, r *http.Request) {
+func GetHome(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-
-	gorice := context.Get(r, "gorice").(*rice.Config)
 
 	storages := context.Get(r, "storages").(*chillax_storage.Storages)
 
@@ -27,25 +24,17 @@ func GetDashboard(w http.ResponseWriter, r *http.Request) {
 
 	currentUser := currentUserInterface.(*chillax_dal.User)
 
-	box, err := gorice.FindBox("dashboard-templates")
+	data := struct {
+		CurrentUser *chillax_dal.User
+	}{
+		currentUser,
+	}
+
+	tmpl, err := template.ParseFiles("templates/dashboard.html.tmpl", "templates/home.html.tmpl")
 	if err != nil {
 		libhttp.HandleErrorJson(w, err)
 		return
 	}
 
-	tmpl := template.New("dashboard")
-
-	templateString, err := box.String("dashboard-base.html.tmpl")
-	if err != nil {
-		libhttp.HandleErrorJson(w, err)
-		return
-	}
-
-	tmpl, err = tmpl.Parse(templateString)
-	if err != nil {
-		libhttp.HandleErrorJson(w, err)
-		return
-	}
-
-	tmpl.Execute(w, currentUser)
+	tmpl.Execute(w, data)
 }

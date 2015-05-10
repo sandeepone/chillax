@@ -11,7 +11,7 @@ func TestNewUser(t *testing.T) {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 
-	u, err := NewUser(storages, "didip@example.com", "password")
+	u, err := NewUser(storages, "didip@example.com", "password", "password")
 	if err != nil {
 		t.Errorf("Creating user should not fail. Error: %v", err)
 	}
@@ -40,7 +40,7 @@ func TestHashedPassword(t *testing.T) {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 
-	u, err := NewUser(storages, "didip@example.com", "password")
+	u, err := NewUser(storages, "didip@example.com", "password", "password")
 	if err != nil {
 		t.Errorf("Creating user should not fail. Error: %v", err)
 	}
@@ -58,7 +58,7 @@ func TestValidateBeforeSave(t *testing.T) {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 
-	u, err := NewUser(storages, "didip@example.com", "password")
+	u, err := NewUser(storages, "didip@example.com", "password", "password")
 	if err != nil {
 		t.Errorf("Creating user should not fail. Error: %v", err)
 	}
@@ -77,7 +77,7 @@ func TestUserSave(t *testing.T) {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 
-	u, err := NewUser(storages, "didip@example.com", "password")
+	u, err := NewUser(storages, "didip@example.com", "password", "password")
 	if err != nil {
 		t.Errorf("Creating user should not fail. Error: %v", err)
 	}
@@ -96,7 +96,7 @@ func TestGetUserById(t *testing.T) {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 
-	u, err := NewUser(storages, "didip@example.com", "password")
+	u, err := NewUser(storages, "didip@example.com", "password", "password")
 	if err != nil {
 		t.Errorf("Creating user should not fail. Error: %v", err)
 	}
@@ -130,7 +130,7 @@ func TestGetUserByEmailAndPassword(t *testing.T) {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 
-	u, err := NewUser(storages, "didip@example.com", "password")
+	u, err := NewUser(storages, "didip@example.com", "password", "password")
 	if err != nil {
 		t.Errorf("Creating user should not fail. Error: %v", err)
 	}
@@ -164,7 +164,7 @@ func TestCreateAndDeleteUserWalls(t *testing.T) {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 
-	u, err := NewUser(storages, "didip@example.com", "password")
+	u, err := NewUser(storages, "didip@example.com", "password", "password")
 	if err != nil {
 		t.Errorf("Creating user should not fail. Error: %v", err)
 	}

@@ -10,42 +10,12 @@ import (
 	"time"
 )
 
-func NewUserGivenJson(storages *chillax_storage.Storages, jsonBody []byte) (*User, error) {
-	var userArgs map[string]string
-
-	err := json.Unmarshal(jsonBody, &userArgs)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, ok := userArgs["Email"]; !ok {
-		return nil, errors.New("Email field does not exist.")
-	}
-	if _, ok := userArgs["Password"]; !ok {
-		return nil, errors.New("Password field does not exist.")
-	}
-	if _, ok := userArgs["PasswordAgain"]; !ok {
-		return nil, errors.New("PasswordAgain field does not exist.")
-	}
-
-	email := userArgs["Email"]
-	password := userArgs["Password"]
-	passwordAgain := userArgs["PasswordAgain"]
+func NewUser(storages *chillax_storage.Storages, email, password, passwordAgain string) (*User, error) {
+	var err error
 
 	if password != passwordAgain {
 		return nil, errors.New("Password and PasswordAgain fields does not match.")
 	}
-
-	u, err := NewUser(storages, email, password)
-	if err != nil {
-		return nil, err
-	}
-
-	return u, nil
-}
-
-func NewUser(storages *chillax_storage.Storages, email, password string) (*User, error) {
-	var err error
 
 	u := &User{}
 	u.storages = storages
@@ -64,7 +34,7 @@ func NewUser(storages *chillax_storage.Storages, email, password string) (*User,
 }
 
 func GetUserById(storages *chillax_storage.Storages, id string) (*User, error) {
-	u, err := NewUser(storages, "", "")
+	u, err := NewUser(storages, "", "", "")
 
 	err = storages.KeyValue.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(u.bucketName))
@@ -80,31 +50,8 @@ func GetUserById(storages *chillax_storage.Storages, id string) (*User, error) {
 	return u, err
 }
 
-func GetUserByEmailAndPasswordJson(storages *chillax_storage.Storages, jsonBody []byte) (*User, error) {
-	var userArgs map[string]string
-
-	err := json.Unmarshal(jsonBody, &userArgs)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, ok := userArgs["Email"]; !ok {
-		return nil, errors.New("Email key does not exist.")
-	}
-	if _, ok := userArgs["Password"]; !ok {
-		return nil, errors.New("Password key does not exist.")
-	}
-
-	u, err := GetUserByEmailAndPassword(storages, userArgs["Email"], userArgs["Password"])
-	if err != nil {
-		return nil, err
-	}
-
-	return u, nil
-}
-
 func GetUserByEmailAndPassword(storages *chillax_storage.Storages, email, password string) (*User, error) {
-	u, err := NewUser(storages, "", "")
+	u, err := NewUser(storages, "", "", "")
 
 	err = storages.KeyValue.Update(func(tx *bolt.Tx) error {
 		bucket, err := tx.CreateBucketIfNotExists([]byte(u.bucketName))
@@ -154,6 +101,24 @@ func (u *User) HashedPassword(password string) (string, error) {
 		return "", err
 	}
 	return string(hashedPassword), nil
+}
+
+func (u *User) UpdateCreds(email, password, passwordAgain string) error {
+	var err error
+
+	if password != passwordAgain {
+		return errors.New("Password and PasswordAgain fields does not match.")
+	}
+
+	u.Email = email
+	if password != "" {
+		u.Password, err = u.HashedPassword(password)
+		if err != nil {
+			return err
+		}
+	}
+
+	return u.Save()
 }
 
 func (u *User) CreateWall(name string) error {
@@ -216,6 +181,10 @@ func (u *User) ValidateBeforeSave() error {
 }
 
 func (u *User) Save() error {
+	if u.ID == "" {
+		return errors.New("User ID cannot be empty when saving.")
+	}
+
 	err := SaveByKey("ID", u.ID, u)
 	if err != nil {
 		return err
@@ -224,5 +193,8 @@ func (u *User) Save() error {
 }
 
 func (u *User) SaveByEmail() error {
+	if u.Email == "" {
+		return errors.New("User Email cannot be empty when saving.")
+	}
 	return SaveByKey("Email", u.Email, u)
 }

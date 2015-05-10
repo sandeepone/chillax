@@ -1,38 +1,32 @@
 package app
 
 import (
-	"github.com/GeertJohan/go.rice"
 	"github.com/carbocation/interpose"
-	chillax_handlers "github.com/chillaxio/chillax/handlers"
-	chillax_middlewares "github.com/chillaxio/chillax/middlewares"
-	chillax_storage "github.com/chillaxio/chillax/storage"
+	"github.com/chillaxio/chillax/handlers"
+	"github.com/chillaxio/chillax/middlewares"
+	"github.com/chillaxio/chillax/storage"
 	gorilla_mux "github.com/gorilla/mux"
+	"net/http"
 )
 
 // NewChillax is the constructor for Chillax struct.
 func NewChillax() (*Chillax, error) {
-	storages, err := chillax_storage.NewStorages()
+	storages, err := storage.NewStorages()
 	if err != nil {
 		return nil, err
 	}
 
-	gorice := &rice.Config{
-		LocateOrder: []rice.LocateMethod{rice.LocateEmbedded, rice.LocateAppended, rice.LocateFS},
-	}
-
-	chillax := &Chillax{storages, gorice}
+	chillax := &Chillax{storages}
 	return chillax, nil
 }
 
 type Chillax struct {
-	storages *chillax_storage.Storages
-	gorice   *rice.Config
+	storages *storage.Storages
 }
 
 func (chillax *Chillax) Middlewares() (*interpose.Middleware, error) {
 	middle := interpose.New()
-	middle.Use(chillax_middlewares.SetStorages(chillax.storages))
-	middle.Use(chillax_middlewares.SetGoRice(chillax.gorice))
+	middle.Use(middlewares.SetStorages(chillax.storages))
 
 	middle.UseHandler(chillax.Mux())
 
@@ -40,15 +34,22 @@ func (chillax *Chillax) Middlewares() (*interpose.Middleware, error) {
 }
 
 func (chillax *Chillax) Mux() *gorilla_mux.Router {
+	MustLogin := middlewares.MustLogin
+
 	router := gorilla_mux.NewRouter()
 
-	router.HandleFunc("/", chillax_handlers.GetDashboard).Methods("GET")
+	router.Handle("/", MustLogin(http.HandlerFunc(handlers.GetHome))).Methods("GET")
 
-	router.HandleFunc("/signup", chillax_handlers.GetSignup).Methods("GET")
-	router.HandleFunc("/login", chillax_handlers.GetLogin).Methods("GET")
+	router.HandleFunc("/signup", handlers.GetSignup).Methods("GET")
+	router.HandleFunc("/signup", handlers.PostSignup).Methods("POST")
+	router.HandleFunc("/login", handlers.GetLogin).Methods("GET")
+	router.HandleFunc("/login", handlers.PostLogin).Methods("POST")
+	router.HandleFunc("/logout", handlers.GetLogout).Methods("GET")
 
-	router.HandleFunc("/api/users", chillax_handlers.PostApiUsers).Methods("POST")
-	router.HandleFunc("/api/users/login", chillax_handlers.PostApiUsersLogin).Methods("POST")
+	router.Handle("/users/{id:[0-9]+}", MustLogin(http.HandlerFunc(handlers.PostPutDeleteUsersID))).Methods("POST", "PUT", "DELETE")
+
+	// Path of static files must be last!
+	router.PathPrefix("/").Handler(http.FileServer(http.Dir("static")))
 
 	return router
 }

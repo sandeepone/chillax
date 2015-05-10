@@ -11,7 +11,7 @@ func TestThingCreateGetDelete(t *testing.T) {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
 
-	u, err := NewUser(storages, "didip", "password")
+	u, err := NewUser(storages, "didip", "password", "password")
 	u.Save()
 
 	thing, err := NewThing(storages, u.ID)

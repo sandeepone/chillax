@@ -2,13 +2,12 @@
 package middlewares
 
 import (
-	"github.com/GeertJohan/go.rice"
-	chillax_storage "github.com/chillaxio/chillax/storage"
+	"github.com/chillaxio/chillax/storage"
 	"github.com/gorilla/context"
 	"net/http"
 )
 
-func SetStorages(storages *chillax_storage.Storages) func(http.Handler) http.Handler {
+func SetStorages(storages *storage.Storages) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 			context.Set(req, "storages", storages)
@@ -18,12 +17,18 @@ func SetStorages(storages *chillax_storage.Storages) func(http.Handler) http.Han
 	}
 }
 
-func SetGoRice(gorice *rice.Config) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-			context.Set(req, "gorice", gorice)
+// MustLogin is a middleware that checks existence of current user.
+func MustLogin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		storages := context.Get(req, "storages").(*storage.Storages)
+		session, _ := storages.Cookie.Get(req, "chillax-session")
+		userRowInterface := session.Values["user"]
 
-			next.ServeHTTP(res, req)
-		})
-	}
+		if userRowInterface == nil {
+			http.Redirect(res, req, "/login", 301)
+			return
+		}
+
+		next.ServeHTTP(res, req)
+	})
 }
