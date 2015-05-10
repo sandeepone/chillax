@@ -1,12 +1,5 @@
 ## TODO
 
-* Render main page after login.
-
-* A few bootstrap themes as inspiration:
-    * http://bootstrapzero.com/bootstrap-template/facebook
-    * http://bootstrapzero.com/bootstrap-template/holo
-
-
 * things:
     /things/2015/03/20
         /{nanoseconds}
