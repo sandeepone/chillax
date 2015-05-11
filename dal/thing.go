@@ -67,8 +67,11 @@ func (t *Thing) ValidateBeforeSave() error {
 	return nil
 }
 
-func (t *Thing) SaveFile(file multipart.File) error {
+func (t *Thing) SaveFile(file multipart.File, fileHeader *multipart.FileHeader) error {
 	defer file.Close()
+
+	// contentType := fileHeader.Header.Get("Content-Type")
+
 	return nil
 }
 
