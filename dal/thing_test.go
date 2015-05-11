@@ -58,5 +58,8 @@ func TestThingCreateGetDelete(t *testing.T) {
 		t.Errorf("Delete should not fail. Error: %v", err)
 	}
 
-	storages.RemoveAll()
+	err = storages.RemoveAll()
+	if err != nil {
+		t.Errorf("Remove all storage failed. Error: %v", err)
+	}
 }

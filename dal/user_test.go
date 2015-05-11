@@ -1,12 +1,12 @@
 package dal
 
 import (
-	chillax_storage "github.com/chillaxio/chillax/storage"
+	"github.com/chillaxio/chillax/storage"
 	"testing"
 )
 
 func TestNewUser(t *testing.T) {
-	storages, err := chillax_storage.NewStorages()
+	storages, err := storage.NewStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
@@ -35,7 +35,7 @@ func TestNewUser(t *testing.T) {
 }
 
 func TestHashedPassword(t *testing.T) {
-	storages, err := chillax_storage.NewStorages()
+	storages, err := storage.NewStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
@@ -53,7 +53,7 @@ func TestHashedPassword(t *testing.T) {
 }
 
 func TestValidateBeforeSave(t *testing.T) {
-	storages, err := chillax_storage.NewStorages()
+	storages, err := storage.NewStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
@@ -72,7 +72,7 @@ func TestValidateBeforeSave(t *testing.T) {
 }
 
 func TestUserSave(t *testing.T) {
-	storages, err := chillax_storage.NewStorages()
+	storages, err := storage.NewStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
@@ -91,7 +91,7 @@ func TestUserSave(t *testing.T) {
 }
 
 func TestGetUserById(t *testing.T) {
-	storages, err := chillax_storage.NewStorages()
+	storages, err := storage.NewStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
@@ -125,7 +125,7 @@ func TestGetUserById(t *testing.T) {
 }
 
 func TestGetUserByEmailAndPassword(t *testing.T) {
-	storages, err := chillax_storage.NewStorages()
+	storages, err := storage.NewStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
@@ -155,5 +155,8 @@ func TestGetUserByEmailAndPassword(t *testing.T) {
 		t.Errorf("Got the wrong user. userFromStorage.ID: %v, userFromStorage.Email: %v, userFromStorage.Password: %v", userFromStorage.ID, userFromStorage.Email, userFromStorage.Password)
 	}
 
-	storages.RemoveAll()
+	err = storages.RemoveAll()
+	if err != nil {
+		t.Errorf("Remove all storage failed. Error: %v", err)
+	}
 }

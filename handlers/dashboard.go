@@ -3,7 +3,7 @@ package handlers
 import (
 	chillax_dal "github.com/chillaxio/chillax/dal"
 	"github.com/chillaxio/chillax/libhttp"
-	chillax_storage "github.com/chillaxio/chillax/storage"
+	storage "github.com/chillaxio/chillax/storage"
 	"github.com/gorilla/context"
 	"html/template"
 	"net/http"
@@ -12,7 +12,7 @@ import (
 func GetHome(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 
-	storages := context.Get(r, "storages").(*chillax_storage.Storages)
+	storages := context.Get(r, "storages").(*storage.Storages)
 
 	session, _ := storages.Cookie.Get(r, "chillax-session")
 

@@ -5,13 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/chillaxio/chillax/libfile"
-	chillax_storage "github.com/chillaxio/chillax/storage"
+	"github.com/chillaxio/chillax/storage"
 	"mime/multipart"
 	"path"
 	"time"
 )
 
-func NewThing(storages *chillax_storage.Storages, userId string) (*Thing, error) {
+func NewThing(storages *storage.Storages, userId string) (*Thing, error) {
 	var err error
 
 	t := &Thing{}
@@ -24,7 +24,7 @@ func NewThing(storages *chillax_storage.Storages, userId string) (*Thing, error)
 
 	_, ok := storages.FileSystems[userId]
 	if !ok {
-		storages.FileSystems[userId] = chillax_storage.NewFileSystem(userId)
+		storages.FileSystems[userId] = storage.NewFileSystem(userId)
 	}
 
 	return t, err
@@ -36,7 +36,7 @@ type Thing struct {
 	UserId    string
 	Path      string
 	Mime      string
-	storages  *chillax_storage.Storages
+	storages  *storage.Storages
 }
 
 func (t *Thing) generatePath() string {

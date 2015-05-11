@@ -3,11 +3,11 @@ package dal
 import (
 	"errors"
 	"fmt"
-	chillax_storage "github.com/chillaxio/chillax/storage"
+	"github.com/chillaxio/chillax/storage"
 	"time"
 )
 
-func NewAlbum(storages *chillax_storage.Storages, name string) (*Album, error) {
+func NewAlbum(storages *storage.Storages, name string) (*Album, error) {
 	var err error
 
 	w := &Album{}
@@ -28,7 +28,7 @@ func (w *Album) GetBucketName() string {
 	return w.bucketName
 }
 
-func (w *Album) GetStorages() *chillax_storage.Storages {
+func (w *Album) GetStorages() *storage.Storages {
 	return w.storages
 }
 

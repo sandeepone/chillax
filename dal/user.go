@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/boltdb/bolt"
-	chillax_storage "github.com/chillaxio/chillax/storage"
+	"github.com/chillaxio/chillax/storage"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
 
-func NewUser(storages *chillax_storage.Storages, email, password, passwordAgain string) (*User, error) {
+func NewUser(storages *storage.Storages, email, password, passwordAgain string) (*User, error) {
 	var err error
 
 	if password != passwordAgain {
@@ -33,7 +33,7 @@ func NewUser(storages *chillax_storage.Storages, email, password, passwordAgain 
 	return u, err
 }
 
-func GetUserById(storages *chillax_storage.Storages, id string) (*User, error) {
+func GetUserById(storages *storage.Storages, id string) (*User, error) {
 	u, err := NewUser(storages, "", "", "")
 
 	err = storages.KeyValue.View(func(tx *bolt.Tx) error {
@@ -50,7 +50,7 @@ func GetUserById(storages *chillax_storage.Storages, id string) (*User, error) {
 	return u, err
 }
 
-func GetUserByEmailAndPassword(storages *chillax_storage.Storages, email, password string) (*User, error) {
+func GetUserByEmailAndPassword(storages *storage.Storages, email, password string) (*User, error) {
 	u, err := NewUser(storages, "", "", "")
 
 	err = storages.KeyValue.Update(func(tx *bolt.Tx) error {
@@ -91,7 +91,7 @@ func (u *User) GetBucketName() string {
 	return u.bucketName
 }
 
-func (u *User) GetStorages() *chillax_storage.Storages {
+func (u *User) GetStorages() *storage.Storages {
 	return u.storages
 }
 

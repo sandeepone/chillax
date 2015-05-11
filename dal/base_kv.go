@@ -4,19 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/boltdb/bolt"
-	chillax_storage "github.com/chillaxio/chillax/storage"
+	"github.com/chillaxio/chillax/storage"
 )
 
 type BaseKV struct {
 	ID         string
 	bucketName string
-	storages   *chillax_storage.Storages
+	storages   *storage.Storages
 }
 
 type IKV interface {
 	ValidateBeforeSave() error
 	GetBucketName() string
-	GetStorages() *chillax_storage.Storages
+	GetStorages() *storage.Storages
 }
 
 func SaveByKey(key, value string, kvThing IKV) error {

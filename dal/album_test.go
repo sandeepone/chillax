@@ -36,5 +36,8 @@ func TestCreateAndDeleteUserAlbums(t *testing.T) {
 		t.Errorf("Deleting non-existing album should not fail. Error: %v", err)
 	}
 
-	storages.RemoveAll()
+	err = storages.RemoveAll()
+	if err != nil {
+		t.Errorf("Remove all storage failed. Error: %v", err)
+	}
 }
