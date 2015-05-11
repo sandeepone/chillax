@@ -84,7 +84,7 @@ type User struct {
 	Email    string
 	Name     string
 	Password string
-	Walls    map[string]*Wall
+	Albums   map[string]*Album
 }
 
 func (u *User) GetBucketName() string {
@@ -121,47 +121,47 @@ func (u *User) UpdateCreds(email, password, passwordAgain string) error {
 	return u.Save()
 }
 
-func (u *User) CreateWall(name string) error {
-	if u.Walls == nil {
-		u.Walls = make(map[string]*Wall)
+func (u *User) CreateAlbum(name string) error {
+	if u.Albums == nil {
+		u.Albums = make(map[string]*Album)
 	}
 
-	wall, err := NewWall(u.storages, name)
+	album, err := NewAlbum(u.storages, name)
 	if err != nil {
 		return err
 	}
 
-	err = wall.Save()
+	err = album.Save()
 	if err != nil {
 		return err
 	}
 
-	u.Walls[wall.ID] = wall
+	u.Albums[album.ID] = album
 
 	return u.Save()
 }
 
-func (u *User) GetWallByName(name string) *Wall {
-	for _, wall := range u.Walls {
-		if wall.Name == name {
-			return wall
+func (u *User) GetAlbumByName(name string) *Album {
+	for _, album := range u.Albums {
+		if album.Name == name {
+			return album
 		}
 	}
 
 	return nil
 }
 
-func (u *User) DeleteWall(name string) error {
-	wall := u.GetWallByName(name)
-	if wall != nil {
-		delete(u.Walls, wall.ID)
+func (u *User) DeleteAlbum(name string) error {
+	album := u.GetAlbumByName(name)
+	if album != nil {
+		delete(u.Albums, album.ID)
 
 		err := u.Save()
 		if err != nil {
 			return err
 		}
 
-		err = wall.Delete()
+		err = album.Delete()
 		if err != nil {
 			return err
 		}

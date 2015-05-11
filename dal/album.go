@@ -7,42 +7,42 @@ import (
 	"time"
 )
 
-func NewWall(storages *chillax_storage.Storages, name string) (*Wall, error) {
+func NewAlbum(storages *chillax_storage.Storages, name string) (*Album, error) {
 	var err error
 
-	w := &Wall{}
+	w := &Album{}
 	w.storages = storages
-	w.bucketName = "walls"
+	w.bucketName = "albums"
 	w.ID = fmt.Sprintf("%v", time.Now().UnixNano())
 	w.Name = name
 
 	return w, err
 }
 
-type Wall struct {
+type Album struct {
 	BaseKV
 	Name string
 }
 
-func (w *Wall) GetBucketName() string {
+func (w *Album) GetBucketName() string {
 	return w.bucketName
 }
 
-func (w *Wall) GetStorages() *chillax_storage.Storages {
+func (w *Album) GetStorages() *chillax_storage.Storages {
 	return w.storages
 }
 
-func (w *Wall) ValidateBeforeSave() error {
+func (w *Album) ValidateBeforeSave() error {
 	if w.Name == "" {
 		return errors.New("Name should not be empty.")
 	}
 	return nil
 }
 
-func (w *Wall) Save() error {
+func (w *Album) Save() error {
 	return SaveByKey("ID", w.ID, w)
 }
 
-func (w *Wall) Delete() error {
+func (w *Album) Delete() error {
 	return DeleteByKey("ID", w.ID, w)
 }
