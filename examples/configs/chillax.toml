@@ -1,2 +1,0 @@
-HttpPort = "8080"
-ProxyHandlersPath = "./proxy-handlers"
