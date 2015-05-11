@@ -11,7 +11,7 @@ import (
 
 // NewFileSystem is constructor for FileSystem
 func NewFileSystem(userId string) *FileSystem {
-	dataDir, err := NewDataDir()
+	dataDir, err := NewDataDir("")
 	if err != nil {
 		return nil
 	}

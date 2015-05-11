@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewUser(t *testing.T) {
-	storages, err := storage.NewStorages()
+	storages, err := storage.NewTestStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
@@ -35,7 +35,7 @@ func TestNewUser(t *testing.T) {
 }
 
 func TestHashedPassword(t *testing.T) {
-	storages, err := storage.NewStorages()
+	storages, err := storage.NewTestStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
@@ -53,7 +53,7 @@ func TestHashedPassword(t *testing.T) {
 }
 
 func TestValidateBeforeSave(t *testing.T) {
-	storages, err := storage.NewStorages()
+	storages, err := storage.NewTestStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
@@ -72,7 +72,7 @@ func TestValidateBeforeSave(t *testing.T) {
 }
 
 func TestUserSave(t *testing.T) {
-	storages, err := storage.NewStorages()
+	storages, err := storage.NewTestStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
@@ -91,7 +91,7 @@ func TestUserSave(t *testing.T) {
 }
 
 func TestGetUserById(t *testing.T) {
-	storages, err := storage.NewStorages()
+	storages, err := storage.NewTestStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}
@@ -125,7 +125,7 @@ func TestGetUserById(t *testing.T) {
 }
 
 func TestGetUserByEmailAndPassword(t *testing.T) {
-	storages, err := storage.NewStorages()
+	storages, err := storage.NewTestStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}

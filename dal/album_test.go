@@ -6,7 +6,7 @@ import (
 )
 
 func TestCreateAndDeleteUserAlbums(t *testing.T) {
-	storages, err := storage.NewStorages()
+	storages, err := storage.NewTestStorages()
 	if err != nil {
 		t.Fatalf("Creating storages should not fail. Error: %v", err)
 	}

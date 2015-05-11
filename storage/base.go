@@ -9,10 +9,13 @@ import (
 	"path"
 )
 
-func NewDataDir() (string, error) {
+func NewDataDir(path string) (string, error) {
 	var err error
 
-	path := libenv.EnvWithDefault("CHILLAX_DATA_DIR", "~/chillax")
+	if path == "" {
+		path = "~/chillax"
+	}
+	path = libenv.EnvWithDefault("CHILLAX_DATA_DIR", path)
 	path = libstring.ExpandTildeAndEnv(path)
 
 	err = os.MkdirAll(libstring.ExpandTildeAndEnv(path), 0755)
@@ -23,12 +26,7 @@ func NewDataDir() (string, error) {
 	return path, nil
 }
 
-func NewStorages() (*Storages, error) {
-	dataDir, err := NewDataDir()
-	if err != nil {
-		return nil, err
-	}
-
+func NewStoragesGivenDataDir(dataDir string) (*Storages, error) {
 	kvdb, err := bolt.Open(path.Join(dataDir, "kv-db"), 0644, nil)
 	if err != nil {
 		return nil, err
@@ -42,17 +40,31 @@ func NewStorages() (*Storages, error) {
 	s := &Storages{}
 	s.DataDir = dataDir
 	s.KeyValue = kvdb
-	s.FileSystems = make(map[string]*FileSystem)
 	s.Cookie = cookieStore
 
 	return s, nil
 }
 
+func NewStorages() (*Storages, error) {
+	dataDir, err := NewDataDir("")
+	if err != nil {
+		return nil, err
+	}
+	return NewStoragesGivenDataDir(dataDir)
+}
+
+func NewTestStorages() (*Storages, error) {
+	dataDir, err := NewDataDir("~/chillax-test")
+	if err != nil {
+		return nil, err
+	}
+	return NewStoragesGivenDataDir(dataDir)
+}
+
 type Storages struct {
-	DataDir     string
-	KeyValue    *bolt.DB
-	FileSystems map[string]*FileSystem
-	Cookie      *sessions.CookieStore
+	DataDir  string
+	KeyValue *bolt.DB
+	Cookie   *sessions.CookieStore
 }
 
 func (s *Storages) CreateKVBucket(name string) error {
@@ -60,11 +72,6 @@ func (s *Storages) CreateKVBucket(name string) error {
 		tx.CreateBucket([]byte(name))
 		return nil
 	})
-}
-
-func (s *Storages) CreateFileSystem(userId string) error {
-	s.FileSystems[userId] = NewFileSystem(userId)
-	return nil
 }
 
 func (s *Storages) RemoveAll() error {
